@@ -1,10 +1,10 @@
 {
   "status": "committed-reviewed-candidate",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "2069738df33fee162ea037f49637dd0980cd7d52",
-  "api_branch": "feat/product-analytics-fixture",
+  "api_revision": "2f22f24b30de7ee6a797d6397bef7422eb8e31cc",
+  "api_branch": "fix/intent-over-page-context",
   "contract": "Peque private product analytics schema1; literal synthetic true; default OFF local fixture only",
-  "note": "Copied bytes verified with git show from the independently source-reviewed API candidate commit. PR95 integration and CI remain pending; this is not a main or deployed freshness claim. Runtime acceptance remains separately gated.",
+  "note": "Copied bytes verified with git show from the exact Root-accepted, independently reviewed API candidate, including concurrent-report watermark and explicit Neo4j retry/telemetry policy. PR95 integration and current-head CI remain pending; not a main or deployed freshness claim. Real paired runtime acceptance remains separately gated.",
   "files": {
     "contracts/product-analytics.schema.json": {
       "local": "contracts/analytics/product-analytics.schema.json",

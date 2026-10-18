@@ -49,7 +49,10 @@ the local provenance stays checked. This producer is a candidate, with no main o
 freshness claim. Its status is `committed-reviewed-candidate`, with integration pending.
 Before a ready PR, Root must accept the producer integration and update this revision if it
 changes. Existing ops and telemetry pins remain separate. Candidate provenance is not runtime
-or production proof.
+or production proof. The current producer pin includes the concurrent-receipt fix and explicit
+Neo4j retry/telemetry policy; identical wire bytes are checked against that exact commit.
+`generated_at` is a logical receipt watermark, not database read completion or complete
+concurrent-event coverage. The adapter retains the producer calendar and observation invariants.
 
 Focused units cover strict wire/calendar/count validation, bounded reads and disabled/error states.
 The architecture checker explicitly admits the analytics feature's four existing layer names,
