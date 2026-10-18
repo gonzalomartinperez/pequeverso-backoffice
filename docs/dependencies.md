@@ -71,7 +71,7 @@ review security advisories, supported versions and exact new artifacts.
 |---|---|---|
 | Node / npm build tooling | Node 24.22.0, bundled npm 11.19.1 | [Node24 LTS](https://nodejs.org/en/about/previous-releases); npm has its own stable releases, not a separate guaranteed LTS window |
 | Next.js | 16.4.2 | [16.x Active LTS](https://nextjs.org/support-policy); pinned patch, recheck security updates |
-| PostgreSQL image/tools | 18.6-trixie, immutable linux/amd64 manifest in Dockerfile.postgres | [Supported major18 until2030-11-14](https://www.postgresql.org/support/versioning/); current stable minor18.6, not an upstream product called LTS |
+| PostgreSQL image/tools | 18.6-trixie, immutable linux/amd64 manifest in `infra/docker/postgres/Dockerfile` | [Supported major18 until2030-11-14](https://www.postgresql.org/support/versioning/); current stable minor18.6, not an upstream product called LTS |
 | Debian runtime | Debian 13 Trixie slim + exact signed packages | [Official Trixie support](https://www.debian.org/releases/trixie/): full support through 2028-08-09, LTS through 2030-06-30; architecture/package coverage varies. Residual CVEs remain activation decisions |
 | React / React DOM |19.3.1 | [Stable React19](https://react.dev/versions); no published separate LTS guarantee |
 | Better Auth |1.7.10 | [Stable upstream](https://www.better-auth.com/docs/introduction); pinned and OAuth/schema regression tested, no invented LTS |

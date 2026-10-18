@@ -1,7 +1,10 @@
 # Deny by default: only application build and migration inputs enter the context.
 *
-!Dockerfile
-!.dockerignore
+!infra/
+!infra/docker/
+!infra/docker/app/
+!infra/docker/app/Dockerfile
+!infra/docker/app/Dockerfile.dockerignore
 !LICENSE
 !NOTICE.md
 !THIRD_PARTY_NOTICES.md

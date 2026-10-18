@@ -17,14 +17,15 @@ cp .env.example .env.local   # optional: local runtime values (never commit)
 | `npm run preview:backoffice` | Serves the last `npm run build` with a fresh PostgreSQL database, the fake IdP and the synthetic ops mock (`TEST_DATABASE_URL` required) on :3241 |
 | `npm run build` | `next build --webpack`; type-checks with the project-local **TypeScript 7** `tsc` CLI (Next's default `useTypeScriptCli`) |
 | `npm run typecheck` | `next typegen` (route types) then **TypeScript 7** `tsc --noEmit` over the whole project, tests included |
-| `npm test` | `node --test` on `tests/unit/**/*.test.ts` (Node 24 strips types natively; no compiler involved): access rules, pinned ops contract, configuration, CSP, fixture safety and the architecture-boundary check |
+| `npm test` | `node --test` on `tests/unit/**/*.test.ts` (Node 24 strips types natively for execution): access rules, pinned ops contract, configuration, CSP, fixture safety and the architecture-boundary check |
 | `npm run lint` / `npm run format` | Biome (lint + format); Biome does not type-check |
 | `npm run check` | Everything above except browsers and databases |
 | `npm run test:db` | `scripts/db-check.ts` (migrations vs Better Auth schema, idempotent re-apply) and `tests/integration` (real OAuth callback against `scripts/fake-idp.ts`); needs a disposable PostgreSQL in `DATABASE_URL` or `TEST_DATABASE_URL`; each run creates and drops its own databases |
-| `npm run test:browser` | Playwright (`playwright.config.ts`) against the production build started by `scripts/backoffice-stack.ts`: ports 3241 (web), 8237 (mock ops), 8238 (fake IdP); needs `TEST_DATABASE_URL`. With `LIVE_OPS_URL`/`LIVE_OPS_TOKEN` it reads a running API instead of the mock (`live-ops.spec.ts`) |
+| `npm run test:browser` | Playwright (`playwright.config.ts`, `tests/browser`) against the production build started by `scripts/backoffice-stack.ts`: ports 3241 (web), 8237 (mock ops), 8238 (fake IdP); needs `TEST_DATABASE_URL`. With `LIVE_OPS_URL`/`LIVE_OPS_TOKEN` it reads a running API instead of the mock (`live-ops.spec.ts`) |
 
-No tool in this repository requires the TypeScript JavaScript compiler API (TypeScript 7 does
-not provide it): the boundary checker scans imports without it, and Next uses the CLI checker.
+The architecture checker uses the development-only TypeScript 6 compatibility compiler API
+for AST and symbol analysis. Application checking and Next use the explicit root TypeScript 7
+CLI; no global compiler, shim replacement or compiler downgrade is required.
 
 ## Pull requests
 

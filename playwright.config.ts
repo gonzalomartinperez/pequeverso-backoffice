@@ -8,7 +8,7 @@ const ci = Boolean(process.env.CI);
  * Proves access rules, rendering and accessibility; it does not prove Google/GitHub OAuth.
  */
 export default defineConfig({
-  testDir: "./tests/backoffice",
+  testDir: "./tests/browser",
   timeout: 45_000,
   expect: { timeout: 7_000 },
   fullyParallel: false,

@@ -146,6 +146,7 @@ jobs:
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
+          file: infra/docker/app/Dockerfile
           load: true
           tags: pequeverso-backoffice:rc
           cache-from: type=gha,scope=web-node24-amd64
@@ -153,7 +154,7 @@ jobs:
       - name: Smoke the exact image hardened (fail-closed, migrations, readiness, headers)
         run: scripts/smoke-image.sh pequeverso-backoffice:rc
       - name: Build the pinned non-root PostgreSQL IAM artifact
-        run: docker build -f Dockerfile.postgres --build-arg SERVICE_REVISION="$GITHUB_SHA" -t pequeverso-backoffice-postgres:rc .
+        run: docker build -f infra/docker/postgres/Dockerfile --build-arg SERVICE_REVISION="$GITHUB_SHA" -t pequeverso-backoffice-postgres:rc .
       - name: Compare bounded IAM settings and restore with the exact app image
         run: scripts/smoke-postgres.sh pequeverso-backoffice:rc /tmp/postgres-receipt pequeverso-backoffice-postgres:rc
 
