@@ -1,12 +1,12 @@
 name: Quality
 
-# Every pull request into develop/main and every push to develop. Independent jobs run in
+# Every pull request into develop/main and every push to develop/main. Independent jobs run in
 # parallel; `Required checks` (the ruleset's required status) fails unless every job succeeded.
 on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [develop, main]
   workflow_dispatch:
 
 permissions: {}
@@ -17,15 +17,17 @@ defaults:
 
 concurrency:
   group: quality-${{ github.ref }}
-  # Supersede older runs of the same pull request; never cancel a push to develop.
+  # Supersede older runs of the same pull request; never cancel a branch push.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NEXT_TELEMETRY_DISABLED: "1"
+  PLAYWRIGHT_SKIP_BROWSER_GC: "1"
+  DOCKER_BUILD_RECORD_UPLOAD: "false"
 
 jobs:
   workflows:
-    name: Lint workflows
+    name: Workflow validation
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -34,6 +36,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - name: actionlint
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
         with:
@@ -48,7 +58,7 @@ jobs:
           min-severity: low
 
   secrets:
-    name: Secret scan (history)
+    name: Secret scan
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -58,11 +68,19 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - name: gitleaks over the full history (redacted; fails on zero commits scanned)
         run: .github/scripts/secret-scan.sh
 
   static:
-    name: Static checks, unit tests and build
+    name: Static checks
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -71,6 +89,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -88,9 +114,9 @@ jobs:
         run: npm run security:check && npm run docs:check && npm run skills:check
 
   database:
-    # Runs the database-backed suite (migrations, IAM, invitations, revocation) when the
-    # repository defines `npm run test:db`; otherwise it records that no such suite exists yet.
-    name: Database suite (PostgreSQL)
+    # Mandatory database-backed migrations, IAM, invitations and revocation suite.
+    name: Database tests
+    needs: [static]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -99,24 +125,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Detect the suite
-        id: suite
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          if node -e 'process.exit(require("./package.json").scripts?.["test:db"] ? 0 : 1)'; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "No test:db script in package.json; nothing to run." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        if: steps.suite.outputs.present == 'true'
         with:
           node-version-file: .nvmrc
           cache: npm
-      - if: steps.suite.outputs.present == 'true'
-        run: npm ci --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - name: Start a disposable PostgreSQL (test-only credentials)
-        if: steps.suite.outputs.present == 'true'
         run: |
           docker run -d --name postgres -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD=ci-only \
             -e POSTGRES_DB=backoffice_test -p 127.0.0.1:5432:5432 --tmpfs /var/lib/postgresql \
@@ -127,13 +149,13 @@ jobs:
           done
           docker logs postgres; exit 1
       - name: Database tests
-        if: steps.suite.outputs.present == 'true'
         env:
           DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
         run: npm run test:db
 
-  image:
-    name: Production image
+  container:
+    name: Container verification
+    needs: [static]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -142,6 +164,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -158,11 +188,12 @@ jobs:
       - name: Compare bounded IAM settings and restore with the exact app image
         run: scripts/smoke-postgres.sh pequeverso-backoffice:rc /tmp/postgres-receipt pequeverso-backoffice-postgres:rc
 
-  backoffice:
+  browser:
     # Production build + real PostgreSQL + the real Better Auth callback against the local fake
     # identity provider + SYNTHETIC ops data. Proves access rules, rendering and accessibility in
     # all engines; it does not prove Google/GitHub OAuth.
-    name: Backoffice browser suite (PostgreSQL, fake IdP)
+    name: Browser tests
+    needs: [static]
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -171,6 +202,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -209,14 +248,24 @@ jobs:
   checks:
     name: Required checks
     if: always()
-    needs: [workflows, secrets, static, database, image, backoffice]
+    needs: [workflows, secrets, static, database, container, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}
     steps:
       - name: Fail unless every job succeeded
         env:
-          RESULTS: ${{ join(needs.*.result, ' ') }}
+          WORKFLOWS_RESULT: ${{ needs.workflows.result }}
+          SECRETS_RESULT: ${{ needs.secrets.result }}
+          STATIC_RESULT: ${{ needs.static.result }}
+          DATABASE_RESULT: ${{ needs.database.result }}
+          CONTAINER_RESULT: ${{ needs.container.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
         run: |
-          echo "results: $RESULTS"
-          for result in $RESULTS; do [ "$result" = success ] || { echo "job result: $result"; exit 1; }; done
+          set -eu
+          test "$WORKFLOWS_RESULT" = success
+          test "$SECRETS_RESULT" = success
+          test "$STATIC_RESULT" = success
+          test "$DATABASE_RESULT" = success
+          test "$CONTAINER_RESULT" = success
+          test "$BROWSER_RESULT" = success

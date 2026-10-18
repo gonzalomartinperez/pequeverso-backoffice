@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-nvm use            # Node 24.21.0 from .nvmrc
+nvm use            # Node 24.22.0 from .nvmrc
 npm ci
 npx playwright install --with-deps chromium firefox webkit
 cp .env.example .env.local   # optional: local runtime values (never commit)
