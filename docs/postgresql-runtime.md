@@ -2,9 +2,16 @@
 
 This is the backoffice's database artifact/recipe for vps-ops to review and translate into its
 own infrastructure. Nothing is deployed or published. The backoffice database stores IAM only.
-The production target is one API-owned PostgreSQL/pgvector engine with separate API and IAM
+The production target is one API-owned PostgreSQL 18.6 Alpine/pgvector engine with separate API and IAM
 databases; the API owns conversations, catalog and spend, while SQLite is its legacy/fixture
 and import path. This repository defines no Neo4j recipe or production database controller.
+
+The recipe below remains an isolated local/CI artifact and recovery drill, not a second
+production engine. The latest recorded compatibility evidence is 19 IAM integration tests
+on the API-owned PostgreSQL 18.6 Alpine artifact and the exact application source
+`4c3257d8fff12e0be6e768bd53264e647e1fa24d` image smoke. This documentation/skill change
+does not rerun those suites or authorize publishing an image, replacing the production
+engine or deploying. Historical Trixie recipe evidence below retains its original scope.
 
 ## Artifact and security boundary
 
