@@ -122,10 +122,28 @@ its actual COPY inputs and excludes secrets; the PostgreSQL FROM/RUN-only recipe
 all context contents. No independently editable root recipe/filter remains. These locations
 are the common project convention, not a framework requirement or a deployment action.
 The IAM recipe supports local/CI artifact drills; production targets the API-owned project
-PostgreSQL/pgvector engine with a separate IAM database, never a second BO engine.
+PostgreSQL 18.6 Alpine/pgvector engine with a separate IAM database, never a second BO engine.
 
 Playwright discovers `tests/browser`; the two renamed specifications retain identical bodies,
 imports, timeouts, assertions and project coverage. Public verification PNG paths stay stable.
 The source guard rejects direct static acquisition or destructuring of ambient clock/random
 methods while allowing injected shadowed ports and deterministic `Date.parse`. It does not
 trace global-object aliases, casts, later assignments or arbitrary reflection and is not a sandbox.
+
+
+## Paired repository conventions
+
+The feature spine remains `src/app`, `src/features/{auth,operations}`, `src/server`,
+`src/shared` and `tests/{unit,integration,browser}`. Application container sources remain
+under `infra/docker/app`. The portfolio backoffice reference at committed revision
+`a124139e1cfa1d0d496fcf76c518830491fc1679` informed this shared layout; Pequeverso keeps
+its own domain, contracts and access rules. There is no frontend business or identity change.
+
+Agent discovery now follows the paired convention: canonical `.claude/skills` folders and
+relative directory links from `.agents/skills`. See [agent skills](agent-skills.md) for the
+portable checks and their limits. The local/CI IAM PostgreSQL recipe remains an intentional
+exception for isolated compatibility and restore drills. It does not introduce another
+production engine or replace the API-owned production artifact. The latest recorded local
+compatibility checks cover 19 IAM integrations on PostgreSQL 18.6 Alpine and the exact
+`4c3257d8fff12e0be6e768bd53264e647e1fa24d` application image smoke; these are prior runtime
+evidence, not tests rerun by the skill migration.

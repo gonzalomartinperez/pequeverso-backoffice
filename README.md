@@ -87,10 +87,13 @@ docker buildx build --load -f infra/docker/postgres/Dockerfile -t pequeverso-bac
 ```
 
 The second recipe is an owned local/CI artifact, not a second production database service.
-Production targets one API-owned PostgreSQL/pgvector engine and separate API/IAM databases.
+Production targets one API-owned PostgreSQL 18.6 Alpine/pgvector engine and separate API/IAM databases.
 No production Compose or deployment controller is introduced. See the
 [architecture map](docs/architecture.md#container-and-browser-test-locations) and
 [deployment contract](docs/deployment-contract.md).
+
+Agent procedures use one canonical `.claude/skills` catalog and relative directory discovery
+links in `.agents/skills`. See [skill maintenance and validation](docs/agent-skills.md).
 
 ## Architecture and data flow
 
