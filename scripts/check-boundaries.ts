@@ -249,27 +249,53 @@ export function checkBoundaries(modules: ReadonlyMap<string, string>, root: stri
           );
           if (!local) report(file, `${from?.layer} must stay pure (${node.text})`);
         }
-        const clock =
-          ts.isCallExpression(node) &&
-          ts.isPropertyAccessExpression(node.expression) &&
-          ts.isIdentifier(node.expression.expression) &&
-          ((node.expression.expression.text === "Date" && node.expression.name.text === "now") ||
-            (node.expression.expression.text === "performance" &&
-              node.expression.name.text === "now") ||
-            (node.expression.expression.text === "Math" && node.expression.name.text === "random"));
-        const currentDate =
+        // Reject acquiring an ambient capability as well as calling it: a later alias
+        // invocation must not make a direct global method read look like an injected port.
+        const ambientMethod = (owner: string, member: string | null) =>
+          ((owner === "Date" || owner === "performance") && member === "now") ||
+          (owner === "Math" && member === "random");
+        let clockOwner: ts.Identifier | undefined;
+        if (
+          ts.isPropertyAccessExpression(node) &&
+          ts.isIdentifier(node.expression) &&
+          ambientMethod(node.expression.text, node.name.text)
+        ) {
+          clockOwner = node.expression;
+        } else if (
+          ts.isElementAccessExpression(node) &&
+          ts.isIdentifier(node.expression) &&
+          ambientMethod(node.expression.text, literal(node.argumentExpression))
+        ) {
+          clockOwner = node.expression;
+        } else if (
+          (ts.isVariableDeclaration(node) || ts.isParameter(node)) &&
+          ts.isObjectBindingPattern(node.name) &&
+          node.initializer &&
+          ts.isIdentifier(node.initializer)
+        ) {
+          const owner = node.initializer;
+          if (
+            node.name.elements.some((element) => {
+              const property = element.propertyName ?? element.name;
+              const member = ts.isIdentifier(property)
+                ? property.text
+                : ts.isComputedPropertyName(property)
+                  ? literal(property.expression)
+                  : literal(property);
+              return !element.dotDotDotToken && ambientMethod(owner.text, member);
+            })
+          )
+            clockOwner = owner;
+        } else if (
           ts.isNewExpression(node) &&
           ts.isIdentifier(node.expression) &&
           node.expression.text === "Date" &&
-          (node.arguments?.length ?? 0) === 0;
-        if (clock || currentDate) {
-          const owner =
-            ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)
-              ? node.expression.expression
-              : ts.isNewExpression(node)
-                ? node.expression
-                : undefined;
-          const symbol = owner ? checker.getSymbolAtLocation(owner) : undefined;
+          (node.arguments?.length ?? 0) === 0
+        ) {
+          clockOwner = node.expression;
+        }
+        if (clockOwner) {
+          const symbol = checker.getSymbolAtLocation(clockOwner);
           if (
             !symbol?.declarations?.some((declaration) =>
               parsed.has(declaration.getSourceFile().fileName),
