@@ -58,6 +58,13 @@ and executes the fixed aggregate shell gate against success, failure, cancellati
 empty and missing results. Its bounded source-shape assertions supplement actionlint/zizmor; they
 are not a general YAML parser or a substitute for GitHub's actual required-check enforcement.
 
+The [skill catalog validator](../scripts/check-skills.ts) runs in the existing static
+file/docs/skills step. Its [filesystem negative cases](../tests/unit/skills.test.ts) run
+through the existing `npm test` unit glob before that step. They check actual directory
+links and resources without executing procedures or contacting services. See
+[agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
+optional gate, permission or status context is introduced.
+
 ## Dependencies and check-name maintenance
 
 [Dependency policy](../.github/workflows/dependency-policy.yml) remains read-only and manual by

@@ -49,8 +49,11 @@ private operations details or other repositories' internals.
   screenshots in `docs/verification/backoffice/` for UI changes (desktop, dark, mobile).
 - Browser suite ports: 3241 (web), 8237 (mock ops), 8238 (fake IdP).
 - Paid model calls, production actions, DNS and storefront changes need separate explicit authority.
-- Skills live in `.agents/skills/` (canonical); `.claude/skills/` adapters point to them. A skill is
-  a procedure, never an authorization.
+- Skill procedures live once in `.claude/skills/<name>/SKILL.md`. `.agents/skills/` is a real
+  directory containing relative directory symlinks to those canonical folders; do not maintain
+  adapters or editable copies. Skills remain automatically discoverable; explicit invocation is
+  optional. Read only the selected procedure and relevant references. A skill is a procedure,
+  never an authorization. See [skill maintenance](docs/agent-skills.md).
 
 <!-- BEGIN:nextjs-agent-rules -->
 
