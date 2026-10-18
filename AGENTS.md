@@ -35,7 +35,8 @@ private operations details or other repositories' internals.
   them behind live IAM checks. This exception adds no collector, real visitor collection, Store
   consent/Meta/CAPI/checkout change or production activation. Reads default OFF and require
   strictly synthetic data; see [product analytics](docs/product-analytics.md).
-- Consume only pinned, committed contracts (`contracts/ops/` and `contracts/telemetry/`); do not
+- Consume only pinned, committed contracts (`contracts/ops/`, `contracts/telemetry/` and
+  `contracts/analytics/`); do not
   invent endpoints, fields or auth behavior. Mocks and fixtures must say they are synthetic.
 - Architecture boundaries are enforced by `scripts/check-boundaries.ts` (run in `npm test`).
 - Other repositories (storefront, API, portfolio, vps-ops) are read-only references. Never import
