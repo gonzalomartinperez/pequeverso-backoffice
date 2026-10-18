@@ -15,11 +15,11 @@ change. These exact revisions identify the evidence below; they do not certify s
 | Verification | Recorded outcome and scope |
 |---|---|
 | Local check/build at the PR #75 candidate | 117 unit tests pass; strict TypeScript 7 application checking, lint, the 53-module architecture inventory, documentation and skills checks pass. The development-only TypeScript 6 compatibility API is absent from the standalone runtime artifact |
-| Local PostgreSQL fixture | 19 integration tests pass, zero schema drift; disposable PostgreSQL18.6, not a production database |
-| Local runtime-role browser fixture | 51 pass / 3 optional live-API skips; 54 distinct tests across Chromium, Firefox, WebKit and mobile Chromium, 273.604s, no retries, flakes or errors. The tested runtime identity had all five administrative flags false; this is not acceptance of real OAuth or the future VPS |
-| [Task Quality run39087271617](https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/runs/39087271617) | All seven jobs succeed on exact task head `2dc9d0b84203ff026c6cabb0660d87bf25d35e48`, including image, database and browser gates |
-| [Post-main Quality run39088812173](https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/runs/39088812173) | Explicit workflow-dispatch run: all seven jobs succeed on main `c6d411d9d4b0083c2775efb4bebaee9d99fdff7f` |
-| [Post-develop Quality run39089260870](https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/runs/39089260870) | Push run: all seven jobs succeed on synchronized develop `afa55d286ce0db95e67c8de83355db519bc824a4` |
+| Local PostgreSQL fixture | 19 integration tests pass, zero schema drift; disposable PostgreSQL 18.6, not a production database |
+| Local runtime-role browser fixture | 51 pass / 3 optional live-API skips; 54 distinct tests across Chromium, Firefox, WebKit and mobile Chromium, 273.604 s, no retries, flakes or errors. The tested runtime identity had all five administrative flags false; this is not acceptance of real OAuth or the future VPS |
+| [Task Quality run 39087271617](https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/runs/39087271617) | All seven jobs succeed on exact task head `2dc9d0b84203ff026c6cabb0660d87bf25d35e48`, including image, database and browser gates |
+| [Post-main Quality run 39088812173](https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/runs/39088812173) | Explicit workflow-dispatch run: all seven jobs succeed on main `c6d411d9d4b0083c2775efb4bebaee9d99fdff7f` |
+| [Post-develop Quality run 39089260870](https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/runs/39089260870) | Push run: all seven jobs succeed on synchronized develop `afa55d286ce0db95e67c8de83355db519bc824a4` |
 
 The local counts and limits are recorded in PR #75 and its release handoff. The initial external
 fixture connection failure and the immediate auto-remove observation race remain retained as
