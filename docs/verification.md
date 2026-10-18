@@ -27,7 +27,7 @@ failed harness evidence; TCP readiness and fresh resource-removal checks correct
 They are not reclassified as passing browser tests. Independent agent review and hosted CI are
 separate evidence; neither is described as human approval.
 
-A subsequent architecture-guard follow-up is pending and must carry its own exact-head evidence;
+Further architecture-guard work must carry its own exact-head evidence;
 these counts must not be extended to that work. No new local build, browser run or database
 fixture was executed for this documentation reconciliation. Real Google/GitHub OAuth, TLS/proxy
 cookies, selected release-image publication and security acceptance, private-network integration,

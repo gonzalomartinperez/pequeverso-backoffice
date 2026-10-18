@@ -173,7 +173,8 @@ describe("Dependabot read-only assessment policy", () => {
     for (const file of [
       ".github/workflows/quality.yml",
       "src/app/page.tsx",
-      "Dockerfile",
+      "infra/docker/app/Dockerfile",
+      "infra/docker/postgres/Dockerfile",
       ".nvmrc",
     ])
       assert.equal(

@@ -75,6 +75,23 @@ record provenance and agent inspection; they do not claim human review.
 | Mobile actual horizontal scroll, right table columns · local MOCK | ![Light local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/compact-availability-2026-10-13/mobile-light-daily-history-scroll-right.png) | ![Dark local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/compact-availability-2026-10-13/mobile-dark-daily-history-scroll-right.png) |
 | Mobile complete technical resources section · local MOCK | ![Light local MOCK Mobile complete technical resources section](docs/verification/compact-availability-2026-10-13/mobile-light-telemetry-resources.png) | ![Dark local MOCK Mobile complete technical resources section](docs/verification/compact-availability-2026-10-13/mobile-dark-telemetry-resources.png) |
 
+## Source and build locations
+
+Browser specifications live in `tests/browser`, with unit and PostgreSQL integrations in
+`tests/unit` and `tests/integration`. Application and IAM fixture recipes use repository-root
+build context and colocated context filters:
+
+```sh
+docker buildx build --load -f infra/docker/app/Dockerfile -t pequeverso-backoffice:reviewed .
+docker buildx build --load -f infra/docker/postgres/Dockerfile -t pequeverso-backoffice-postgres:reviewed .
+```
+
+The second recipe is an owned local/CI artifact, not a second production database service.
+Production targets one API-owned PostgreSQL/pgvector engine and separate API/IAM databases.
+No production Compose or deployment controller is introduced. See the
+[architecture map](docs/architecture.md#container-and-browser-test-locations) and
+[deployment contract](docs/deployment-contract.md).
+
 ## Architecture and data flow
 
 <p align="center">

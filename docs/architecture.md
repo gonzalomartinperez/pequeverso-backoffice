@@ -25,6 +25,11 @@ src/
       presentation/         dashboard (server component), Recharts daily charts (client), formatting
   shared/ui                 owned primitives on the design tokens
 migrations/                 committed SQL (Better Auth core + invitations/audit)
+infra/docker/app/           application Dockerfile and deny-by-default context filter
+infra/docker/postgres/      owned IAM fixture recipe and zero-copy context filter
+tests/unit/                source policy and deterministic behavior
+tests/integration/         real disposable PostgreSQL
+tests/browser/             real IAM with fake IdP and synthetic operations
 ```
 
 ## Request flow
@@ -102,3 +107,25 @@ validators. Next still validates action compilation and serializable props; this
 certify arbitrary object serialization, authorization, reflection/eval or third-party side effects.
 No runtime access decision depends on the architecture checker. Keep independent auth,
 least-privilege database, contract, image and browser checks.
+
+## Container and browser-test locations
+
+Build application and IAM fixture recipes from the repository root with explicit paths:
+
+```sh
+docker buildx build --load -f infra/docker/app/Dockerfile -t pequeverso-backoffice:reviewed .
+docker buildx build --load -f infra/docker/postgres/Dockerfile -t pequeverso-backoffice-postgres:reviewed .
+```
+
+Each recipe has an adjacent `Dockerfile.dockerignore`. The application filter retains only
+its actual COPY inputs and excludes secrets; the PostgreSQL FROM/RUN-only recipe excludes
+all context contents. No independently editable root recipe/filter remains. These locations
+are the common project convention, not a framework requirement or a deployment action.
+The IAM recipe supports local/CI artifact drills; production targets the API-owned project
+PostgreSQL/pgvector engine with a separate IAM database, never a second BO engine.
+
+Playwright discovers `tests/browser`; the two renamed specifications retain identical bodies,
+imports, timeouts, assertions and project coverage. Public verification PNG paths stay stable.
+The source guard rejects direct static acquisition or destructuring of ambient clock/random
+methods while allowing injected shadowed ports and deterministic `Date.parse`. It does not
+trace global-object aliases, casts, later assignments or arbitrary reflection and is not a sandbox.

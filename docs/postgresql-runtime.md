@@ -1,14 +1,18 @@
 # PostgreSQL runtime and recovery worksheet
 
 This is the backoffice's database artifact/recipe for vps-ops to review and translate into its
-own infrastructure. Nothing is deployed or published. PostgreSQL stores operator IAM only;
-conversation/catalog/spend data remains in the API's SQLite volume. There is no Neo4j service.
+own infrastructure. Nothing is deployed or published. The backoffice database stores IAM only.
+The production target is one API-owned PostgreSQL/pgvector engine with separate API and IAM
+databases; the API owns conversations, catalog and spend, while SQLite is its legacy/fixture
+and import path. This repository defines no Neo4j recipe or production database controller.
 
 ## Artifact and security boundary
 
-Build `Dockerfile.postgres` from the reviewed repository commit. Its source is the immutable
-`postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b`
-for linux/amd64. A fresh official linux/amd64 manifest pull on 2026-10-12 resolved to that digest. The derived
+Build `infra/docker/postgres/Dockerfile` from the reviewed repository commit. Its source is the immutable
+`postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336`
+index, using linux/amd64. Its platform manifest remains
+`885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b`, observed on
+2026-10-12; the later index-pin update did not change that platform image. The derived
 artifact installs exact signed Debian 13 security patches for OpenSSL, PCRE2, perl, xz/lzma and
 tzdata. Available-fix scans must cover **all** severities, including UNKNOWN, before using the
 artifact. Residual advisories remain visible, not accepted implicitly. Other architectures are
@@ -115,7 +119,7 @@ credentials, model calls or remote actions. Dumps contain synthetic IAM and are 
 content-free hashes/counts are recorded. Keep the receipt directory private.
 
 ```sh
-docker build -f Dockerfile.postgres -t pequeverso-backoffice-postgres:reviewed .
+docker build -f infra/docker/postgres/Dockerfile -t pequeverso-backoffice-postgres:reviewed .
 scripts/smoke-postgres.sh EXACT_BACKOFFICE_IMAGE /tmp/pequeverso-pg-receipt pequeverso-backoffice-postgres:reviewed
 ```
 
