@@ -34,8 +34,12 @@ describe("software license and reserved content", () => {
     }
     assert.ok(read("README.md").includes("[NOTICE.md](NOTICE.md)"));
     assert.ok(read("THIRD_PARTY_NOTICES.md").includes("[MIT License](LICENSE)"));
-    assert.ok(read("Dockerfile").includes('org.opencontainers.image.licenses="MIT"'));
-    assert.ok(read("Dockerfile").includes("LICENSE NOTICE.md THIRD_PARTY_NOTICES.md ./"));
-    assert.ok(read(".dockerignore").split("\n").includes("!NOTICE.md"));
+    assert.ok(
+      read("infra/docker/app/Dockerfile").includes('org.opencontainers.image.licenses="MIT"'),
+    );
+    assert.ok(
+      read("infra/docker/app/Dockerfile").includes("LICENSE NOTICE.md THIRD_PARTY_NOTICES.md ./"),
+    );
+    assert.ok(read("infra/docker/app/Dockerfile.dockerignore").split("\n").includes("!NOTICE.md"));
   });
 });

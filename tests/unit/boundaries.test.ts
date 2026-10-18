@@ -316,6 +316,45 @@ it("rejects ambient clock/randomness in pure layers and private environments in 
   );
 });
 
+it("rejects ambient clock and randomness extraction before alias invocation", () => {
+  const sources = [
+    "const now = Date.now; export const expires = () => now();",
+    "const now = performance.now; export const elapsed = () => now();",
+    "const random = Math.random; export const choose = () => random();",
+    'const now = Date["now"]; export const expires = () => now();',
+    "const { now } = Date; export const expires = () => now();",
+    "const { now: clock } = performance; export const elapsed = () => clock();",
+    'const { ["random"]: draw } = Math; export const choose = () => draw();',
+    "export const expires = ({now} = Date) => now();",
+    "export const choose = ({random: draw} = Math) => draw();",
+  ];
+  for (const layer of ["domain", "application"]) {
+    for (const source of sources) {
+      assert.match(
+        inspect({ [`features/auth/${layer}/probe.ts`]: source }).join("\n"),
+        /must stay pure \(ambient clock or randomness\)/,
+        source,
+      );
+    }
+  }
+});
+
+it("preserves statically extracted methods from injected shadowed clock and randomness ports", () => {
+  for (const layer of ["domain", "application"]) {
+    for (const source of [
+      "export const expires = (Date: {now(): number}) => { const now = Date.now; return now(); };",
+      'export const expires = (Date: {now(): number}) => { const now = Date["now"]; return now(); };',
+      "export const elapsed = (performance: {now(): number}) => { const {now} = performance; return now(); };",
+      "export const choose = (Math: {random(): number}) => { const {random: draw} = Math; return draw(); };",
+      "export const expires = () => { const Date = {now: () => 42}; const {now} = Date; return now(); };",
+      'export const docs = "Date.now and const {random}=Math are examples";',
+      'export const parsed = Date.parse("2026-10-18T00:00:00Z");',
+    ]) {
+      assert.deepEqual(inspect({ [`features/auth/${layer}/probe.ts`]: source }), [], source);
+    }
+  }
+});
+
 it("keeps server-only packages out of pure layers", () => {
   assert.match(
     inspect({ "features/auth/domain/probe.ts": "import 'server-only';" }).join("\n"),

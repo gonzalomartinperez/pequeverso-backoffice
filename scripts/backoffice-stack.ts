@@ -19,7 +19,7 @@ const database = await browserDatabase(base, path.resolve(import.meta.dirname, "
 const childEnv = withoutBootstrapDatabaseCredentials(process.env);
 
 // LIVE_OPS_URL/LIVE_OPS_TOKEN point the dashboard at a running pequeverso-assistant-api (fixture
-// provider) instead of the mock; used by tests/backoffice/live-ops.spec.ts.
+// provider) instead of the mock; used by tests/browser/live-ops.spec.ts.
 const live = process.env.LIVE_OPS_URL
   ? { url: process.env.LIVE_OPS_URL, token: process.env.LIVE_OPS_TOKEN ?? "" }
   : null;
