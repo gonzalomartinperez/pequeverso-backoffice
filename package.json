@@ -11,7 +11,7 @@
     "dev": "next dev --port 3201",
     "build": "next build --webpack",
     "start": "next start --port 3201",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && node node_modules/typescript/bin/tsc --noEmit",
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write .",
     "test": "node --test \"tests/unit/**/*.test.ts\"",
@@ -52,6 +52,7 @@
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@typescript/typescript6": "6.0.2",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2"
   }
