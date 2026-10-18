@@ -109,7 +109,7 @@ assert.ok(gate, "missing aggregate shell gate");
 
 function runGate(results: Record<string, string | undefined>): number | null {
   // Only the fixed aggregate shell block executes, never a PR dependency or build script.
-  const env: Record<string, string> = { PATH: process.env.PATH ?? "/usr/bin:/bin" };
+  const env: NodeJS.ProcessEnv = { NODE_ENV: "test", PATH: process.env.PATH ?? "/usr/bin:/bin" };
   for (const [key, value] of Object.entries(results)) {
     if (value !== undefined) env[key] = value;
   }
