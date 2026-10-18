@@ -69,7 +69,7 @@ review security advisories, supported versions and exact new artifacts.
 
 | Component | Project revision | Upstream support classification |
 |---|---|---|
-| Node / npm build tooling | Node 24.22.0, bundled npm11.19.1 | [Node24 LTS](https://nodejs.org/en/about/previous-releases); npm has its own stable releases, not a separate guaranteed LTS window |
+| Node / npm build tooling | Node 24.22.0, bundled npm 11.19.1 | [Node24 LTS](https://nodejs.org/en/about/previous-releases); npm has its own stable releases, not a separate guaranteed LTS window |
 | Next.js | 16.4.2 | [16.x Active LTS](https://nextjs.org/support-policy); pinned patch, recheck security updates |
 | PostgreSQL image/tools | 18.6-trixie, immutable linux/amd64 manifest in Dockerfile.postgres | [Supported major18 until2030-11-14](https://www.postgresql.org/support/versioning/); current stable minor18.6, not an upstream product called LTS |
 | Debian runtime | Debian 13 Trixie slim + exact signed packages | [Official Trixie support](https://www.debian.org/releases/trixie/): full support through 2028-08-09, LTS through 2030-06-30; architecture/package coverage varies. Residual CVEs remain activation decisions |
@@ -92,3 +92,23 @@ No portfolio assets, identity, live working tree or infrastructure configuration
 The BO migration runner uses native Node24 TypeScript stripping and pg; any distroless
 candidate must preserve that command, SSR dependencies, uid, health/readiness, PostgreSQL
 TLS roots and writable cache bounds. Do not select a smaller base from nominal size alone.
+
+## Development-only architecture parser (2026-10-18)
+
+`@typescript/typescript6` is pinned directly to 6.0.2. Its official `@typescript/old` dependency
+aliases TypeScript 6; the committed lock fixes that implementation to 6.0.3 and its registry
+integrity. The wrapper exposes the compiler API and `tsc6`; root `typescript` 7.0.2 remains pinned.
+Its indirect alias also publishes a `tsc` binary: npm 11.19.1 installed the `.bin/tsc` shim
+from that alias, so `npm run typecheck` explicitly runs `node node_modules/typescript/bin/tsc`
+after route type generation. That exact executable reports 7.0.2; no shim, postinstall hook or
+global binary is modified. Bare `npx tsc` is not the authorized checker in this tree.
+This is a development guard dependency, not an application or framework downgrade or an LTS claim. Production standalone artifacts must not
+include it.
+
+Microsoft documents [side-by-side TypeScript 6/7](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)
+and the [compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API).
+TypeScript 7.0 has no compatible programmatic API. The extra JS compiler costs development install
+space; its mature AST/symbol support avoids another native binding and handwritten scope
+resolver. Unsupported new grammar fails closed and requires a reviewed parser update rather
+than silently skipping dependencies. This increment changes neither runtime dependencies nor
+auth, database schemas, API contracts or browser versions.
