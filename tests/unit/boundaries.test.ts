@@ -383,3 +383,40 @@ it("blocks private package subpaths through both direct client imports and publi
       );
   }
 });
+
+it("admits only the analytics feature's existing four layers and preserves all boundaries", () => {
+  assert.deepEqual(
+    inspect({
+      "features/analytics/domain/report.ts": "export type Report = { count: number };",
+      "features/analytics/application/ports.ts":
+        'import type { Report } from "../domain/report.ts"; export interface Source { read(): Promise<Report> }',
+      "features/analytics/adapters/http.ts":
+        'import type { Source } from "../application/ports.ts"; export const adapter = (): Source | null => null;',
+      "features/analytics/presentation/report.ts":
+        'import type { Source } from "../application/ports.ts"; export type Props = { source: Source };',
+      "server/analytics.ts":
+        'import { adapter } from "../features/analytics/adapters/http.ts"; export const read = adapter;',
+    }),
+    [],
+  );
+  for (const [file, source, expected] of [
+    [
+      "features/analytics/domain/report.ts",
+      "export const read = () => fetch(url);",
+      /must stay pure/,
+    ],
+    ["features/analytics/collector.ts", "export const value = 1;", /unknown source placement/],
+    [
+      "features/analytics/presentation/report.ts",
+      'import { adapter } from "../adapters/http.ts";',
+      /presentation/,
+    ],
+    [
+      "features/analytics/adapters/http.ts",
+      'import { port } from "../../operations/application/ports.ts";',
+      /may not import feature/,
+    ],
+  ] as const) {
+    assert.match(inspect({ [file]: source }).join("\n"), expected);
+  }
+});

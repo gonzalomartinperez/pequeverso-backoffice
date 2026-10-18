@@ -1,0 +1,27 @@
+{
+  "status": "committed-reviewed-candidate",
+  "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
+  "api_revision": "2069738df33fee162ea037f49637dd0980cd7d52",
+  "api_branch": "feat/product-analytics-fixture",
+  "contract": "Peque private product analytics schema1; literal synthetic true; default OFF local fixture only",
+  "note": "Copied bytes verified with git show from the independently source-reviewed API candidate commit. PR95 integration and CI remain pending; this is not a main or deployed freshness claim. Runtime acceptance remains separately gated.",
+  "files": {
+    "contracts/product-analytics.schema.json": {
+      "local": "contracts/analytics/product-analytics.schema.json",
+      "sha256": "a3da0d55794a815ec585417bd68c987b031ceeadbb9e0d2273352a35cda7cf1b"
+    },
+    "contracts/site-experience-pequeverso-v1.schema.json": {
+      "local": "contracts/analytics/site-experience-pequeverso-v1.schema.json",
+      "sha256": "10264058e6c9b26fd308f51eaa2b9286b352b418e2c625511caf22d0e9c7dcf7"
+    },
+    "contracts/examples/product-analytics.json": {
+      "local": "contracts/analytics/product-analytics.example.json",
+      "sha256": "3662d1a6ae8e5b34903baa6c57a0d0bec8a350f088eaefc607aeab2fec2e0292"
+    },
+    "contracts/product-analytics.source.json": {
+      "local": "contracts/analytics/profile.source.json",
+      "sha256": "2b9d5befa18ee9b6bdb1f6bbb23907966870e8b179c97c67f3888c4378ade148"
+    }
+  },
+  "integration": "pending"
+}

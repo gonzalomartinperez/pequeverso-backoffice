@@ -209,3 +209,7 @@ material are excluded; see [NOTICE.md](NOTICE.md) and the preserved
 [third-party attribution](THIRD_PARTY_NOTICES.md). The runtime carries all three
 notices under `/app/`; the application's access controls and privacy obligations
 are unchanged.
+
+The independently disabled [local fixture analytics report](docs/product-analytics.md) reads
+synthetic site-event aggregates behind the existing IAM guard. It adds no visitor collector
+or production tracking, and keeps the operational dashboard and its contracts separate.

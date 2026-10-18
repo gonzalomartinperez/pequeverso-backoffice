@@ -14,7 +14,11 @@
       "!contracts/ops/ops.schema.json",
       "!contracts/ops/ops.summary.example.json",
       "!contracts/telemetry/ops.telemetry.schema.json",
-      "!contracts/telemetry/ops.telemetry.example.json"
+      "!contracts/telemetry/ops.telemetry.example.json",
+      "!contracts/analytics/product-analytics.schema.json",
+      "!contracts/analytics/site-experience-pequeverso-v1.schema.json",
+      "!contracts/analytics/product-analytics.example.json",
+      "!contracts/analytics/profile.source.json"
     ]
   },
   "formatter": {
