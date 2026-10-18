@@ -16,7 +16,14 @@ const fixtureRoot = path.resolve("/virtual-backoffice");
 function inspect(files: Record<string, string>): string[] {
   return checkBoundaries(
     new Map(
-      Object.entries(files).map(([file, text]) => [path.join(fixtureRoot, "src", file), text]),
+      Object.entries({
+        "server/observability.ts": "export const register = () => {};",
+        "features/auth/application/access.ts": "export const inviteMember = () => {};",
+        "features/auth/application/ports.ts": "export interface Actor {}",
+        "features/auth/adapters/store.ts": "export const store = {};",
+        "features/operations/application/ports.ts": "export interface Port {}",
+        ...files,
+      }).map(([file, text]) => [path.join(fixtureRoot, "src", file), text]),
     ),
     fixtureRoot,
   );
@@ -140,5 +147,200 @@ it("rejects static template and import-options adapter dependencies from present
       inspect({ "features/auth/presentation/probe.ts": statement }).join("\n"),
       /presentation may not import adapters/,
     );
+  }
+});
+
+it("rejects every unclassified/importless root and feature, computed imports and parse errors", () => {
+  for (const [file, source] of [
+    ["stray.ts", "export const x = 1;"],
+    ["unknown/x.ts", "export const x = 1;"],
+    ["features/new/domain/x.ts", "export const x = 1;"],
+    ["features/auth/presentation/probe.ts", "const name = './x'; import(name);"],
+    ["features/auth/presentation/probe.ts", "export const = ;"],
+  ])
+    assert.ok(inspect({ [file as string]: source as string }).length > 0);
+});
+
+it("parses escaped strings, require, import-equals and type-imports without bypassing layers", () => {
+  for (const statement of [
+    String.raw`import {store} from "\u002e\u002e/adapters/store";`,
+    "const store = require('../adapters/store');",
+    "import store = require('../adapters/store');",
+    "type Store = import('../adapters/store').Store;",
+    "export * from '../adapters/store';",
+  ])
+    assert.match(
+      inspect({ "features/auth/presentation/probe.ts": statement }).join("\n"),
+      /may not import adapters/,
+    );
+});
+
+it("allows inline type-only syntax and ignores strings/property names or injected bindings", () => {
+  assert.deepEqual(
+    inspect({
+      "features/auth/presentation/probe.ts":
+        "import {type Actor} from '../application/ports'; export type P=Actor;",
+      "features/auth/domain/document.ts":
+        'export const text="fetch() process.env"; export const named={fetch:1}; export const use=(fetch:()=>number)=>fetch();',
+    }),
+    [],
+  );
+  assert.match(
+    inspect({
+      "features/auth/domain/probe.ts": "export const run=()=>globalThis.fetch('/');",
+    }).join("\n"),
+    /must stay pure/,
+  );
+});
+
+it("rejects runtime and type-only dependency cycles", () => {
+  for (const prefix of ["", "type "])
+    assert.match(
+      inspect({
+        "features/auth/domain/a.ts": `import ${prefix}{B} from './b'; export type A=typeof B;`,
+        "features/auth/domain/b.ts": `import ${prefix}{A} from './a'; export type B=typeof A;`,
+      }).join("\n"),
+      /dependency cycle/,
+    );
+});
+
+it("rejects unresolved and ambiguous local targets while accepting existing public JSON leaves", () => {
+  assert.match(
+    inspect({ "shared/ui/a.ts": "import './missing';" }).join("\n"),
+    /unresolved local target/,
+  );
+  assert.match(
+    inspect({
+      "shared/ui/a.ts": "import './b';",
+      "shared/ui/b.ts": "export {};",
+      "shared/ui/b.tsx": "export {};",
+    }).join("\n"),
+    /ambiguous local target/,
+  );
+  assert.deepEqual(
+    inspect({
+      "shared/ui/public-wire.json": '{"schema_version":"1"}',
+      "shared/ui/validator.ts":
+        'import schema from "./public-wire.json"; export const valid=(value:unknown)=>typeof value==="object" && schema.schema_version==="1";',
+      "app/client.tsx":
+        '"use client"; import {valid} from "@/shared/ui/validator"; export const result=valid({schema_version:"1"});',
+    }),
+    [],
+  );
+});
+
+it("follows client barrels transitively to private server and builtin dependencies", () => {
+  for (const target of ["@/server/config", "node:fs"])
+    assert.match(
+      inspect({
+        "app/client.tsx":
+          '"use client"; import {config} from "@/shared/ui/barrel"; export const x=config;',
+        "shared/ui/barrel.ts": `export {config} from "${target}";`,
+        "server/config.ts": "import 'server-only'; export const config={};",
+      }).join("\n"),
+      /client runtime reaches/,
+    );
+});
+
+it("accepts explicit async Server Action RPC and serializable composition without exposing server modules", () => {
+  assert.deepEqual(
+    inspect({
+      "app/panel/actions.ts":
+        '"use server"; import {config} from "@/server/config"; export async function save(){return {ok:Boolean(config)}}',
+      "server/config.ts": "import 'server-only'; export const config={};",
+      "features/auth/presentation/form.tsx":
+        '"use client"; import {save} from "@/app/panel/actions"; export const run=()=>save();',
+      "app/panel/page.tsx":
+        'import {save} from "./actions"; export default function Page(){return <Form action={save} label="Enviar" data={{ok:true}}/>}',
+    }),
+    [],
+  );
+});
+
+it("rejects fake actions, private re-exports and core-to-action dependencies", () => {
+  for (const action of [
+    '"use server"; export {config as save} from "@/server/config";',
+    '"use server"; export const save={private:true};',
+    "export async function save(){return {};}",
+  ])
+    assert.ok(
+      inspect({
+        "app/panel/actions.ts": action,
+        "server/config.ts": "import 'server-only'; export const config={};",
+        "features/auth/presentation/form.tsx":
+          '"use client"; import {save} from "@/app/panel/actions"; export const run=()=>save();',
+      }).length > 0,
+    );
+  assert.match(
+    inspect({
+      "app/panel/actions.ts": '"use server"; export async function save(){return {};}',
+      "features/auth/domain/probe.ts": 'import {save} from "@/app/panel/actions";',
+    }).join("\n"),
+    /domain may not import app/,
+  );
+});
+
+it("does not confuse public schema leaves with private server resource paths", () => {
+  assert.match(
+    inspect({
+      "app/client.tsx":
+        '"use client"; import config from "@/server/config.json"; export const x=config;',
+      "server/config.json": '{"syntheticPrivateConfig":true}',
+    }).join("\n"),
+    /client runtime reaches private server module/,
+  );
+});
+
+it("rejects ambient clock/randomness in pure layers and private environments in client graphs", () => {
+  for (const expression of ["Date.now()", "new Date()", "performance.now()", "Math.random()"]) {
+    assert.match(
+      inspect({ "features/auth/domain/probe.ts": `export const now=()=>${expression};` }).join(
+        "\n",
+      ),
+      /must stay pure/,
+    );
+  }
+  assert.deepEqual(
+    inspect({
+      "features/auth/domain/probe.ts": "export const time=(Date:{now():number})=>Date.now();",
+    }),
+    [],
+  );
+  assert.match(
+    inspect({
+      "app/client.tsx":
+        '"use client"; import {value} from "@/shared/ui/read"; export const x=value;',
+      "shared/ui/read.ts": "export const value=process.env.PRIVATE_TEST_TOKEN;",
+    }).join("\n"),
+    /client runtime accesses process/,
+  );
+});
+
+it("keeps server-only packages out of pure layers", () => {
+  assert.match(
+    inspect({ "features/auth/domain/probe.ts": "import 'server-only';" }).join("\n"),
+    /may not import package/,
+  );
+});
+
+it("blocks private package subpaths through both direct client imports and public barrels", () => {
+  for (const specifier of ["pg/lib/client.js", "server-only/index.js"]) {
+    for (const files of [
+      {
+        "app/client.tsx": `"use client"; import Client from "${specifier}"; export const x=Client;`,
+      },
+      {
+        "app/client.tsx":
+          '"use client"; import {value} from "@/shared/ui/barrel"; export const x=value;',
+        "shared/ui/barrel.ts": `export {default as value} from "${specifier}";`,
+      },
+      {
+        "features/auth/presentation/probe.ts": `import Client from "${specifier}"; export const x=Client;`,
+      },
+    ])
+      assert.match(
+        inspect(files).join("\n"),
+        /client runtime reaches server package|presentation may not import/,
+      );
   }
 });

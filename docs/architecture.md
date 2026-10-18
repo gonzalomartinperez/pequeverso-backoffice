@@ -83,8 +83,22 @@ Outer framework entry points such as `src/proxy.ts` and `src/instrumentation.ts`
 composition role; they do not make misplaced feature modules valid.
 
 `npm test` runs the checker over real source and negative virtual-module fixtures for these
-rules, alongside positive composition and type-only cases. The checker uses a bounded textual
-scanner rather than a complete TypeScript parser (TypeScript 7 does not expose that API).
-It is a regression guard for declared dependencies, not a sandbox or a proof of semantic purity;
-review indirect IO, computed imports and new syntax explicitly. No runtime authorization or
-framework isolation depends on this scanner.
+rules, alongside positive composition and type-only cases. The checker parses source snapshots with the official development-only TypeScript 6
+compatibility API; the root application compiler stays TypeScript 7. It never imports or executes
+fixture modules. Every current source module is classified explicitly: app/server, shared/ui,
+auth/operations feature layers, and the exact proxy/instrumentation entry points. Unknown and
+importless placement, syntax errors, computed imports, missing/ambiguous local targets and
+undeclared packages fail closed. Imports, re-exports, import-equals, require and import types
+produce typed dependency edges; all edges participate in cycle checks, while only runtime
+edges contribute to transitive client reachability. Existing public JSON/CSS resources remain
+valid leaves; private server resources cannot enter client graphs.
+
+Purity checks inspect identifier references and lexical symbols, distinguishing injected ports
+from ambient IO, clocks/randomness and documentation strings. A narrow Server Action RPC
+boundary accepts named async exports from App Router actions modules with a real top-level
+`use server` directive; mixed value exports/private re-exports are not that boundary. Positive
+fixtures preserve the actual server-page/action-prop/client-form composition and public wire
+validators. Next still validates action compilation and serializable props; this guard does not
+certify arbitrary object serialization, authorization, reflection/eval or third-party side effects.
+No runtime access decision depends on the architecture checker. Keep independent auth,
+least-privilege database, contract, image and browser checks.
