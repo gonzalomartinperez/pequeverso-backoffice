@@ -30,8 +30,13 @@ private operations details or other repositories' internals.
 ## Non-negotiables
 
 - Treat API payloads and anything from the network as untrusted: validate at the adapter boundary.
-- No tracking, analytics, session replay or third-party feedback services.
-- Consume only pinned, committed contracts (`contracts/ops/` and `contracts/telemetry/`); do not
+- No visitor tracking, analytics collection, session replay or third-party feedback services.
+  The owner-authorized analytics report may read Peque API synthetic or production-class
+  aggregates and display them behind live IAM checks with truthful classification. This read-only
+  exception adds no collector, Store consent/Meta/CAPI/checkout change or production activation.
+  Reads default OFF; production capability is not deployment or trusted-edge proof; see [product analytics](docs/product-analytics.md).
+- Consume only pinned, committed contracts (`contracts/ops/`, `contracts/telemetry/` and
+  `contracts/analytics/`); do not
   invent endpoints, fields or auth behavior. Mocks and fixtures must say they are synthetic.
 - Architecture boundaries are enforced by `scripts/check-boundaries.ts` (run in `npm test`).
 - Other repositories (storefront, API, portfolio, vps-ops) are read-only references. Never import

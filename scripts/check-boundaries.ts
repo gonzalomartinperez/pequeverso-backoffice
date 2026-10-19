@@ -72,9 +72,10 @@ function walk(dir: string): string[] {
 }
 function place(src: string, file: string): Place | null {
   const rel = posix(path.relative(src, file));
-  const feature = /^features\/(auth|operations)\/(domain|application|adapters|presentation)\//.exec(
-    rel,
-  );
+  const feature =
+    /^features\/(auth|operations|analytics)\/(domain|application|adapters|presentation)\//.exec(
+      rel,
+    );
   if (feature) return { feature: feature[1] ?? null, layer: feature[2] as Layer };
   if (rel.startsWith("shared/ui/")) return { feature: null, layer: "shared" };
   if (rel.startsWith("server/")) return { feature: null, layer: "server" };

@@ -5,6 +5,7 @@ import { cn } from "@/shared/ui/cn";
 
 const LINKS = [
   { href: "/panel", label: "Estado", owner: false },
+  { href: "/panel/analitica", label: "Actividad del sitio", owner: false },
   { href: "/panel/accesos", label: "Accesos", owner: true },
   { href: "/panel/cuenta", label: "Cuenta", owner: false },
 ] as const;
@@ -20,6 +21,7 @@ export function PanelNav({ owner }: { owner: boolean }) {
             <li key={link.href}>
               <Link
                 href={link.href}
+                prefetch={false}
                 aria-current={current ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 items-center rounded-pill px-3 text-small font-extrabold no-underline",
