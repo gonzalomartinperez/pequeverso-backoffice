@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { type Browser, expect, type Page, test } from "@playwright/test";
+import { type Browser, expect, type Page, type Request, test } from "@playwright/test";
 
 const IDP = "http://127.0.0.1:8238";
 const OPS = "http://127.0.0.1:8237";
@@ -233,6 +233,55 @@ test("keyboard: skip link, navigation and focus are reachable", async ({ page })
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/panel\/accesos$/);
   await expect(nav.getByRole("link", { name: "Accesos" })).toHaveAttribute("aria-current", "page");
+});
+
+test("private navigation waits for explicit activation instead of prefetching @mobile", async ({
+  page,
+}) => {
+  const privatePaths = new Set(["/panel", "/panel/analitica", "/panel/accesos", "/panel/cuenta"]);
+  let privatePrefetches = 0;
+  const observe = (request: Request) => {
+    const url = new URL(request.url());
+    if (url.origin !== "http://localhost:3241" || !privatePaths.has(url.pathname)) return;
+    const headers = request.headers();
+    if (headers["next-router-prefetch"] === "1" || headers.purpose === "prefetch")
+      privatePrefetches++;
+  };
+  // Observe before the OAuth round trip so initial viewport prefetch cannot escape the check.
+  page.on("request", observe);
+  try {
+    await signIn(page, "owner@example.test", "owner");
+    const nav = page.getByRole("navigation", { name: "Backoffice" });
+    await expect(nav).toBeVisible();
+    await expect(nav.getByRole("link")).toHaveCount(4);
+    await page.waitForLoadState("networkidle", { timeout: 7_000 });
+    expect(privatePrefetches).toBe(0);
+    for (const link of await nav.getByRole("link").all()) await link.hover();
+    await page.waitForLoadState("networkidle", { timeout: 7_000 });
+    expect(privatePrefetches).toBe(0);
+
+    const accountResponse = page.waitForResponse((response) => {
+      const request = response.request();
+      const url = new URL(response.url());
+      return (
+        url.origin === "http://localhost:3241" &&
+        url.pathname === "/panel/cuenta" &&
+        (request.isNavigationRequest() || request.headers().rsc === "1") &&
+        request.headers()["next-router-prefetch"] !== "1"
+      );
+    });
+    await nav.getByRole("link", { name: "Cuenta", exact: true }).click();
+    expect((await accountResponse).status()).toBe(200);
+    await expect(page).toHaveURL(/\/panel\/cuenta$/);
+    await expect(nav.getByRole("link", { name: "Cuenta", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(privatePrefetches).toBe(0);
+    expect(await cspViolations(page)).toEqual([]);
+  } finally {
+    page.off("request", observe);
+  }
 });
 
 test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async ({

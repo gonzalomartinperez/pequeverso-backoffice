@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status": "ACCEPTED_LOCAL_FIXTURE_CAPTURES_ROOT_AGENT_VISUAL_PASS",
+  "api_revision": "850e78cf84df78f0ea66e2811e92aeb15a6f5d04",
+  "api_tree": "82d27ac577a9183f19ba23354222922eb55807bb",
+  "bo_revision": "ee06832910882dc37b9916a6248ecde5841c1c85",
+  "bo_tree": "37b73c7c2f06f7913b7cd06cc6cf6baa5e4b5e92",
+  "run": "actual-850-ee068-v22",
+  "finish_utc": "2026-10-19T04:19:04.912914+00:00",
+  "criteria": {
+    "A": true,
+    "B": true,
+    "C": true,
+    "D": true,
+    "E": true,
+    "F": true,
+    "G": true,
+    "H": true,
+    "I": true
+  },
+  "skips": 0,
+  "sdk_calls": 0,
+  "current_owner_process_groups": 0,
+  "current_owner_listeners": 0,
+  "current_owner_resources": 0,
+  "prior_failed_resources": "Historical failed runs/resources are separate preserved custody, not covered by current-owner zero counts.",
+  "public_receipt_sha256": {
+    "FIN.json": "0211e5d9fc57d7ab81ec563795e6b504127e725743f7fef206033a0165ed2f13",
+    "CONTROLLER-RESULT.json": "f3a1d6c3f3d06d17d4a02083d7cfde4307bd9357799706e57323bfc5b1f71eba",
+    "ACK-REQUEST.json": "e535410b644b6425d18b1afd60f94de4b5526d40eb5d7406f983472d9ed64712",
+    "ROOT-DELETE-ACK.json": "114a6ebf791d734e6adfbff65084a5e1cc414a6941ef421b84d068b72fb03c4a",
+    "BACKUP-PROOF.json": "ea8936517517d806f8cc2256b3639940cfdcb3685f9a8f09eb8f2512185acf04",
+    "neo-normal-stop-proof.json": "f66328732cae47db125cb56043d3e92e45bbed71664193cad3b4f661b7f2ad85",
+    "browser-off.json": "920f01f9ee39e6815f0dd33e1b593b002c1629fde02e703ac29d0f40c8907850",
+    "browser-on.json": "41bec42f29111f186b24168d6fdc0d87935cefd73f77b1957b2781905ebd3df2",
+    "PAIR-SOURCE.json": "c26c366d992678944d76de79df88ece818df41b138237d6974f0080268b80945"
+  },
+  "backup_scope": {
+    "file_count": 6,
+    "root_proof_bound_deletion_ACK": true,
+    "strict_006_tables_and_IAM_scope": "Root verified dumps/strict006TOCs/IAM/globals-no-passwords and safeNeo tar before ACK",
+    "neo_clean_exit_before_cold_copy": true,
+    "fresh_restore_exercised": false
+  },
+  "visual_review": {
+    "reviewer": "Root agent",
+    "reported_approx_utc": "2026-10-19T04:19:30Z",
+    "decision": "PASS_BYTE_COPY_APPROVED",
+    "all_three_native_originals_viewed": true,
+    "human_review": false,
+    "physical_device_test": false,
+    "scope": "Readable desktop/off-state/mobile390; natural wrapping and intended own table scroll. Screenshot inspection is not exhaustive browser/layout/device certification."
+  },
+  "accessibility": {
+    "axe_scans": 3,
+    "violations": 0,
+    "full_accessibility_audit": false
+  },
+  "captures": [
+    {
+      "file": "off-desktop.png",
+      "sha256": "0509d7140a1c479e264889a9c68e6e17253443989c4c072de7b9dffc40189e34",
+      "bytes": 67672,
+      "width": 1280,
+      "height": 720,
+      "repo_path": "docs/verification/analytics-native-2026-10-19/off-desktop.png",
+      "desktop_path": "Pequeverso-Backoffice-Preview/off-desktop.png"
+    },
+    {
+      "file": "on-desktop-nine.png",
+      "sha256": "df51ccd8fe6336b66d9a096581408664e01bdfcdfd3aaf27d64a67f6c97cd896",
+      "bytes": 178333,
+      "width": 1440,
+      "height": 1957,
+      "repo_path": "docs/verification/analytics-native-2026-10-19/on-desktop-nine.png",
+      "desktop_path": "Pequeverso-Backoffice-Preview/on-desktop-nine.png"
+    },
+    {
+      "file": "on-mobile-nine.png",
+      "sha256": "47921c221265fab4d41875b4d0c7d3cc516ea18e8561f140b8d25ff3fe78a24a",
+      "bytes": 173340,
+      "width": 390,
+      "height": 2656,
+      "repo_path": "docs/verification/analytics-native-2026-10-19/on-mobile-nine.png",
+      "desktop_path": "Pequeverso-Backoffice-Preview/on-mobile-nine.png"
+    }
+  ],
+  "limits": [
+    "Local isolated syntheticAPI/PG/Neo/IAM/fakeOAuth fixture; no provider/model calls.",
+    "Pair executes actual API850 archive with exact producer pin; it does not execute or relabel historical API121 image.",
+    "Separate BOee image and cached advisory scan are identified in the verification document.",
+    "No VPS deployment/realGoogleGitHubOAuth/productionactivation/trustededge/countryprovenance claim.",
+    "Successful backup and deletion ACK are not a fresh restore drill."
+  ]
+}

@@ -11,9 +11,10 @@ and preserves third-party rights.
 
 The repository was renamed to `pequeverso-backoffice` on 2026-10-17; earlier GitHub URLs
 redirect, while local checkout paths and persistent identifiers remain unchanged. This name
-does not claim a completed business analytics suite. Project-wide analytics, events and sales
-funnels are proposals until their authorized data sources, privacy boundaries and contracts
-exist; this change adds no collection or synthetic business dashboard. Existing assistant
+does not claim a completed business analytics suite. An independently disabled site-activity
+report consumes the API's bounded synthetic or production-class aggregates through a pinned
+contract and existing IAM checks. Received events are not people, orders, revenue or conversion.
+It adds no browser collector or production activation. Existing assistant
 feedback may inform human review, deterministic fixtures/evaluations, a reviewed PR and a
 release. It does not imply automatic model training or additional conversation storage.
 
@@ -42,6 +43,28 @@ backoffice, and the dashboard never enables the storefront.
 
 `Next.js 16 · Active LTS` `Node24 · LTS` `PostgreSQL18.6 · supported to2030`
 `React19` `TypeScript7` `Better Auth` `Tailwind4` `OpenTelemetry` `Prometheus/Grafana handoff`
+
+## Local site-activity gallery — 2026-10-19
+
+These native captures use the local production build, an isolated synthetic API/PostgreSQL/Neo4j
+fixture and a fake OAuth provider. Received events are not people, orders, revenue or conversions.
+The application reads the API from its server; browser views contain no private API bearer.
+The disabled view makes no private report read. The enabled views select nine synthetic events:
+two page views, three section views and four public clicks, with three visible clicks and one
+withheld by the privacy threshold.
+
+| Local fixture view | Native capture |
+| --- | --- |
+| Report disabled · desktop | ![Disabled local site-activity report](docs/verification/analytics-native-2026-10-19/off-desktop.png) |
+| Nine synthetic events · desktop | ![Desktop report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-desktop-nine.png) |
+| Nine synthetic events · mobile | ![Mobile report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-mobile-nine.png) |
+
+[Exact source, capture manifest and verification limits](docs/verification/native-runtime2026-10-19.md).
+This is a local fixture, not a VPS deployment, live production traffic, real Google/GitHub OAuth,
+provider availability or model-quality evidence. Production configuration capability does not
+activate collection or establish a trusted deployed edge. The historical availability gallery
+below retains its original 2026-10-13 fixtures and provenance; these images do not recertify it.
+
 
 ## Rendered dashboard gallery
 
@@ -209,3 +232,9 @@ material are excluded; see [NOTICE.md](NOTICE.md) and the preserved
 [third-party attribution](THIRD_PARTY_NOTICES.md). The runtime carries all three
 notices under `/app/`; the application's access controls and privacy obligations
 are unchanged.
+
+The independently disabled [site-activity report](docs/product-analytics.md) reads bounded
+site-event aggregates behind the existing IAM guard, distinguishing synthetic fixtures from
+production-class data. Country defaults to unknown; enabling configuration does not prove a
+trusted deployed edge. It adds no visitor collector or production activation and keeps the
+operational dashboard and its contracts separate.

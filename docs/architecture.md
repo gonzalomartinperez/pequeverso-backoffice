@@ -147,3 +147,13 @@ production engine or replace the API-owned production artifact. The latest recor
 compatibility checks cover 19 IAM integrations on PostgreSQL 18.6 Alpine and the exact
 `4c3257d8fff12e0be6e768bd53264e647e1fa24d` application image smoke; these are prior runtime
 evidence, not tests rerun by the skill migration.
+
+## Private site analytics
+
+`src/features/analytics/{domain,application,adapters,presentation}` owns the separate
+site report, with separate synthetic and production-class aggregate namespaces owned by the API. `src/server/analytics.ts` checks live `read_operations` membership
+before any selection/read, then composes its private bounded adapter. `/panel/analitica`
+inherits the panel's headers. Its independent server flag defaults OFF; enabling a read in
+production does not activate collection or establish deployment or trusted-edge provenance. Domain/application purity and cross-feature restrictions apply;
+analytics does not import operations adapters or join IAM data. See
+[product analytics](product-analytics.md) for wire provenance and pending paired acceptance.

@@ -30,6 +30,7 @@ export type BackofficeConfig = {
   testIssuer: string | null;
   ops: { url: string; token: string } | null;
   telemetryEnabled: boolean;
+  analyticsReadEnabled: boolean;
   observability: ObservabilityConfig;
   sessionHours: number;
   /** Better Auth's per-IP limiter; only automated tests on one address may turn it off. */
@@ -164,6 +165,10 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
   }
   if (opsToken && opsToken.length < 32)
     throw new Error("OPS_READ_TOKEN must have at least 32 characters");
+  const analyticsReadEnabled = observabilitySwitch(
+    env.PRODUCT_ANALYTICS_READ_ENABLED,
+    "PRODUCT_ANALYTICS_READ_ENABLED",
+  );
   return {
     environment,
     origin,
@@ -174,6 +179,7 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
     github,
     testIssuer,
     ops: opsUrl ? { url: opsUrl.replace(/\/$/, ""), token: opsToken } : null,
+    analyticsReadEnabled,
     telemetryEnabled: observabilitySwitch(env.OPS_TELEMETRY_ENABLED, "OPS_TELEMETRY_ENABLED"),
     observability: parseObservability({ ...env, BACKOFFICE_ENVIRONMENT: environment }),
     sessionHours: 8,
