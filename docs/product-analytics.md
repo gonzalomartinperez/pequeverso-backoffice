@@ -57,8 +57,10 @@ File SHA256 values are checked by focused tests. These five generated copies ret
 formatting through exact Biome path exclusions, matching the existing ops/telemetry convention;
 the local provenance stays checked. This producer is a candidate, with no main or deployed
 freshness claim. Its status is `committed-reviewed-candidate`; the canonical source pin is API
-`121d3dc5a04d6c12908eb96b6f891f9ff62e2cb0`, published on its task branch and independently
-reviewed. Existing ops and telemetry pins remain separate. Candidate provenance is not
+`850e78cf84df78f0ea66e2811e92aeb15a6f5d04`, integrated into API `develop` by squash
+[PR95](https://github.com/gonzalomartinperez/pequeverso-assistant-api/pull/95) and independently
+reviewed. Its five contract blobs and canonical country allowlist are byte-identical to the
+previously reviewed `121d3dc` cohort. Existing ops and telemetry pins remain separate. Candidate provenance is not
 production proof. Five exact
 artifacts include14 socket-country and8 UTC-calendar semantic fixtures. The local ISO label
 module is derived from that same commit’s canonical API allowlist and checked against its schema;
