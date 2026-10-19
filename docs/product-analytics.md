@@ -55,19 +55,23 @@ The schema, example and source profile under `contracts/analytics` were copied w
 from the actual source-reviewed API candidate recorded in `contracts/analytics/source.json`.
 File SHA256 values are checked by focused tests. These five generated copies retain producer
 formatting through exact Biome path exclusions, matching the existing ops/telemetry convention;
-the local provenance stays checked. This producer is a candidate, with no main or deployed
-freshness claim. Its status is `committed-reviewed-candidate`; the canonical source pin is API
-`850e78cf84df78f0ea66e2811e92aeb15a6f5d04`, integrated into API `develop` by squash
-[PR95](https://github.com/gonzalomartinperez/pequeverso-assistant-api/pull/95) and independently
-reviewed. Its five contract blobs and canonical country allowlist are byte-identical to the
-previously reviewed `121d3dc` cohort. Existing ops and telemetry pins remain separate. Candidate provenance is not
+the local provenance stays checked. Its status is `committed-reviewed-local-fixture`; the canonical
+source pin is API `850e78cf84df78f0ea66e2811e92aeb15a6f5d04`, integrated by squash
+[PR95](https://github.com/gonzalomartinperez/pequeverso-assistant-api/pull/95) and released in
+[PR97](https://github.com/gonzalomartinperez/pequeverso-assistant-api/pull/97). Its five contract
+blobs and canonical country allowlist are byte-identical to the reviewed `121d3dc` cohort.
+Existing ops and telemetry pins remain separate. Committed provenance is not
 production proof. Five exact
 artifacts include14 socket-country and8 UTC-calendar semantic fixtures. The local ISO label
 module is derived from that same commit’s canonical API allowlist and checked against its schema;
 it is not a separately maintained country policy. Five real isolated PostgreSQL integration
 tests passed on the byte-identical analytics implementation at `ddf5fafe` on 2026-10-19;
-the canonical pin records their scope. Country ingress/edge trust and final paired browser
-verification remain separate gates; no working-tree export is accepted as committed provenance.
+the canonical pin records their scope. The exact API850/BOee068 local paired fixture completed
+all nine criteria on 2026-10-19: native owner/viewer authorization, OFF no-read behavior,
+calendar/privacy/counts, three axe scans, strict response-body capture, clean Neo shutdown and
+proof-bound backup custody. See [native evidence](verification/native-runtime2026-10-19.md).
+This is not a fresh006/Neo restore, live OAuth, deployed edge or production acceptance.
+No working-tree export is accepted as committed provenance.
 `generated_at` is a logical receipt watermark, not database read completion or complete
 concurrent-event coverage. The adapter retains the producer calendar and observation invariants.
 

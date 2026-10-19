@@ -44,6 +44,28 @@ backoffice, and the dashboard never enables the storefront.
 `Next.js 16 · Active LTS` `Node24 · LTS` `PostgreSQL18.6 · supported to2030`
 `React19` `TypeScript7` `Better Auth` `Tailwind4` `OpenTelemetry` `Prometheus/Grafana handoff`
 
+## Local site-activity gallery — 2026-10-19
+
+These native captures use the local production build, an isolated synthetic API/PostgreSQL/Neo4j
+fixture and a fake OAuth provider. Received events are not people, orders, revenue or conversions.
+The application reads the API from its server; browser views contain no private API bearer.
+The disabled view makes no private report read. The enabled views select nine synthetic events:
+two page views, three section views and four public clicks, with three visible clicks and one
+withheld by the privacy threshold.
+
+| Local fixture view | Native capture |
+| --- | --- |
+| Report disabled · desktop | ![Disabled local site-activity report](docs/verification/analytics-native-2026-10-19/off-desktop.png) |
+| Nine synthetic events · desktop | ![Desktop report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-desktop-nine.png) |
+| Nine synthetic events · mobile | ![Mobile report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-mobile-nine.png) |
+
+[Exact source, capture manifest and verification limits](docs/verification/native-runtime2026-10-19.md).
+This is a local fixture, not a VPS deployment, live production traffic, real Google/GitHub OAuth,
+provider availability or model-quality evidence. Production configuration capability does not
+activate collection or establish a trusted deployed edge. The historical availability gallery
+below retains its original 2026-10-13 fixtures and provenance; these images do not recertify it.
+
+
 ## Rendered dashboard gallery
 
 These are native-resolution screenshots of the actual local production build, captured at

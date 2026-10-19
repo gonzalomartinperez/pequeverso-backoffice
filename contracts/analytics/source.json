@@ -1,10 +1,10 @@
 {
-  "status": "committed-reviewed-candidate",
+  "status": "committed-reviewed-local-fixture",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
   "api_revision": "850e78cf84df78f0ea66e2811e92aeb15a6f5d04",
   "api_branch": "develop",
   "contract": "Peque private analytics schema1 revision1.1; strict boolean classification and suppressed country aggregates; default OFF",
-  "note": "Five byte-exact committed producer copies, independently source-reviewed and integrated into API develop by squash PR95. Isolated PostgreSQL006 five integration tests passed on ddf5, with the same analytics source bytes. Full paired browser, trusted edge and production deployment remain unverified. Country capability describes current configuration, not authenticated upstream provenance.",
+  "note": "Five byte-exact committed producer copies, independently reviewed and integrated via API PR95/develop and release97/main. Isolated PostgreSQL006 five integration tests passed on ddf5 with the same analytics source bytes. Exact API850/BOee068 local paired fixture V22 passed A-I on 2026-10-19, including authenticated owner/viewer, strict response-body privacy and proof-bound backup custody; no fresh006/Neo restore or deployed-edge proof. Country capability describes configuration, not authenticated upstream provenance.",
   "files": {
     "contracts/product-analytics.schema.json": {
       "local": "contracts/analytics/product-analytics.schema.json",
@@ -34,5 +34,5 @@
     "count": 249,
     "labels_sha256": "bad3b0ab6d1073f237d176df4d3ec9297269c1c13c73f714c0736a87912b1523"
   },
-  "integration": "develop"
+  "integration": "main"
 }
