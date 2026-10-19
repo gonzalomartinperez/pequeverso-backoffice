@@ -11,9 +11,10 @@ and preserves third-party rights.
 
 The repository was renamed to `pequeverso-backoffice` on 2026-10-17; earlier GitHub URLs
 redirect, while local checkout paths and persistent identifiers remain unchanged. This name
-does not claim a completed business analytics suite. Project-wide analytics, events and sales
-funnels are proposals until their authorized data sources, privacy boundaries and contracts
-exist; this change adds no collection or synthetic business dashboard. Existing assistant
+does not claim a completed business analytics suite. An independently disabled site-activity
+report consumes the API's bounded synthetic or production-class aggregates through a pinned
+contract and existing IAM checks. Received events are not people, orders, revenue or conversion.
+It adds no browser collector or production activation. Existing assistant
 feedback may inform human review, deterministic fixtures/evaluations, a reviewed PR and a
 release. It does not imply automatic model training or additional conversation storage.
 
@@ -210,6 +211,8 @@ material are excluded; see [NOTICE.md](NOTICE.md) and the preserved
 notices under `/app/`; the application's access controls and privacy obligations
 are unchanged.
 
-The independently disabled [local fixture analytics report](docs/product-analytics.md) reads
-synthetic site-event aggregates behind the existing IAM guard. It adds no visitor collector
-or production tracking, and keeps the operational dashboard and its contracts separate.
+The independently disabled [site-activity report](docs/product-analytics.md) reads bounded
+site-event aggregates behind the existing IAM guard, distinguishing synthetic fixtures from
+production-class data. Country defaults to unknown; enabling configuration does not prove a
+trusted deployed edge. It adds no visitor collector or production activation and keeps the
+operational dashboard and its contracts separate.

@@ -56,16 +56,16 @@ from the actual source-reviewed API candidate recorded in `contracts/analytics/s
 File SHA256 values are checked by focused tests. These five generated copies retain producer
 formatting through exact Biome path exclusions, matching the existing ops/telemetry convention;
 the local provenance stays checked. This producer is a candidate, with no main or deployed
-freshness claim. Its status is `committed-reviewed-candidate`, with integration pending.
-Before a ready PR, Root must accept the producer integration and update this revision if it
-changes. Existing ops and telemetry pins remain separate. Candidate provenance is not runtime
-or production proof. The revision1.1 producer is local committed candidate
-`a005e992a54f87c7ec8e6f188666e98be0c05912`, independently reviewed at source. Five exact
+freshness claim. Its status is `committed-reviewed-candidate`; the canonical source pin is API
+`121d3dc5a04d6c12908eb96b6f891f9ff62e2cb0`, published on its task branch and independently
+reviewed. Existing ops and telemetry pins remain separate. Candidate provenance is not
+production proof. Five exact
 artifacts include14 socket-country and8 UTC-calendar semantic fixtures. The local ISO label
 module is derived from that same commit’s canonical API allowlist and checked against its schema;
-it is not a separately maintained country policy. The candidate is not a pushed/main or deployed
-freshness claim. Real SQL006, country ingress/edge trust and paired runtime verification remain
-pending; no working-tree export is accepted as committed provenance.
+it is not a separately maintained country policy. Five real isolated PostgreSQL integration
+tests passed on the byte-identical analytics implementation at `ddf5fafe` on 2026-10-19;
+the canonical pin records their scope. Country ingress/edge trust and final paired browser
+verification remain separate gates; no working-tree export is accepted as committed provenance.
 `generated_at` is a logical receipt watermark, not database read completion or complete
 concurrent-event coverage. The adapter retains the producer calendar and observation invariants.
 
