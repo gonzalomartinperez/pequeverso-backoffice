@@ -1,10 +1,10 @@
 {
   "status": "committed-reviewed-candidate",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "a005e992a54f87c7ec8e6f188666e98be0c05912",
-  "api_branch": "feat/production-analytics",
+  "api_revision": "121d3dc5a04d6c12908eb96b6f891f9ff62e2cb0",
+  "api_branch": "fix/intent-over-page-context",
   "contract": "Peque private analytics schema1 revision1.1; strict boolean classification and suppressed country aggregates; default OFF",
-  "note": "Exact git-show copies from local committed independently source-reviewed producer; not pushed/main/deployed proof. SQL006 persistence, edge trust and paired production-capable verification remain pending. Country configuration describes current API settings, not verified event provenance.",
+  "note": "Five byte-exact committed producer copies, independently source-reviewed. Isolated PostgreSQL006 five integration tests passed on ddf5, with the same analytics source bytes. Full paired browser, trusted edge and production deployment remain unverified. Country capability describes current configuration, not authenticated upstream provenance.",
   "files": {
     "contracts/product-analytics.schema.json": {
       "local": "contracts/analytics/product-analytics.schema.json",
