@@ -46,6 +46,13 @@ describe("bounded private analytics read", () => {
     );
     assert.equal(calls, 1);
   });
+  it("accepts production-class aggregates through the same bounded private server read", async () => {
+    const reading = await analyticsHttp(settings, true, async () =>
+      Response.json({ ...report, synthetic: false, country_collection: "trusted_proxy_header" }),
+    ).read(selection);
+    assert.equal(reading.status, "available");
+    if (reading.status === "available") assert.equal(reading.report.synthetic, false);
+  });
   it("distinguishes disabled, rejected, malformed, non-UTF8 and oversized bodies", async () => {
     const cases: [() => Response, string][] = [
       [() => new Response(null, { status: 404 }), "disabled"],
@@ -55,7 +62,7 @@ describe("bounded private analytics read", () => {
         () => new Response("{}", { headers: { "content-type": "application/json" } }),
         "unavailable",
       ],
-      [() => Response.json({ ...report, synthetic: false }), "unavailable"],
+      [() => Response.json({ ...report, synthetic: "false" }), "unavailable"],
       [
         () =>
           new Response(new Uint8Array([255]), { headers: { "content-type": "application/json" } }),

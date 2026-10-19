@@ -31,10 +31,10 @@ private operations details or other repositories' internals.
 
 - Treat API payloads and anything from the network as untrusted: validate at the adapter boundary.
 - No visitor tracking, analytics collection, session replay or third-party feedback services.
-  The owner-authorized local fixture analytics report may read Peque API aggregates and display
-  them behind live IAM checks. This exception adds no collector, real visitor collection, Store
-  consent/Meta/CAPI/checkout change or production activation. Reads default OFF and require
-  strictly synthetic data; see [product analytics](docs/product-analytics.md).
+  The owner-authorized analytics report may read Peque API synthetic or production-class
+  aggregates and display them behind live IAM checks with truthful classification. This read-only
+  exception adds no collector, Store consent/Meta/CAPI/checkout change or production activation.
+  Reads default OFF; production capability is not deployment or trusted-edge proof; see [product analytics](docs/product-analytics.md).
 - Consume only pinned, committed contracts (`contracts/ops/`, `contracts/telemetry/` and
   `contracts/analytics/`); do not
   invent endpoints, fields or auth behavior. Mocks and fixtures must say they are synthetic.

@@ -5,7 +5,7 @@ import { cn } from "@/shared/ui/cn";
 
 const LINKS = [
   { href: "/panel", label: "Estado", owner: false },
-  { href: "/panel/analitica", label: "Analítica de prueba", owner: false },
+  { href: "/panel/analitica", label: "Actividad del sitio", owner: false },
   { href: "/panel/accesos", label: "Accesos", owner: true },
   { href: "/panel/cuenta", label: "Cuenta", owner: false },
 ] as const;

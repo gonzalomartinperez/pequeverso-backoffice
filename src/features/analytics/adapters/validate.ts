@@ -1,3 +1,4 @@
+import { isCountryCode } from "../domain/countries.ts";
 import {
   type Counts,
   profileSource,
@@ -81,10 +82,11 @@ export function parseAnalyticsReport(value: unknown, expected: Selection): Repor
       root.project === "pequeverso" &&
       root.layout_revision === "pequeverso-v1" &&
       root.profile_source_revision === profileSource &&
-      root.synthetic === true &&
+      typeof root.synthetic === "boolean" &&
       root.coverage === "received_events_only" &&
       root.timezone === "UTC" &&
-      root.country_collection === "disabled" &&
+      (root.country_collection === "disabled" ||
+        root.country_collection === "trusted_proxy_header") &&
       root.retention_days === 93 &&
       root.min_bucket === 3,
   );
@@ -126,11 +128,14 @@ export function parseAnalyticsReport(value: unknown, expected: Selection): Repor
   });
   for (const key of ["page_views", "section_views", "public_clicks"] as const)
     need(daily.reduce((total, row) => total + row[key], 0) === totals[key]);
-  const countries = rows(root.countries, 1).map((value): Report["countries"][number] => {
+  let previousCountry = "";
+  const countries = rows(root.countries, 250).map((value): Report["countries"][number] => {
     const row = object(value, ["code", "count"]);
-    need(row.code === "unknown" || row.code === "withheld");
-    const count = integer(row.count, 1);
-    need(row.code === (count < 3 ? "withheld" : "unknown"));
+    need(isCountryCode(row.code) || row.code === "unknown" || row.code === "withheld");
+    // ISO codes sort before unknown, then withheld. Strict order also rejects duplicates.
+    need(row.code > previousCountry);
+    previousCountry = row.code;
+    const count = integer(row.count, row.code === "withheld" ? 1 : 3);
     return { code: row.code, count };
   });
   need(countries.reduce((total, row) => total + row.count, 0) === sum(totals));
@@ -170,10 +175,10 @@ export function parseAnalyticsReport(value: unknown, expected: Selection): Repor
     project: "pequeverso",
     layout_revision: "pequeverso-v1",
     profile_source_revision: profileSource,
-    synthetic: true,
+    synthetic: root.synthetic,
     coverage: "received_events_only",
     timezone: "UTC",
-    country_collection: "disabled",
+    country_collection: root.country_collection,
     retention_days: 93,
     min_bucket: 3,
     generated_at: generated,

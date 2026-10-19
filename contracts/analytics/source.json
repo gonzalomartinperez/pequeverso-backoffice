@@ -1,14 +1,14 @@
 {
   "status": "committed-reviewed-candidate",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "0a76456b96b0640363786a4dcea885cdeebc2141",
-  "api_branch": "fix/intent-over-page-context",
-  "contract": "Peque private product analytics schema1; literal synthetic true; default OFF local fixture only",
-  "note": "Copied bytes verified with git show from the exact Root-accepted, independently reviewed API candidate. Concurrent-report watermark, explicit Neo4j retry/telemetry policy, native pointer fixture and lossless evidence encoding remain included. Fixture startup now requires successful effective settings readiness within its existing admission budget. These four analytics wire artifacts remain byte-identical. PR95 integration and current-head CI remain pending; not a main or deployed freshness claim. Full paired runtime acceptance remains separately gated.",
+  "api_revision": "a005e992a54f87c7ec8e6f188666e98be0c05912",
+  "api_branch": "feat/production-analytics",
+  "contract": "Peque private analytics schema1 revision1.1; strict boolean classification and suppressed country aggregates; default OFF",
+  "note": "Exact git-show copies from local committed independently source-reviewed producer; not pushed/main/deployed proof. SQL006 persistence, edge trust and paired production-capable verification remain pending. Country configuration describes current API settings, not verified event provenance.",
   "files": {
     "contracts/product-analytics.schema.json": {
       "local": "contracts/analytics/product-analytics.schema.json",
-      "sha256": "a3da0d55794a815ec585417bd68c987b031ceeadbb9e0d2273352a35cda7cf1b"
+      "sha256": "c0de21b74a1c2c7bcc3015874dc702375f0b9fcca9f66d0007e7ff0912da2713"
     },
     "contracts/site-experience-pequeverso-v1.schema.json": {
       "local": "contracts/analytics/site-experience-pequeverso-v1.schema.json",
@@ -20,8 +20,19 @@
     },
     "contracts/product-analytics.source.json": {
       "local": "contracts/analytics/profile.source.json",
-      "sha256": "2b9d5befa18ee9b6bdb1f6bbb23907966870e8b179c97c67f3888c4378ade148"
+      "sha256": "ae6df6e8b546984390547acbd561f1364f46524f407f15dcdab1638550048747"
+    },
+    "contracts/analytics-semantics.examples.json": {
+      "local": "contracts/analytics/analytics-semantics.examples.json",
+      "sha256": "34052250e924003f7b4f060f271d2fbcaa5be847a8de78060cf9925f5b845b92"
     }
+  },
+  "derived_country_codes": {
+    "source_path": "app/domain/analytics_country.py",
+    "source_sha256": "cf5c0a066e0f02de12a9d576abc381fe7bb7a369557344201aaac0aeaab7c8d9",
+    "local": "src/features/analytics/domain/countries.ts",
+    "count": 249,
+    "labels_sha256": "bad3b0ab6d1073f237d176df4d3ec9297269c1c13c73f714c0736a87912b1523"
   },
   "integration": "pending"
 }

@@ -1,13 +1,14 @@
-# Local fixture site analytics
+# Private site analytics
 
-The owner-authorized local fixture capability reads a separate Peque API report at
+The owner-authorized read-only capability reads a separate Peque API report at
 `GET /internal/v1/ops/product-analytics`. It preserves the existing operational summary1.2
 and telemetry1.0 dashboard. It adds no collector or visitor tracking to this application
 or the storefront. Advertising, Meta/CAPI, consent/banner and checkout behavior stay outside
-this feature. Production collection and activation need separate authorization.
+this feature. Production capability does not authorize deployment or activate collection. Consent is owned by
+the separate storefront collector and remains independent of advertising consent.
 
-`PRODUCT_ANALYTICS_READ_ENABLED=false` is the server-only default. Turning it on is refused
-in the production environment. The fixture uses the existing validated private `OPS_API_URL`
+`PRODUCT_ANALYTICS_READ_ENABLED=false` is the server-only default in every environment. Explicit
+opt-in permits a production read without enabling ingestion. The adapter uses the existing validated private `OPS_API_URL`
 and server-only `OPS_READ_TOKEN`; no token or private origin reaches the browser. Every read
 awaits `requireActor("read_operations")` first, including the loader itself because a layout
 may render concurrently with its page. Existing owner/viewer access remains unchanged.
@@ -16,7 +17,10 @@ The `/panel/analitica` page inherits the panel's private/no-store/noindex header
 Its adapter has a four-second whole-response deadline, a 256 KiB actual-byte cap, strict UTF-8,
 no redirects, cache, cookies, browser-header forwarding or retries. HTTP404 is disabled; other
 failures or invalid payloads are unavailable, never a fabricated zero. Disabled reads do no IO.
-Only a closed schema1 Peque report with `synthetic: true` is accepted. The generated example's
+Only a closed schema1 Peque report with boolean `synthetic` is accepted. The UI labels synthetic
+data as a local test and `synthetic: false` as API-classified production data; this classification
+is not deployment evidence, event provenance or proof of any edge configuration. The API stores
+these classes separately, so changing its configuration does not relabel old fixture aggregates. The generated example's
 `fixture/scope/report` envelope is test metadata; HTTP returns the report at the top level.
 
 ## Measures and filters
@@ -32,9 +36,15 @@ These are not people, unique visits, sales or attribution. First/last receipt ti
 observed events, not enablement or uptime. An empty valid report means no received events for
 the selection and does not establish that the site had no traffic.
 
-Country collection is disabled. The country table counts all three event types together:
-zero yields no row;1–2 events yield `withheld`;3 or more yield `unknown`. It never estimates
-nationality or location. An exact route and section make the8×8 pointer grid available; cells
+The country table counts all three event types together. The closed producer country list is
+ISO249 alpha-2 plus `unknown` and `withheld`. Visible country/unknown buckets need at least3
+events. Each smaller country bucket is merged into one `withheld` row, whose combined count
+may be3 or more. Rows are unique, sorted ISO codes then unknown then withheld, at most250,
+and reconcile with all received events; an empty valid report has no country rows.
+`country_collection` describes the current API configuration (`disabled` or
+`trusted_proxy_header`), not a verified edge or the provenance of historical events. Known
+historical countries remain valid with collection currently disabled. No nationality or personal
+location is inferred. An exact route and section make the8×8 pointer grid available; cells
 below3 are withheld. Visible, withheld and unselected counts reconcile with received clicks.
 An absent cell is not invented zero. Captioned server-rendered tables accompany the visual grid;
 Peque semantic tokens, native controls and visible keyboard focus preserve the owned identity.
@@ -43,16 +53,19 @@ Peque semantic tokens, native controls and visible keyboard focus preserve the o
 
 The schema, example and source profile under `contracts/analytics` were copied with `git show`
 from the actual source-reviewed API candidate recorded in `contracts/analytics/source.json`.
-File SHA256 values are checked by focused tests. These four generated copies retain producer
+File SHA256 values are checked by focused tests. These five generated copies retain producer
 formatting through exact Biome path exclusions, matching the existing ops/telemetry convention;
 the local provenance stays checked. This producer is a candidate, with no main or deployed
 freshness claim. Its status is `committed-reviewed-candidate`, with integration pending.
 Before a ready PR, Root must accept the producer integration and update this revision if it
 changes. Existing ops and telemetry pins remain separate. Candidate provenance is not runtime
-or production proof. The current producer pin includes the concurrent-receipt fix and explicit
-Neo4j retry/telemetry policy, corrected native pointer fixture and lossless catalog-evidence
-encoding, plus bounded cold-start settings readiness in fixture tooling; identical analytics
-wire bytes are checked against that exact commit.
+or production proof. The revision1.1 producer is local committed candidate
+`a005e992a54f87c7ec8e6f188666e98be0c05912`, independently reviewed at source. Five exact
+artifacts include14 socket-country and8 UTC-calendar semantic fixtures. The local ISO label
+module is derived from that same commit’s canonical API allowlist and checked against its schema;
+it is not a separately maintained country policy. The candidate is not a pushed/main or deployed
+freshness claim. Real SQL006, country ingress/edge trust and paired runtime verification remain
+pending; no working-tree export is accepted as committed provenance.
 `generated_at` is a logical receipt watermark, not database read completion or complete
 concurrent-event coverage. The adapter retains the producer calendar and observation invariants.
 
@@ -61,7 +74,7 @@ The architecture checker explicitly admits the analytics feature's four existing
 retaining purity, same-feature application types and all cross-feature/client restrictions.
 Source/light checks are not browser, IAM, PostgreSQL, restore, paired harness or production proof.
 
-Closure requires the finite fixture path: explicit saved opt-in/withdrawal harness → real API →
+Local acceptance uses the finite fixture path: explicit saved opt-in/withdrawal harness → real API →
 isolated synthetic PostgreSQL → authenticated BO, exact counts and source hashes, runtime grants,
 calendar/privacy negative cases, accessible tables and required CI. Database/browser/container
 execution needs a fresh authorized resource lease. No provider/model call is part of this work.

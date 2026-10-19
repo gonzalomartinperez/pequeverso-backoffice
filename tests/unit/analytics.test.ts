@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { calendarWindow } from "../../src/features/analytics/adapters/calendar.ts";
 import { parseAnalyticsReport } from "../../src/features/analytics/adapters/validate.ts";
+import { countryCodes } from "../../src/features/analytics/domain/countries.ts";
 import {
   defaultSelection,
   profileSource,
@@ -19,12 +20,12 @@ const example = JSON.parse(
   ),
 );
 const selection: Selection = example.report.selection;
-describe("fixture analytics contract", () => {
-  it("verifies all four committed producer artifact bytes and the owned profile", () => {
+describe("private analytics contract", () => {
+  it("verifies all five committed producer artifact bytes and the owned profile", () => {
     const source = JSON.parse(readFileSync("contracts/analytics/source.json", "utf8"));
     assert.match(source.api_revision, /^[a-f0-9]{40}$/);
     assert.equal(source.api_repository, "gonzalomartinperez/pequeverso-assistant-api");
-    assert.equal(Object.keys(source.files).length, 4);
+    assert.equal(Object.keys(source.files).length, 5);
     for (const file of Object.values(source.files) as { local: string; sha256: string }[]) {
       assert.ok(file.local.startsWith("contracts/analytics/"));
       assert.equal(
@@ -39,8 +40,18 @@ describe("fixture analytics contract", () => {
     const schema = JSON.parse(
       readFileSync("contracts/analytics/product-analytics.schema.json", "utf8"),
     );
-    assert.equal(schema.properties.synthetic.const, true);
+    assert.equal(schema.properties.synthetic.type, "boolean");
     assert.equal(schema.additionalProperties, false);
+    assert.equal(countryCodes.length, 249);
+    assert.deepEqual(schema.$defs.Country.properties.code.enum, [
+      ...countryCodes,
+      "unknown",
+      "withheld",
+    ]);
+    assert.equal(
+      createHash("sha256").update(JSON.stringify(countryCodes)).digest("hex"),
+      source.derived_country_codes.labels_sha256,
+    );
   });
   it("accepts the committed Peque report and keeps country events distinct from page views", () => {
     const report = parseAnalyticsReport(example.report, selection);
@@ -50,13 +61,13 @@ describe("fixture analytics contract", () => {
     assert.equal(report.grid.visible_clicks + report.grid.withheld_clicks, 4);
     assert.throws(() => parseAnalyticsReport(example, selection));
   });
-  it("rejects unknown fields, production data, wrong identities and inconsistent aggregates", () => {
+  it("rejects unknown fields, invalid classifications, wrong identities and inconsistent aggregates", () => {
     const mutations: ((r: typeof example.report) => void)[] = [
       (r) => {
         r.unrecognized = 1;
       },
       (r) => {
-        r.synthetic = false;
+        r.synthetic = "false";
       },
       (r) => {
         r.project = "portfolio";
@@ -89,10 +100,7 @@ describe("fixture analytics contract", () => {
         r.countries[0].count = 2;
       },
       (r) => {
-        r.countries[0].code = "AR";
-      },
-      (r) => {
-        r.countries[0].code = "withheld";
+        r.countries[0].code = "ZZ";
       },
       (r) => {
         r.grid.cells[0].count = 2;
@@ -130,6 +138,90 @@ describe("fixture analytics contract", () => {
       mutate(report);
       assert.throws(() => parseAnalyticsReport(report, selection));
     }
+  });
+  it("shares the producer UTC calendar fixtures without importing any server/header trust into BO", () => {
+    const shared = JSON.parse(
+      readFileSync("contracts/analytics/analytics-semantics.examples.json", "utf8"),
+    );
+    assert.equal(shared.fixture, true);
+    assert.equal(shared.country_cases.length, 14);
+    assert.equal(shared.periods.length, 8);
+    for (const row of shared.periods) {
+      const window = calendarWindow(row.instant, {
+        ...defaultSelection,
+        period: row.period,
+        offset: row.offset,
+      });
+      assert.equal(window.start.slice(0, 10), row.start);
+      assert.equal(window.end.slice(0, 10), row.end);
+      assert.equal(window.partial, row.partial);
+    }
+  });
+  it("accepts both dataset classes without treating proxy configuration as provenance", () => {
+    for (const synthetic of [true, false])
+      for (const country_collection of ["disabled", "trusted_proxy_header"]) {
+        const report = { ...structuredClone(example.report), synthetic, country_collection };
+        const parsed = parseAnalyticsReport(report, selection);
+        assert.equal(parsed.synthetic, synthetic);
+        assert.equal(parsed.country_collection, country_collection);
+      }
+  });
+  it("accepts historical country buckets with collection OFF and merged small groups", () => {
+    const report = structuredClone(example.report);
+    report.countries = [
+      { code: "AR", count: 5 },
+      { code: "withheld", count: 4 },
+    ];
+    assert.deepEqual(parseAnalyticsReport(report, selection).countries, report.countries);
+    report.countries = [
+      { code: "AR", count: 3 },
+      { code: "unknown", count: 3 },
+      { code: "withheld", count: 3 },
+    ];
+    assert.deepEqual(parseAnalyticsReport(report, selection).countries, report.countries);
+    for (const countries of [
+      [
+        { code: "AR", count: 2 },
+        { code: "withheld", count: 7 },
+      ],
+      [
+        { code: "unknown", count: 2 },
+        { code: "withheld", count: 7 },
+      ],
+      [
+        { code: "AR", count: 3 },
+        { code: "AR", count: 6 },
+      ],
+      [
+        { code: "BR", count: 3 },
+        { code: "AR", count: 6 },
+      ],
+      [
+        { code: "unknown", count: 3 },
+        { code: "AR", count: 6 },
+      ],
+      [
+        { code: "withheld", count: 3 },
+        { code: "unknown", count: 6 },
+      ],
+      [{ code: "ZZ", count: 9 }],
+      [{ code: "ar", count: 9 }],
+      [{ code: "US", count: 8 }],
+    ])
+      assert.throws(() => parseAnalyticsReport({ ...report, countries }, selection));
+  });
+  it("accepts the full closed country set while keeping the aggregate and row bounds", () => {
+    const report = structuredClone(example.report);
+    report.totals.page_views = 743;
+    report.daily = [{ ...report.totals, day: "2026-10-18" }];
+    report.countries = [...countryCodes, "unknown"].map((code) => ({ code, count: 3 }));
+    assert.equal(parseAnalyticsReport(report, selection).countries.length, 250);
+    assert.throws(() =>
+      parseAnalyticsReport(
+        { ...report, countries: [...report.countries, { code: "withheld", count: 1 }] },
+        selection,
+      ),
+    );
   });
   it("accepts empty and withheld-country reports without inventing data", () => {
     for (const amount of [0, 1, 2, 3]) {
@@ -221,7 +313,7 @@ describe("fixture analytics contract", () => {
       assert.equal(window.partial, offset === 0);
     }
   });
-  it("defaults reads off and refuses enabling them in production", () => {
+  it("defaults reads off in every environment and allows explicit production opt-in", () => {
     assert.equal(parseConfig({ BACKOFFICE_ENVIRONMENT: "test" }).analyticsReadEnabled, false);
     assert.equal(
       parseConfig({ BACKOFFICE_ENVIRONMENT: "test", PRODUCT_ANALYTICS_READ_ENABLED: "true" })
@@ -231,19 +323,18 @@ describe("fixture analytics contract", () => {
     assert.throws(() =>
       parseConfig({ BACKOFFICE_ENVIRONMENT: "test", PRODUCT_ANALYTICS_READ_ENABLED: "yes" }),
     );
-    assert.throws(
-      () =>
-        parseConfig({
-          NODE_ENV: "production",
-          BACKOFFICE_ORIGIN: "https://fixture.invalid",
-          BETTER_AUTH_SECRET: "fixture-secret-".repeat(4),
-          DATABASE_URL: "postgres://fixture:fixture@database/backoffice",
-          OWNER_EMAIL: "owner@fixture.invalid",
-          GOOGLE_CLIENT_ID: "fixture",
-          GOOGLE_CLIENT_SECRET: "fixture",
-          PRODUCT_ANALYTICS_READ_ENABLED: "true",
-        }),
-      /Fixture analytics reads/,
+    assert.equal(
+      parseConfig({
+        NODE_ENV: "production",
+        BACKOFFICE_ORIGIN: "https://fixture.invalid",
+        BETTER_AUTH_SECRET: "fixture-secret-".repeat(4),
+        DATABASE_URL: "postgres://fixture:fixture@database/backoffice",
+        OWNER_EMAIL: "owner@fixture.invalid",
+        GOOGLE_CLIENT_ID: "fixture",
+        GOOGLE_CLIENT_SECRET: "fixture",
+        PRODUCT_ANALYTICS_READ_ENABLED: "true",
+      }).analyticsReadEnabled,
+      true,
     );
   });
 });

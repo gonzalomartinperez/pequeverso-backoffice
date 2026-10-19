@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AnalyticsReport } from "@/features/analytics/presentation/report";
 import { readAnalytics } from "@/server/analytics";
 export const metadata: Metadata = {
-  title: "Analítica de prueba",
+  title: "Actividad del sitio",
   robots: { index: false, follow: false },
 };
 export default async function AnalyticsPage({

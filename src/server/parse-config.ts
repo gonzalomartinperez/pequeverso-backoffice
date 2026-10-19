@@ -169,8 +169,6 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
     env.PRODUCT_ANALYTICS_READ_ENABLED,
     "PRODUCT_ANALYTICS_READ_ENABLED",
   );
-  if (analyticsReadEnabled && production)
-    throw new Error("Fixture analytics reads are not allowed in production");
   return {
     environment,
     origin,

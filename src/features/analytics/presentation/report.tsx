@@ -4,8 +4,9 @@ import type { Selection } from "../domain/report.ts";
 import { AnalyticsFilters } from "./filters.tsx";
 
 const number = (value: number) => value.toLocaleString("es");
+const countryNames = new Intl.DisplayNames(["es"], { type: "region" });
 const messages = {
-  disabled: "Analítica de prueba desactivada. No hay un informe disponible.",
+  disabled: "Lectura de analítica desactivada. No hay un informe disponible.",
   invalid_selection: "La selección no es válida. Elige una página y una sección compatibles.",
   unavailable:
     "No disponible. No se pudo obtener un informe válido; no se muestran ceros en su lugar.",
@@ -21,10 +22,18 @@ export function AnalyticsReport({
   return (
     <div className="grid min-w-0 gap-6">
       <header>
-        <h1 className="text-heading text-ink">Actividad del sitio · prueba local</h1>
+        <h1 className="text-heading text-ink">
+          Actividad del sitio
+          {report ? (report.synthetic ? " · prueba local" : " · producción") : ""}
+        </h1>
         <p className="mt-2 text-body text-copy">
-          Datos sintéticos. Son eventos recibidos, no personas, visitas únicas ni conversiones. Esta
-          vista no activa la recopilación.
+          {report
+            ? report.synthetic
+              ? "Datos sintéticos. "
+              : "Datos clasificados como producción por la API. "
+            : "Sin clasificación de datos disponible. "}
+          Son eventos recibidos, no personas, visitas únicas ni conversiones. Esta vista no activa
+          la recopilación ni verifica el despliegue del colector.
         </p>
       </header>
       <Section id="analytics-filters" title="Consultar un intervalo">
@@ -104,8 +113,12 @@ export function AnalyticsReport({
           </Section>
           <Section
             id="analytics-country"
-            title="País no recopilado"
-            description="El canal no usa geolocalización. El país no informa nacionalidad."
+            title="Eventos por país"
+            description={
+              report.country_collection === "disabled"
+                ? "Configuración actual: país desactivado. Puede haber agregados históricos con país. No informa nacionalidad ni ubicación personal."
+                : "Configuración actual: cabecera de proxy confiable. Esta vista no verifica el proxy ni la procedencia de cada evento. No informa nacionalidad ni ubicación personal."
+            }
           >
             <TableRegion label="Eventos por grupo de país">
               <table className="w-full">
@@ -128,7 +141,9 @@ export function AnalyticsReport({
                       <th scope="row" className={td}>
                         {row.code === "unknown"
                           ? "País no informado"
-                          : "Grupo retenido por umbral (menos de 3)"}
+                          : row.code === "withheld"
+                            ? "Grupos retenidos por umbral (menos de 3 por país)"
+                            : `${countryNames.of(row.code) ?? row.code} (${row.code})`}
                       </th>
                       <td className={td}>{number(row.count)}</td>
                     </tr>

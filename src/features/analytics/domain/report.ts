@@ -1,4 +1,6 @@
-/** Product-owned, fixture-only profile; no visitor identity or production collection. */
+import type { CountryCode } from "./countries.ts";
+
+/** Product-owned closed profile; no visitor identity. */
 export const profileSource = "88d6d0add414261e5ccf5bd3e2b21285e1a33179";
 export const profile = {
   "/": ["hero", "leer", "bebe", "preguntas"],
@@ -28,10 +30,10 @@ export type Report = {
   project: "pequeverso";
   layout_revision: "pequeverso-v1";
   profile_source_revision: typeof profileSource;
-  synthetic: true;
+  synthetic: boolean;
   coverage: "received_events_only";
   timezone: "UTC";
-  country_collection: "disabled";
+  country_collection: "disabled" | "trusted_proxy_header";
   retention_days: 93;
   min_bucket: 3;
   generated_at: string;
@@ -43,7 +45,7 @@ export type Report = {
   last_observed_at: string | null;
   totals: Counts;
   daily: (Counts & { day: string })[];
-  countries: { code: "unknown" | "withheld"; count: number }[];
+  countries: { code: CountryCode | "unknown" | "withheld"; count: number }[];
   grid: {
     available: boolean;
     visible_clicks: number;
