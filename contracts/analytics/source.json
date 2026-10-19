@@ -1,10 +1,10 @@
 {
   "status": "committed-reviewed-candidate",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "797afd4954346ab347aeb9f35f54fd97405c6c07",
+  "api_revision": "0a76456b96b0640363786a4dcea885cdeebc2141",
   "api_branch": "fix/intent-over-page-context",
   "contract": "Peque private product analytics schema1; literal synthetic true; default OFF local fixture only",
-  "note": "Copied bytes verified with git show from the exact Root-accepted, independently reviewed API candidate. It includes the concurrent-report watermark, explicit Neo4j retry/telemetry policy, corrected native pointer fixture and lossless catalog-evidence encoding. These four analytics wire artifacts remain byte-identical. PR95 integration and current-head CI remain pending; not a main or deployed freshness claim. Full paired runtime acceptance remains separately gated.",
+  "note": "Copied bytes verified with git show from the exact Root-accepted, independently reviewed API candidate. Concurrent-report watermark, explicit Neo4j retry/telemetry policy, native pointer fixture and lossless evidence encoding remain included. Fixture startup now requires successful effective settings readiness within its existing admission budget. These four analytics wire artifacts remain byte-identical. PR95 integration and current-head CI remain pending; not a main or deployed freshness claim. Full paired runtime acceptance remains separately gated.",
   "files": {
     "contracts/product-analytics.schema.json": {
       "local": "contracts/analytics/product-analytics.schema.json",
