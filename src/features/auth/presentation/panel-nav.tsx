@@ -21,6 +21,7 @@ export function PanelNav({ owner }: { owner: boolean }) {
             <li key={link.href}>
               <Link
                 href={link.href}
+                prefetch={false}
                 aria-current={current ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 items-center rounded-pill px-3 text-small font-extrabold no-underline",
