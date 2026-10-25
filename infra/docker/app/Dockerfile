@@ -14,7 +14,7 @@ COPY public ./public
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 
-FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:59c479c9b8c123e66047315c968aa2d35e31ae5149c856e4110a79c8b3563f0b AS runtime
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:cb606325b7ec4af55462cb0b424a53b452a5b4a894ffe841fcf1048d216fb9f8 AS runtime
 LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice"
 LABEL org.opencontainers.image.description="Pequeverso private backoffice (access and assistant operations)"
 LABEL org.opencontainers.image.licenses="MIT"
