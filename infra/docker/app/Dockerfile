@@ -3,7 +3,7 @@
 # One image, two commands: `node server.js` (default) and `node scripts/db-migrate.ts` (one-shot
 # migrations, run by the operator before starting a release that needs them).
 # Base pinned by digest (node 24.22.0, Debian trixie slim, linux/amd64 verified).
-FROM node:24.22.0-trixie-slim@sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315 AS build
+FROM node:24.22.0-trixie-slim@sha256:a6155384446670e9719bdc4fd0ebe4d4b29fb32a8d6aa523da3547a6cfbcf22c AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
@@ -14,7 +14,7 @@ COPY public ./public
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 
-FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:59c479c9b8c123e66047315c968aa2d35e31ae5149c856e4110a79c8b3563f0b AS runtime
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:cb606325b7ec4af55462cb0b424a53b452a5b4a894ffe841fcf1048d216fb9f8 AS runtime
 LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice"
 LABEL org.opencontainers.image.description="Pequeverso private backoffice (access and assistant operations)"
 LABEL org.opencontainers.image.licenses="MIT"

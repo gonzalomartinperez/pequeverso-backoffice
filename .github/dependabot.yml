@@ -1,80 +1,45 @@
-# Dependency updates (docs/dependencies.md). Read from the default branch (main); version updates
-# target develop. Security updates are raised against the default branch and are never auto-merged.
+# Dependency updates (docs/dependencies.md). One weekly PR for every ecosystem, targeting develop.
+# Security updates are disabled in repository settings; alerts stay on.
 version: 2
-updates:
-  - package-ecosystem: npm
-    directory: /
-    target-branch: develop
+multi-ecosystem-groups:
+  weekly-all:
     schedule:
       interval: weekly
       day: monday
-      time: "06:00"
+      time: "09:00"
       timezone: America/Argentina/Buenos_Aires
-    open-pull-requests-limit: 5
-    rebase-strategy: auto
-    # Cooldown delays routine version updates only; security updates are not delayed.
+    target-branch: develop
+    open-pull-requests-limit: 1
+    labels: [dependencies]
+updates:
+  - package-ecosystem: npm
+    directory: /
+    multi-ecosystem-group: weekly-all
+    patterns: ["*"]
     cooldown:
       default-days: 7
-      semver-major-days: 30
-      semver-minor-days: 7
-      semver-patch-days: 7
-    groups:
-      # Grouping only reduces review churn; every merge remains manual.
-      low-risk-patches:
-        applies-to: version-updates
-        update-types: [patch]
-        patterns:
-          - lucide-react
-          - clsx
-          - tailwind-merge
-          - class-variance-authority
-          - "@biomejs/biome"
-          - "@axe-core/playwright"
-          - "@types/node"
-          - "@types/react"
-          - "@types/react-dom"
+      semver-major-days: 14
+      semver-patch-days: 3
     ignore:
       # Node typings follow the Node LTS line in .nvmrc (24.x).
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
-    labels: [dependencies]
-    commit-message:
-      prefix: build(deps)
-      prefix-development: build(deps-dev)
   - package-ecosystem: github-actions
     directory: /
-    target-branch: develop
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: America/Argentina/Buenos_Aires
-    open-pull-requests-limit: 3
-    rebase-strategy: auto
+    multi-ecosystem-group: weekly-all
+    patterns: ["*"]
     cooldown:
       default-days: 7
-    groups:
-      actions:
-        patterns: ["*"]
-    labels: [dependencies, ci]
-    commit-message:
-      prefix: ci(deps)
   - package-ecosystem: docker
     directories:
       - /infra/docker/app
       - /infra/docker/postgres
-    target-branch: develop
-    schedule:
-      interval: weekly
+    multi-ecosystem-group: weekly-all
+    patterns: ["*"]
+    cooldown:
+      default-days: 7
     ignore:
       # The runtime follows the Node LTS line in .nvmrc and package.json engines (24.x); moving to a
       # new major is a deliberate migration, not a routine update.
       - dependency-name: node
         update-types: [version-update:semver-major]
-    open-pull-requests-limit: 2
-    rebase-strategy: auto
-    cooldown:
-      default-days: 7
-    labels: [dependencies, docker]
-    commit-message:
-      prefix: build(docker)
