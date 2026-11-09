@@ -73,3 +73,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 The seven-job paired backoffice profile and verification limits are documented in
 [docs/ci.md](docs/ci.md). Preserve the existing **Required checks** aggregate context and
 its explicit success requirement for every prerequisite; workflow names must not collide.
+
+## Master plan (2026-11)
+
+The excellence refactor is planned in [`docs/master-plan/`](docs/master-plan/README.md). Before
+acting on anything it covers, read
+[`docs/master-plan/owner-decisions.md`](docs/master-plan/owner-decisions.md) (binding owner
+decisions) and, to continue the work from any session,
+[`docs/master-plan/RESUME.md`](docs/master-plan/RESUME.md).

@@ -1,0 +1,7 @@
+lint rc=0 sec=0.9
+typecheck rc=0 sec=4.5
+unit-coverage rc=0 sec=9.2
+security-check rc=1 sec=0.8
+docs-check rc=1 sec=0.7
+skills-check rc=0 sec=0.5
+boundaries rc=0 sec=1.1

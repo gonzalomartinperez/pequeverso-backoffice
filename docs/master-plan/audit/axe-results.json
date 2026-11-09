@@ -1,0 +1,224 @@
+[
+  {
+    "page": "signin",
+    "w": 390,
+    "scheme": "light",
+    "url": "http://localhost:3241/ingresar",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "dashboard",
+    "w": 390,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "access",
+    "w": 390,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel/accesos",
+    "violations": [],
+    "hOverflow": true
+  },
+  {
+    "page": "analytics",
+    "w": 390,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel/analitica",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "consoleErrors": [],
+    "w": 390,
+    "scheme": "light"
+  },
+  {
+    "page": "signin",
+    "w": 768,
+    "scheme": "light",
+    "url": "http://localhost:3241/ingresar",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "dashboard",
+    "w": 768,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "access",
+    "w": 768,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel/accesos",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "analytics",
+    "w": 768,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel/analitica",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "consoleErrors": [],
+    "w": 768,
+    "scheme": "light"
+  },
+  {
+    "page": "signin",
+    "w": 1440,
+    "scheme": "light",
+    "url": "http://localhost:3241/ingresar",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "dashboard",
+    "w": 1440,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "access",
+    "w": 1440,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel/accesos",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "analytics",
+    "w": 1440,
+    "scheme": "light",
+    "url": "http://localhost:3241/panel/analitica",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "consoleErrors": [],
+    "w": 1440,
+    "scheme": "light"
+  },
+  {
+    "page": "signin",
+    "w": 390,
+    "scheme": "dark",
+    "url": "http://localhost:3241/ingresar",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "dashboard",
+    "w": 390,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "access",
+    "w": 390,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel/accesos",
+    "violations": [],
+    "hOverflow": true
+  },
+  {
+    "page": "analytics",
+    "w": 390,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel/analitica",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "consoleErrors": [],
+    "w": 390,
+    "scheme": "dark"
+  },
+  {
+    "page": "signin",
+    "w": 768,
+    "scheme": "dark",
+    "url": "http://localhost:3241/ingresar",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "dashboard",
+    "w": 768,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "access",
+    "w": 768,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel/accesos",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "analytics",
+    "w": 768,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel/analitica",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "consoleErrors": [],
+    "w": 768,
+    "scheme": "dark"
+  },
+  {
+    "page": "signin",
+    "w": 1440,
+    "scheme": "dark",
+    "url": "http://localhost:3241/ingresar",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "dashboard",
+    "w": 1440,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "access",
+    "w": 1440,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel/accesos",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "page": "analytics",
+    "w": 1440,
+    "scheme": "dark",
+    "url": "http://localhost:3241/panel/analitica",
+    "violations": [],
+    "hOverflow": false
+  },
+  {
+    "consoleErrors": [],
+    "w": 1440,
+    "scheme": "dark"
+  }
+]
