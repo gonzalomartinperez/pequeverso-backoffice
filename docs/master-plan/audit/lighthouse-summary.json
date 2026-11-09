@@ -1,62 +1,62 @@
 {
- "dashboard_mobile": {
-  "scores": {
-   "performance": 0.7,
-   "accessibility": 1,
-   "best-practices": 1,
-   "seo": 0.63
+  "dashboard_mobile": {
+    "scores": {
+      "performance": 0.7,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 0.63
+    },
+    "largest-contentful-paint": 2121.81464,
+    "total-blocking-time": 2965.5926799999997,
+    "cumulative-layout-shift": 0,
+    "first-contentful-paint": 916.81464,
+    "total-byte-weight": 388554,
+    "unused-javascript": 150,
+    "bootup-time": 3765.87599999999
   },
-  "largest-contentful-paint": 2121.81464,
-  "total-blocking-time": 2965.5926799999997,
-  "cumulative-layout-shift": 0,
-  "first-contentful-paint": 916.81464,
-  "total-byte-weight": 388554,
-  "unused-javascript": 150,
-  "bootup-time": 3765.87599999999
- },
- "dashboard_desktop": {
-  "scores": {
-   "performance": 0.78,
-   "accessibility": 1,
-   "best-practices": 1,
-   "seo": 0.63
+  "dashboard_desktop": {
+    "scores": {
+      "performance": 0.78,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 0.63
+    },
+    "largest-contentful-paint": 673.0500000000001,
+    "total-blocking-time": 512.5,
+    "cumulative-layout-shift": 0,
+    "first-contentful-paint": 283.22,
+    "total-byte-weight": 388550,
+    "unused-javascript": 40,
+    "bootup-time": 1049.3299999999863
   },
-  "largest-contentful-paint": 673.0500000000001,
-  "total-blocking-time": 512.5,
-  "cumulative-layout-shift": 0,
-  "first-contentful-paint": 283.22,
-  "total-byte-weight": 388550,
-  "unused-javascript": 40,
-  "bootup-time": 1049.3299999999863
- },
- "signin_mobile": {
-  "scores": {
-   "performance": 0.78,
-   "accessibility": 1,
-   "best-practices": 1,
-   "seo": 0.63
+  "signin_mobile": {
+    "scores": {
+      "performance": 0.78,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 0.63
+    },
+    "largest-contentful-paint": 1559.3714,
+    "total-blocking-time": 1024.8143,
+    "cumulative-layout-shift": 0,
+    "first-contentful-paint": 809.3714,
+    "total-byte-weight": 254703,
+    "unused-javascript": 0,
+    "bootup-time": 1325.955999999998
   },
-  "largest-contentful-paint": 1559.3714,
-  "total-blocking-time": 1024.8143,
-  "cumulative-layout-shift": 0,
-  "first-contentful-paint": 809.3714,
-  "total-byte-weight": 254703,
-  "unused-javascript": 0,
-  "bootup-time": 1325.955999999998
- },
- "signin_desktop": {
-  "scores": {
-   "performance": 0.98,
-   "accessibility": 1,
-   "best-practices": 1,
-   "seo": 0.63
-  },
-  "largest-contentful-paint": 390.53171999999995,
-  "total-blocking-time": 125.99999999999997,
-  "cumulative-layout-shift": 0,
-  "first-contentful-paint": 230.53172,
-  "total-byte-weight": 254700,
-  "unused-javascript": 0,
-  "bootup-time": 264.66999999999985
- }
+  "signin_desktop": {
+    "scores": {
+      "performance": 0.98,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 0.63
+    },
+    "largest-contentful-paint": 390.53171999999995,
+    "total-blocking-time": 125.99999999999997,
+    "cumulative-layout-shift": 0,
+    "first-contentful-paint": 230.53172,
+    "total-byte-weight": 254700,
+    "unused-javascript": 0,
+    "bootup-time": 264.66999999999985
+  }
 }

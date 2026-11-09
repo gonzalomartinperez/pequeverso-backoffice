@@ -5,33 +5,15 @@
   "status": "draft (master plan 2026-11-09); validated by tests/unit/ci-profile.test.ts from M1",
   "gate": {
     "job": "ci-gate",
-    "passWhen": [
-      "success",
-      "skipped"
-    ],
-    "failWhen": [
-      "failure",
-      "cancelled"
-    ],
+    "passWhen": ["success", "skipped"],
+    "failWhen": ["failure", "cancelled"],
     "failClosed": true
   },
   "classify": {
-    "inputs": [
-      "git diff --name-only BASE HEAD",
-      "branch name",
-      "PR labels"
-    ],
+    "inputs": ["git diff --name-only BASE HEAD", "branch name", "PR labels"],
     "onError": "all",
     "unknownFile": "all",
-    "precedence": [
-      "release",
-      "hotfix",
-      "deps-weekly",
-      "workflow",
-      "contract",
-      "code",
-      "docs"
-    ]
+    "precedence": ["release", "hotfix", "deps-weekly", "workflow", "contract", "code", "docs"]
   },
   "profiles": {
     "docs": {
@@ -53,15 +35,8 @@
         ".worktreeinclude",
         "docs/GLOSSARY.md"
       ],
-      "excludePaths": [
-        "docs/explanation/diagrams/*.mmd"
-      ],
-      "run": [
-        "secrets",
-        "docs-checks",
-        "skills-activation-evals-if-.agents-changed",
-        "ci-gate"
-      ],
+      "excludePaths": ["docs/explanation/diagrams/*.mmd"],
+      "run": ["secrets", "docs-checks", "skills-activation-evals-if-.agents-changed", "ci-gate"],
       "skip": [
         "static-code",
         "database",
@@ -106,14 +81,7 @@
         ".claude/hooks/**",
         ".claude/agents/**"
       ],
-      "run": [
-        "secrets",
-        "static-code",
-        "unit-coverage",
-        "build-once",
-        "browser-pr",
-        "ci-gate"
-      ],
+      "run": ["secrets", "static-code", "unit-coverage", "build-once", "browser-pr", "ci-gate"],
       "conditional": {
         "database": [
           "migrations/**",
@@ -142,16 +110,8 @@
           "src/shared/tokens/**",
           "tests/visual/**"
         ],
-        "a11y-keyboard": [
-          "src/shared/**",
-          "src/features/*/presentation/**",
-          "src/app/**"
-        ],
-        "performance": [
-          "src/**",
-          "package-lock.json",
-          "next.config.ts"
-        ],
+        "a11y-keyboard": ["src/shared/**", "src/features/*/presentation/**", "src/app/**"],
+        "performance": ["src/**", "package-lock.json", "next.config.ts"],
         "mutation-incremental": [
           "src/features/**/domain/**",
           "src/features/**/application/**",
@@ -159,11 +119,7 @@
           "src/server/**",
           "src/shared/lib/**"
         ],
-        "authz-matrix": [
-          "src/app/**",
-          "src/features/auth/**",
-          "src/server/auth.ts"
-        ],
+        "authz-matrix": ["src/app/**", "src/features/auth/**", "src/server/auth.ts"],
         "kit-lock": [
           "src/shared/ui/**",
           "src/shared/shell/**",
@@ -171,22 +127,16 @@
           "src/shared/tokens/structure.tokens.json",
           "kit.lock.json"
         ],
-        "tokens": [
-          "src/shared/tokens/**"
-        ]
+        "tokens": ["src/shared/tokens/**"]
       },
-      "skip": [
-        "release-only-jobs"
-      ],
+      "skip": ["release-only-jobs"],
       "budgetMinutes": {
         "p50": 6,
         "p95": 12
       }
     },
     "contract": {
-      "paths": [
-        "contracts/**"
-      ],
+      "paths": ["contracts/**"],
       "run": [
         "code-profile",
         "validators-against-pins",
@@ -199,9 +149,7 @@
       }
     },
     "workflow": {
-      "paths": [
-        ".github/**"
-      ],
+      "paths": [".github/**"],
       "excludePaths": [
         ".github/pull_request_template.md",
         ".github/ISSUE_TEMPLATE/**",
@@ -257,9 +205,7 @@
     },
     "hotfix": {
       "branchPattern": "hotfix/**",
-      "requires": [
-        "label:owner-authorized-hotfix"
-      ],
+      "requires": ["label:owner-authorized-hotfix"],
       "run": [
         "code-profile",
         "release-verification-for-touched-surfaces",
@@ -291,9 +237,6 @@
     "ci-duration-report",
     "develop-ahead-of-main-report"
   ],
-  "daily": [
-    "osv-vulnerability-job",
-    "compromised-actions-watch"
-  ],
+  "daily": ["osv-vulnerability-job", "compromised-actions-watch"],
   "everyFileCovered": "tests/unit/ci-profile.test.ts asserts git ls-files is a subset of union(profile paths); a file outside every profile fails the test and, at runtime, classify returns code (fail closed)"
 }
