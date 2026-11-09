@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "repo": "pequeverso-backoffice",
+  "ecosystem": "v1",
+  "status": "draft (master plan 2026-11-09); validated by tests/unit/ci-profile.test.ts from M1",
+  "gate": {
+    "job": "ci-gate",
+    "passWhen": [
+      "success",
+      "skipped"
+    ],
+    "failWhen": [
+      "failure",
+      "cancelled"
+    ],
+    "failClosed": true
+  },
+  "classify": {
+    "inputs": [
+      "git diff --name-only BASE HEAD",
+      "branch name",
+      "PR labels"
+    ],
+    "onError": "all",
+    "unknownFile": "all",
+    "precedence": [
+      "release",
+      "hotfix",
+      "deps-weekly",
+      "workflow",
+      "contract",
+      "code",
+      "docs"
+    ]
+  },
+  "profiles": {
+    "docs": {
+      "paths": [
+        "**/*.md",
+        "docs/**",
+        "LICENSE",
+        "NOTICE.md",
+        "THIRD_PARTY_NOTICES.md",
+        ".github/ISSUE_TEMPLATE/**",
+        ".github/pull_request_template.md",
+        ".github/CODEOWNERS",
+        ".claude/**",
+        ".agents/**",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".codex/**",
+        ".mcp.json",
+        ".worktreeinclude",
+        "docs/GLOSSARY.md"
+      ],
+      "excludePaths": [
+        "docs/explanation/diagrams/*.mmd"
+      ],
+      "run": [
+        "secrets",
+        "docs-checks",
+        "skills-activation-evals-if-.agents-changed",
+        "ci-gate"
+      ],
+      "skip": [
+        "static-code",
+        "database",
+        "build",
+        "browser",
+        "visual",
+        "container",
+        "mutation",
+        "performance"
+      ],
+      "budgetMinutes": {
+        "p50": 2,
+        "p95": 4
+      }
+    },
+    "code": {
+      "paths": [
+        "src/**",
+        "scripts/**",
+        "tests/**",
+        "migrations/**",
+        "public/**",
+        "quality/**",
+        "package.json",
+        "package-lock.json",
+        "next.config.ts",
+        "tsconfig.json",
+        "biome.json",
+        "postcss.config.json",
+        "playwright.config.ts",
+        ".nvmrc",
+        ".env.example",
+        "infra/docker/**",
+        ".gitignore",
+        ".gitleaksignore",
+        "next-env.d.ts",
+        "observability/**",
+        "kit.lock.json",
+        "kit.exceptions.json",
+        ".devcontainer/**",
+        ".claude/settings.json",
+        ".claude/hooks/**",
+        ".claude/agents/**"
+      ],
+      "run": [
+        "secrets",
+        "static-code",
+        "unit-coverage",
+        "build-once",
+        "browser-pr",
+        "ci-gate"
+      ],
+      "conditional": {
+        "database": [
+          "migrations/**",
+          "src/features/auth/**",
+          "src/server/**",
+          "scripts/db-*.ts",
+          "scripts/browser-database.ts",
+          "tests/integration/**",
+          "package-lock.json"
+        ],
+        "container": [
+          "infra/docker/**",
+          "package.json",
+          "package-lock.json",
+          "next.config.ts",
+          "migrations/**",
+          "src/proxy.ts",
+          "src/server/**",
+          "scripts/db-migrate.ts",
+          "scripts/smoke-*.sh"
+        ],
+        "visual": [
+          "src/shared/**",
+          "src/features/*/presentation/**",
+          "src/app/**",
+          "src/shared/tokens/**",
+          "tests/visual/**"
+        ],
+        "a11y-keyboard": [
+          "src/shared/**",
+          "src/features/*/presentation/**",
+          "src/app/**"
+        ],
+        "performance": [
+          "src/**",
+          "package-lock.json",
+          "next.config.ts"
+        ],
+        "mutation-incremental": [
+          "src/features/**/domain/**",
+          "src/features/**/application/**",
+          "src/features/**/adapters/validate*.ts",
+          "src/server/**",
+          "src/shared/lib/**"
+        ],
+        "authz-matrix": [
+          "src/app/**",
+          "src/features/auth/**",
+          "src/server/auth.ts"
+        ],
+        "kit-lock": [
+          "src/shared/ui/**",
+          "src/shared/shell/**",
+          "src/shared/charts/**",
+          "src/shared/tokens/structure.tokens.json",
+          "kit.lock.json"
+        ],
+        "tokens": [
+          "src/shared/tokens/**"
+        ]
+      },
+      "skip": [
+        "release-only-jobs"
+      ],
+      "budgetMinutes": {
+        "p50": 6,
+        "p95": 12
+      }
+    },
+    "contract": {
+      "paths": [
+        "contracts/**"
+      ],
+      "run": [
+        "code-profile",
+        "validators-against-pins",
+        "generated-types-compile",
+        "require-label:contract-major-if-breaking"
+      ],
+      "budgetMinutes": {
+        "p50": 8,
+        "p95": 14
+      }
+    },
+    "workflow": {
+      "paths": [
+        ".github/**"
+      ],
+      "excludePaths": [
+        ".github/pull_request_template.md",
+        ".github/ISSUE_TEMPLATE/**",
+        ".github/CODEOWNERS"
+      ],
+      "run": [
+        "actionlint",
+        "zizmor-high",
+        "sha-pin-policy",
+        "dry-run-changed-reusable-workflow",
+        "shellcheck",
+        "ci-gate",
+        "agent-review-workflow-lint"
+      ],
+      "budgetMinutes": {
+        "p50": 3,
+        "p95": 5
+      }
+    },
+    "deps-weekly": {
+      "branchPattern": "dependabot/**",
+      "run": [
+        "code-profile",
+        "dependency-review",
+        "licence-check",
+        "sbom-diff",
+        "lockfile-lint",
+        "image-rebuild-scan-if-docker-or-base-changed",
+        "deps-policy-readonly"
+      ],
+      "budgetMinutes": {
+        "p50": 9,
+        "p95": 15
+      }
+    },
+    "release": {
+      "trigger": "pull_request develop -> main",
+      "run": [
+        "code-profile-full",
+        "all-engines-matrix",
+        "mutation-full-or-nightly-green-24h",
+        "lighthouse",
+        "visual-all-routes",
+        "container-build-sbom-provenance-verify",
+        "changelog-check",
+        "authz-matrix",
+        "zap-baseline-if-nightly-stale"
+      ],
+      "budgetMinutes": {
+        "p50": 20,
+        "p95": 30
+      }
+    },
+    "hotfix": {
+      "branchPattern": "hotfix/**",
+      "requires": [
+        "label:owner-authorized-hotfix"
+      ],
+      "run": [
+        "code-profile",
+        "release-verification-for-touched-surfaces",
+        "auto-backmerge-pr-to-develop"
+      ],
+      "budgetMinutes": {
+        "p50": 6,
+        "p95": 12
+      }
+    }
+  },
+  "assistant-quality": "not applicable (no prompts, retrieval or golden set in this repository)",
+  "nightly": [
+    "mutation-full",
+    "flake-detector",
+    "three-engines-plus-pixel",
+    "visual-all",
+    "forced-colors-zoom",
+    "zap-baseline",
+    "scorecard-and-ratchets",
+    "osv-and-grype-on-latest-image",
+    "scorecard-action",
+    "contract-drift-watch"
+  ],
+  "weekly": [
+    "deps-weekly-guard",
+    "link-check-all-docs",
+    "standards-drift",
+    "ci-duration-report",
+    "develop-ahead-of-main-report"
+  ],
+  "daily": [
+    "osv-vulnerability-job",
+    "compromised-actions-watch"
+  ],
+  "everyFileCovered": "tests/unit/ci-profile.test.ts asserts git ls-files is a subset of union(profile paths); a file outside every profile fails the test and, at runtime, classify returns code (fail closed)"
+}

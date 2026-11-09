@@ -1,0 +1,269 @@
+path,layer,kind,lines,target_path,target_layer,action,reason
+.agents/skills/web-change-backoffice,agent,symlink,0,.claude/skills/implement-task,agent,replace-link,Old directory link removed; the canonical folder is .agents/skills/implement-task and .claude/skills/implement-task becomes the relative symlink (ecosystem 15.1)
+.agents/skills/web-review-delivery,agent,symlink,0,.claude/skills/review-change,agent,replace-link,Old directory link removed; the canonical folder is .agents/skills/review-change and .claude/skills/review-change becomes the relative symlink (ecosystem 15.1)
+.agents/skills/web-verify-backoffice,agent,symlink,0,.claude/skills/verify-release,agent,replace-link,Old directory link removed; the canonical folder is .agents/skills/verify-release and .claude/skills/verify-release becomes the relative symlink (ecosystem 15.1)
+.claude/skills/web-change-backoffice/SKILL.md,agent,skill,32,.agents/skills/implement-task/SKILL.md,agent,move-edit,Merged into catalog skills implement-task and add-metric (ecosystem 15.5); scope updated to the new layout; content preserved
+.claude/skills/web-review-delivery/SKILL.md,agent,skill,34,.agents/skills/review-change/SKILL.md,agent,move-edit,Merged into review-change and security-review-auth; review flags preserved verbatim; adds design review step
+.claude/skills/web-verify-backoffice/SKILL.md,agent,skill,33,.agents/skills/verify-release/SKILL.md,agent,move-edit,"Merged into verify-release and the audit-visual, audit-accessibility, audit-performance skills; PostgreSQL-missing honesty rule preserved"
+.env.example,config,config,49,.env.example,config,keep,Variable names stay the env schema source; M4 generates it from server/env.ts and a test compares both
+.github/dependabot.yml,ci,config,80,.github/dependabot.yml,ci,rewrite,"Single weekly multi-ecosystem group, Monday 09:00 ART, target develop, limit 1 (ecosystem 5)"
+.github/gitleaks.toml,ci,config,17,.github/gitleaks.toml,ci,keep,Kept; copied from standards template at M1
+.github/pull_request_template.md,ci,doc,8,.github/pull_request_template.md,ci,edit,"Add evidence, docs/changelog touched, agent-docs touched, risk (ecosystem 4)"
+.github/scripts/secret-scan.sh,ci,script,28,.github/scripts/secret-scan.sh,ci,keep,Kept; fails on zero commits scanned; moves into the standards security workflow only if it covers the same case
+.github/workflows/dependency-policy.yml,ci,workflow,38,.github/workflows/dependency-policy.yml,ci,edit,"Kept as read-only trusted assessment for the weekly PR (default-branch code, never checks out PR head); documented exception in ADR"
+.github/workflows/quality.yml,ci,workflow,271,.github/workflows/ci.yml,ci,rename-rewrite,Becomes ci.yml: classify + profiles + ci-gate calling standards reusable workflows; Required checks retired only after ci-gate is required
+.gitignore,config,config,13,.gitignore,config,keep,"Add .quality/artifacts, playwright-report"
+.gitleaksignore,config,config,6,.gitleaksignore,config,keep,Keep; every entry needs an issue and expiry (ecosystem 5.5)
+.nvmrc,config,config,1,.nvmrc,config,keep,24.22.0 until the Node 26 flip (E10)
+AGENTS.md,meta,doc,75,AGENTS.md,meta,keep,"Rewrite to ecosystem 15.1 skeleton (commands, layout, boundaries, skills, docs map); commands tested against package.json"
+CHANGELOG.md,meta,doc,16,CHANGELOG.md,meta,regenerate,Owned by release-please from M1; 1.0.0 entry preserved as history
+CLAUDE.md,meta,doc,1,CLAUDE.md,meta,keep,"Stays ""@AGENTS.md"" plus Claude-only notes"
+CONTRIBUTING.md,meta,doc,78,CONTRIBUTING.md,meta,edit,"Shorten to run-checks, branch flow, commit convention; versions not hand-written (no volatile facts)"
+LICENSE,meta,doc,21,LICENSE,meta,keep,"MIT, unchanged"
+NOTICE.md,meta,doc,39,NOTICE.md,meta,keep,"Reserved scope, unchanged"
+README.md,meta,doc,240,README.md,meta,rewrite,Ecosystem README template (M3); dated release blocks and 14-row gallery removed; 4 hero shots from M5 baselines
+SECURITY.md,meta,doc,25,SECURITY.md,meta,edit,"Add 5-day acknowledgement, private reporting link, vulnerability SLA reference"
+THIRD_PARTY_NOTICES.md,meta,doc,46,THIRD_PARTY_NOTICES.md,meta,regenerate,Generated from the SBOM at release; test already guards licence text
+biome.json,config,config,57,biome.json,config,edit,"Add noRestrictedImports, noPrivateImports, noImportCycles, noUndeclaredDependencies, domains; pin schema"
+contracts/analytics/analytics-semantics.examples.json,contracts,contract,213,contracts/analytics/analytics-semantics.examples.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/analytics/product-analytics.example.json,contracts,contract,62,contracts/analytics/product-analytics.example.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/analytics/product-analytics.schema.json,contracts,contract,642,contracts/analytics/product-analytics.schema.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/analytics/profile.source.json,contracts,contract,54,contracts/analytics/profile.source.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/analytics/site-experience-pequeverso-v1.schema.json,contracts,contract,198,contracts/analytics/site-experience-pequeverso-v1.schema.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/analytics/source.json,contracts,contract,38,contracts/analytics/source.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/ops/ops.schema.json,contracts,contract,779,contracts/ops/ops.schema.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/ops/ops.summary.example.json,contracts,contract,183,contracts/ops/ops.summary.example.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/ops/source.json,contracts,contract,17,contracts/ops/source.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/ops/summary.fixture.json,contracts,contract,362,contracts/ops/summary.fixture.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/telemetry/ops.telemetry.example.json,contracts,contract,44,contracts/telemetry/ops.telemetry.example.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/telemetry/ops.telemetry.schema.json,contracts,contract,332,contracts/telemetry/ops.telemetry.schema.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+contracts/telemetry/source.json,contracts,contract,16,contracts/telemetry/source.json,contracts,keep,Pinned producer snapshot with SHA-256; expand/contract only; refreshed by contract-profile PRs
+docs/adr/001-one-app-two-shells.md,docs,doc,15,docs/decisions/0001-one-app-two-shells.md,docs,move,Superseded history (chat shells removed); status set to superseded (chat shells removed; ADR-0008 records the current scope); MADR path of ecosystem 14.2
+docs/adr/002-typescript-7.md,docs,doc,18,docs/decisions/0002-typescript-7.md,docs,move,MADR path; add Confirmation section
+docs/adr/003-plain-text-answers.md,docs,doc,17,docs/decisions/0003-plain-text-answers.md,docs,move,Mostly historical (chat in storefront); mark superseded
+docs/adr/004-same-origin-api-and-same-site-session.md,docs,doc,15,docs/decisions/0004-same-origin-api-and-same-site-session.md,docs,move,Mostly historical; mark superseded
+docs/adr/005-backoffice-auth-better-auth.md,docs,doc,58,docs/decisions/0005-backoffice-auth-better-auth.md,docs,move,MADR path; linked from threat model
+docs/adr/006-iam-in-postgresql.md,docs,doc,21,docs/decisions/0006-iam-in-postgresql.md,docs,move,MADR path
+docs/adr/007-ops-data-source.md,docs,doc,21,docs/decisions/0007-ops-data-source.md,docs,move,MADR path
+docs/agent-skills.md,docs,doc,68,docs/reference/agent-skills.md,docs,move,Diataxis reference
+docs/architecture.md,docs,doc,159,docs/explanation/architecture.md,docs,move,Diataxis explanation; C4 Mermaid added; verified-history paragraphs trimmed
+docs/architecture/README.md,docs,doc,28,docs/explanation/architecture-diagrams.md,docs,move,Diagram index folded under explanation
+docs/architecture/manifest.json,docs,doc,38,docs/explanation/diagrams/manifest.json,docs,move,Diagram provenance moves with the diagrams
+docs/architecture/system-dark.mmd,docs,doc,9,docs/explanation/diagrams/system-dark.mmd,docs,move,Mermaid source kept
+docs/architecture/system-dark.svg,docs,doc,45,docs/explanation/diagrams/system-dark.svg,docs,move,Rendered asset for README picture
+docs/architecture/system-light.mmd,docs,doc,9,docs/explanation/diagrams/system-light.mmd,docs,move,Mermaid source kept
+docs/architecture/system-light.svg,docs,doc,45,docs/explanation/diagrams/system-light.svg,docs,move,Rendered asset for README picture
+docs/authentication.md,docs,doc,101,docs/explanation/authentication.md,docs,move,Diataxis explanation; threat model links added
+docs/ci.md,docs,doc,78,docs/reference/ci.md,docs,rewrite,Rewritten for ci-gate and profiles; generated from ci-profile.json where possible
+docs/coordination.md,docs,doc,129,docs/explanation/history/coordination-2026-10.md,docs,move,Historical log of pins and renames; out of the reading path
+docs/dependencies.md,docs,doc,114,docs/reference/dependencies.md,docs,rewrite,Weekly single-PR rule and dependency ADR policy
+docs/deployment-contract.md,docs,doc,259,docs/reference/deployment-contract.md,docs,edit,"Diataxis reference; add readyz version/schema_version, GHCR digest and attestation, env schema link"
+docs/design-system.md,docs,doc,105,docs/explanation/design-system.md,docs,rewrite,Replaced by the Atelier system; design-playbook.md content lands here at M5
+docs/engineering-standards.md,docs,doc,58,docs/explanation/engineering-standards.md,docs,edit,Reduce to deviations from ecosystem.md; remainder deleted as duplicate
+docs/observability.md,docs,doc,83,docs/reference/observability.md,docs,move,Diataxis reference
+docs/postgresql-runtime.md,docs,doc,195,docs/how-to/postgres-runtime-and-restore.md,docs,move,How-to restore drill; volatile image facts removed
+docs/product-analytics.md,docs,doc,86,docs/reference/product-analytics.md,docs,move,Diataxis reference
+docs/runtime-baseline.md,docs,doc,68,docs/reference/runtime-baseline.md,docs,move,Diataxis reference; versions generated from files
+docs/verification.md,docs,doc,401,docs/explanation/history/verification-2026-10.md,docs,move,Dated evidence log; frozen history
+docs/verification/analytics-native-2026-10-19/capture-manifest.json,docs,evidence,95,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/analytics-native-2026-10-19/off-desktop.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/analytics-native-2026-10-19/on-desktop-nine.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/analytics-native-2026-10-19/on-mobile-nine.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/README.md,docs,evidence,31,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/capture-mobile-corrections-receipt.json,docs,evidence,54,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/capture-receipt.json,docs,evidence,104,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-availability-budget-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-budget.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-catalog.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-quality-latency-errors-tokens.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-recent-runs.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-dark-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-availability-budget-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-budget.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-catalog.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-quality-latency-errors-tokens.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-recent-runs.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/desktop-light-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/manifest.json,docs,evidence,241,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-dark-daily-history-scroll-right.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-dark-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-dark-navigation-focus.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-dark-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-dark-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-light-daily-history-scroll-right.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-light-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-light-navigation-focus.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-light-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/availability-2026-10-12/mobile-light-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/desktop-access.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/desktop-dashboard-dark.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/desktop-dashboard-real-api.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/desktop-dashboard.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/desktop-missing-data.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/desktop-revoke-dialog.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/desktop-unavailable.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/mobile-dashboard-daily.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/mobile-dashboard-top.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/backoffice/sign-in.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/README.md,docs,evidence,46,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/capture-daily-pointer-corrections-receipt.json,docs,evidence,37,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/capture-receipt.json,docs,evidence,137,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-availability-budget-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-budget.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-catalog.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-quality-latency-errors-tokens.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-recent-runs.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-dark-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-availability-budget-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-budget.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-catalog.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-quality-latency-errors-tokens.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-recent-runs.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/desktop-light-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/manifest.json,docs,evidence,204,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-dark-daily-history-scroll-right.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-dark-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-dark-navigation-focus.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-dark-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-dark-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-light-daily-history-scroll-right.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-light-daily-history.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-light-navigation-focus.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-light-overview.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/compact-availability-2026-10-13/mobile-light-telemetry-resources.png,docs,evidence,0,,,delete,Dated 2026-10 fixture captures of the pre-redesign UI; superseded by baselines at M5; preserved by tag archive/verification-2026-10 before deletion
+docs/verification/native-runtime2026-10-19.md,docs,doc,93,docs/explanation/history/native-runtime-2026-10-19.md,docs,move,Frozen history
+docs/verification/runtime-cohort-2026-10-17.md,docs,doc,124,docs/explanation/history/runtime-cohort-2026-10-17.md,docs,move,Frozen history
+infra/docker/app/Dockerfile,infra,container,37,infra/docker/app/Dockerfile,infra,edit,"Add ARG SERVICE_REVISION + labels, npm ci --ignore-scripts, SOURCE_DATE_EPOCH, Node 26 after E10; keep distroless nonroot and HEALTHCHECK"
+infra/docker/app/Dockerfile.dockerignore,infra,container,28,infra/docker/app/Dockerfile.dockerignore,infra,keep,Deny-by-default context filter kept
+infra/docker/postgres/Dockerfile,infra,container,27,infra/docker/postgres/Dockerfile,infra,edit,"Add HEALTHCHECK pg_isready (trivy DS-0026); keep as CI/restore-drill fixture, not a production engine"
+infra/docker/postgres/Dockerfile.dockerignore,infra,container,2,infra/docker/postgres/Dockerfile.dockerignore,infra,keep,Kept
+migrations/0001_auth.sql,migrations,migration,18,migrations/0001_auth.sql,migrations,keep,Append-only; never edited
+migrations/0002_access.sql,migrations,migration,28,migrations/0002_access.sql,migrations,keep,"Append-only; audit view joins live user table in a read model, no schema change"
+next-env.d.ts,config,config,7,next-env.d.ts,config,keep,Generated by Next; excluded from lint
+next.config.ts,config,config,27,next.config.ts,config,edit,"Add typedRoutes, explicit headers snapshot, standalone stays; no use-cache"
+observability/backoffice-alerts.yml,infra,config,20,observability/backoffice-alerts.yml,infra,keep,Kept; multi-window burn-rate rules added in MV
+observability/backoffice-dashboard.json,infra,config,218,observability/backoffice-dashboard.json,infra,keep,Kept; handoff to vps-ops
+package-lock.json,config,config,3594,package-lock.json,config,keep,Committed lockfile; weekly dependency PR updates it
+package.json,config,config,59,package.json,config,edit,"Add scripts check:*, scorecard, mutation, visual, lighthouse; subpath imports; remove recharts at M5"
+playwright.config.ts,config,config,39,playwright.config.ts,config,edit,"Per-role projects, retries 1, failOnFlakyTests on main, blob reporter, visual project"
+postcss.config.json,config,config,5,postcss.config.json,config,keep,Tailwind 4 PostCSS plugin; JSON preferred over .mjs
+public/apple-touch-icon.png,assets,asset,0,public/apple-touch-icon.png,assets,keep,Regenerated from the Atelier isotipo at M5 if the mark changes
+public/brand/brand-isotipo-w192-f34b1740.webp,assets,asset,0,public/brand/brand-isotipo-w192-f34b1740.webp,assets,keep,Kept
+public/brand/brand-isotipo-w96-cf729aa6.webp,assets,asset,0,public/brand/brand-isotipo-w96-cf729aa6.webp,assets,keep,Kept
+public/favicon.ico,assets,asset,0,public/favicon.ico,assets,keep,Kept
+public/fonts/OFL-Fraunces.txt,assets,asset,93,public/fonts/OFL-Fraunces.txt,assets,keep,Licence kept
+public/fonts/OFL-NunitoSans.txt,assets,asset,93,public/fonts/OFL-NunitoSans.txt,assets,keep,Licence kept
+public/fonts/fraunces-latin-wght-7f9d191d.woff2,assets,asset,0,public/fonts/fraunces-latin-wght-7f9d191d.woff2,assets,keep,Kept; add italic axis subset only if the margin-note style needs it (<=20 KB)
+public/fonts/nunito-sans-latin-wght-29e38904.woff2,assets,asset,0,public/fonts/nunito-sans-latin-wght-29e38904.woff2,assets,keep,Kept
+public/icon-192.png,assets,asset,0,public/icon-192.png,assets,keep,Kept
+scripts/backoffice-stack.ts,scripts,script,96,scripts/preview-stack.ts,scripts,rename,Name matches npm run preview:backoffice and the visual/ZAP/Lighthouse jobs that reuse it
+scripts/browser-database.ts,scripts,script,112,scripts/browser-database.ts,scripts,keep,Fixture: disposable DB and runtime role; kept
+scripts/check-boundaries.ts,scripts,script,455,scripts/check-boundaries.ts,scripts,keep,"Keep the stricter custom guard (client reachability, purity, negative fixtures) next to Biome import rules; drop @typescript/typescript6 when TS 7.1 exposes the API"
+scripts/check-docs.ts,scripts,script,31,scripts/check-docs.ts,scripts,keep,Extend with README heading check and ecosystem.md stamp check
+scripts/check-public-files.ts,scripts,script,43,scripts/check-public-files.ts,scripts,keep,Kept as extra public-repo scan; gitleaks stays authoritative
+scripts/check-skills.ts,scripts,script,170,scripts/check-skills.ts,scripts,keep,"Extend for ecosystem 15.1 rules (metadata, triggers.json present, last-reviewed)"
+scripts/close-pool.ts,scripts,script,31,scripts/close-pool.ts,scripts,keep,Kept
+scripts/db-check.ts,scripts,script,67,scripts/db-check.ts,scripts,keep,Kept; adds migration up/forward-only test hook
+scripts/db-migrate.ts,scripts,script,76,scripts/db-migrate.ts,scripts,keep,Shipped in the image; kept
+scripts/dependabot/policy.ts,scripts,script,228,scripts/dependabot/policy.ts,scripts,keep,Kept read-only policy for the single weekly PR
+scripts/dependabot/run.ts,scripts,script,107,scripts/dependabot/run.ts,scripts,keep,Kept
+scripts/fake-idp.ts,scripts,script,87,scripts/fake-idp.ts,scripts,keep,"Owner decision: click-through fake identity provider stays as the E2E, visual and DAST sign-in; production refuses it"
+scripts/mock-ops.ts,scripts,script,100,scripts/mock-ops.ts,scripts,keep,Synthetic ops API; gains deterministic frozen-clock states for visual baselines
+scripts/smoke-image.sh,scripts,script,108,scripts/smoke-image.sh,scripts,keep,Becomes the base of container-structure-test plus smoke; kept
+scripts/smoke-postgres.sh,scripts,script,160,scripts/smoke-postgres.sh,scripts,keep,Kept as the restore-drill smoke
+src/app/api/auth/[...all]/route.ts,app,source,11,src/app/api/auth/[...all]/route.ts,app,keep,Better Auth handler; listed in the authz matrix as a mutating route
+src/app/globals.css,app,source,395,src/shared/tokens/theme.css,shared,move,Split into tokens/structure.css + pack-atelier.css (hand-authored) and generated theme.css; Tailwind import stays in globals.css
+src/app/healthz/route.ts,app,source,7,src/app/healthz/route.ts,app,edit,"Return {status, version}; no dependencies (ecosystem 8.5)"
+src/app/ingresar/page.tsx,app,source,75,src/app/ingresar/page.tsx,app,edit,Illustrated sign-in; error variants for expired/used invitation; keeps provider buttons
+src/app/internal/v1/ops/metrics/route.ts,app,source,14,src/app/internal/v1/ops/metrics/route.ts,app,keep,Machine bearer metrics; kept
+src/app/invitacion/[token]/route.ts,app,source,34,src/app/invitacion/[token]/route.ts,app,keep,One-time invitation landing; listed in the authz matrix
+src/app/layout.tsx,app,source,49,src/app/layout.tsx,app,edit,"Theme and density from cookies before paint (no inline matchMedia script flash), skip link, fonts"
+src/app/page.tsx,app,source,6,src/app/page.tsx,app,keep,Redirect to /panel
+src/app/panel/accesos/actions.ts,app,source,49,src/app/panel/accesos/actions.ts,app,edit,"Server actions gain audit read, session revoke; every export calls requireActor (tested)"
+src/app/panel/accesos/page.tsx,app,source,163,src/app/panel/accesos/page.tsx,app,rewrite,"IAM page on the settings template: members, invitations, sessions, linked accounts"
+src/app/panel/analitica/page.tsx,app,source,15,src/app/panel/analitica/page.tsx,app,rewrite,"Audience view with range, filters in URL, hatch for withheld"
+src/app/panel/cuenta/page.tsx,app,source,34,src/app/panel/cuenta/page.tsx,app,rewrite,"Profile and preferences (theme, density, time zone)"
+src/app/panel/layout.tsx,app,source,37,src/app/panel/layout.tsx,app,rewrite,"App shell: sidebar, topbar, status strip, user menu, command palette"
+src/app/panel/page.tsx,app,source,10,src/app/panel/page.tsx,app,rewrite,Resumen: answer-first overview
+src/app/readyz/route.ts,app,source,21,src/app/readyz/route.ts,app,edit,"Add version and schema_version, still no reasons or secrets"
+src/features/analytics/adapters/analytics-http.ts,feature-adapters,source,87,src/features/analytics/adapters/analytics-http.ts,feature-adapters,keep,Bounded private read; kept
+src/features/analytics/adapters/calendar.ts,feature-adapters,source,23,src/features/analytics/adapters/calendar.ts,feature-adapters,keep,Kept
+src/features/analytics/adapters/validate.ts,feature-adapters,source,196,src/features/analytics/adapters/validate.ts,feature-adapters,keep,Kept; fast-check fuzz target
+src/features/analytics/application/ports.ts,feature-application,source,9,src/features/analytics/application/ports.ts,feature-application,keep,Kept
+src/features/analytics/domain/countries.ts,feature-domain,source,256,src/features/analytics/domain/countries.ts,feature-domain,keep,Kept
+src/features/analytics/domain/report.ts,feature-domain,source,86,src/features/analytics/domain/report.ts,feature-domain,keep,Kept
+src/features/analytics/domain/selection.ts,feature-domain,source,12,src/features/analytics/domain/selection.ts,feature-domain,edit,Selection parse/serialize shared with URL-synced filters; property-tested
+src/features/analytics/presentation/filters.tsx,feature-presentation,source,83,src/features/analytics/presentation/filters.tsx,feature-presentation,rewrite,FilterChips and RangePicker from the kit
+src/features/analytics/presentation/report.tsx,feature-presentation,source,216,src/features/analytics/presentation/report.tsx,feature-presentation,rewrite,"Rebuilt on Metric, ChartFrame, Heatmap, DataTable"
+src/features/auth/adapters/better-auth.ts,feature-adapters,source,271,src/features/auth/adapters/better-auth.ts,feature-adapters,edit,Session list/revoke wiring; pinned >= 1.6.11 with advisory regression tests
+src/features/auth/adapters/node-secrets.ts,feature-adapters,source,8,src/features/auth/adapters/node-secrets.ts,feature-adapters,keep,Kept
+src/features/auth/adapters/postgres-access-store.ts,feature-adapters,source,210,src/features/auth/adapters/postgres-access-store.ts,feature-adapters,edit,"Audit read model with live-user join, sessions read; covered by integration tests and merged coverage"
+src/features/auth/application/access.ts,feature-application,source,155,src/features/auth/application/access.ts,feature-application,edit,"New use cases listAudit, listSessions, revokeSession; same ports style"
+src/features/auth/application/ports.ts,feature-application,source,66,src/features/auth/application/ports.ts,feature-application,edit,Extended ports
+src/features/auth/domain/access.ts,feature-domain,source,90,src/features/auth/domain/access.ts,feature-domain,edit,Permission table becomes the source of the authz matrix test; property-tested lattice
+src/features/auth/presentation/account-controls.tsx,feature-presentation,source,54,src/shared/shell/user-menu.tsx,shared,move,"Becomes the shared shell user menu with theme, density, sign-out"
+src/features/auth/presentation/auth-client.ts,feature-presentation,source,5,src/features/auth/presentation/auth-client.ts,feature-presentation,keep,Kept
+src/features/auth/presentation/backoffice-frame.tsx,feature-presentation,source,47,src/shared/shell/app-shell.tsx,shared,rewrite,Marketing header replaced by sidebar + topbar + status strip
+src/features/auth/presentation/confirm-action.tsx,feature-presentation,source,124,src/shared/ui/confirm-dialog.tsx,shared,move,Generic type-to-confirm dialog (native dialog) in the kit
+src/features/auth/presentation/invite-form.tsx,feature-presentation,source,112,src/features/auth/presentation/invite-form.tsx,feature-presentation,edit,"Field/Input/Button kit, redundant-entry safe, real clipboard result"
+src/features/auth/presentation/panel-nav.tsx,feature-presentation,source,39,src/shared/shell/sidebar.tsx,shared,rewrite,Six-destination sidebar with bookmark indicator and rail mode
+src/features/auth/presentation/sign-in-panel.tsx,feature-presentation,source,60,src/features/auth/presentation/sign-in-panel.tsx,feature-presentation,edit,"Illustrated card, disabled-until-hydrated layout stable"
+src/features/operations/adapters/ops-http.ts,feature-adapters,source,97,src/features/operations/adapters/ops-http.ts,feature-adapters,keep,Kept
+src/features/operations/adapters/telemetry-http.ts,feature-adapters,source,39,src/features/operations/adapters/telemetry-http.ts,feature-adapters,keep,Kept
+src/features/operations/adapters/telemetry-validate.ts,feature-adapters,source,103,src/features/operations/adapters/telemetry-validate.ts,feature-adapters,keep,Kept; fuzz target
+src/features/operations/adapters/validate.ts,feature-adapters,source,288,src/features/operations/adapters/validate.ts,feature-adapters,keep,Kept; fuzz target; mutation scope
+src/features/operations/application/ports.ts,feature-application,source,23,src/features/operations/application/ports.ts,feature-application,keep,Kept
+src/features/operations/domain/summary.ts,feature-domain,source,181,src/features/operations/domain/summary.ts,feature-domain,edit,Add tagged Metric value derivation (ok|empty|unavailable|stale|withheld); mutation scope
+src/features/operations/domain/telemetry.ts,feature-domain,source,28,src/features/operations/domain/telemetry.ts,feature-domain,keep,Kept
+src/features/operations/presentation/daily-charts.tsx,feature-presentation,source,150,src/shared/charts/column-chart.tsx,shared,rewrite,"Recharts removed: server-rendered owned SVG, zero client JS"
+src/features/operations/presentation/dashboard.tsx,feature-presentation,source,647,src/features/operations/presentation/overview/overview.tsx,feature-presentation,split,"647 lines split into overview, runs, usage, catalog presentation modules under 200 lines each"
+src/features/operations/presentation/format.ts,feature-presentation,source,93,src/shared/lib/format.ts,shared,move,Intl-based formatting with explicit time zone; shared by all features
+src/features/operations/presentation/telemetry.tsx,feature-presentation,source,169,src/features/operations/presentation/overview/technical-status.tsx,feature-presentation,move,Technical observation moves into the Resumen disclosure and status strip
+src/instrumentation.ts,entry,source,31,src/instrumentation.ts,entry,keep,OTel bootstrap; kept
+src/proxy.ts,entry,source,44,src/proxy.ts,entry,edit,Add x-request-id creation and propagation; optimistic redirect only; CSP unchanged
+src/server/analytics.ts,server,source,20,src/server/container.ts,server,merge,Merged into the composition root
+src/server/auth.ts,server,source,153,src/server/auth.ts,server,edit,requireActor stays the single authz entry; DAL-style guard tested
+src/server/config.ts,server,source,12,src/server/env.ts,server,rename,Single env module; no process.env elsewhere (guard)
+src/server/csp.ts,server,source,17,src/server/csp.ts,server,keep,Kept; CSP snapshot test
+src/server/fixture-safety.ts,server,source,34,src/server/fixture-safety.ts,server,keep,Kept
+src/server/observability-config.ts,server,source,57,src/server/observability-config.ts,server,keep,Kept
+src/server/observability.ts,server,source,190,src/server/observability.ts,server,keep,Kept; attributes centralised; log redaction test
+src/server/operations.ts,server,source,26,src/server/container.ts,server,merge,Merged into the composition root
+src/server/parse-config.ts,server,source,189,src/server/env-parse.ts,server,rename,Pairs with env.ts
+src/shared/ui/badge.tsx,shared,source,25,src/shared/ui/badge.tsx,shared,rewrite,"Badge/StatusPill with glyph + text, plain Spanish labels"
+src/shared/ui/brand-mark.tsx,shared,source,30,src/shared/ui/brand-mark.tsx,shared,edit,Isotipo with paper-tag Backoffice label
+src/shared/ui/button.tsx,shared,source,69,src/shared/ui/button.tsx,shared,rewrite,"Button/IconButton/LinkButton sm 28/md 32/lg 40, radius 6, loading state"
+src/shared/ui/callout.tsx,shared,source,28,src/shared/ui/callout.tsx,shared,edit,"Four tones, never colour only"
+src/shared/ui/cn.ts,shared,source,19,src/shared/lib/cn.ts,shared,move,Kit layout: lib holds non-visual helpers; registry of custom sizes kept
+src/shared/ui/sections.tsx,shared,source,69,src/shared/ui/sections.tsx,shared,split,"Section/Facts/TableRegion split into Card, Facts, DataTable"
+tests/browser/analytics.spec.ts,tests-browser,test,60,tests/browser/audience.spec.ts,tests-browser,rename,Route-named spec
+tests/browser/backoffice.spec.ts,tests-browser,test,538,tests/browser/overview.spec.ts,tests-browser,split,"538-line spec split by route and concern: auth, overview, access, a11y, telemetry, invitation, responsive; test bodies preserved"
+tests/browser/live-ops.spec.ts,tests-browser,test,35,tests/browser/live-ops.spec.ts,tests-browser,keep,MV-gated real API reading; stays skipped without LIVE_OPS_URL
+tests/integration/auth.test.ts,tests-integration,test,593,tests/integration/auth.test.ts,tests-integration,edit,"Add one regression test per Better Auth advisory, sessions, audit read model"
+tests/integration/runtime-role.test.ts,tests-integration,test,101,tests/integration/runtime-role.test.ts,tests-integration,keep,Least-privilege role test kept
+tests/unit/access.test.ts,tests-unit,test,370,tests/unit/access.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/analytics-http.test.ts,tests-unit,test,108,tests/unit/analytics-http.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/analytics-presentation.test.ts,tests-unit,test,103,tests/unit/analytics-presentation.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/analytics.test.ts,tests-unit,test,340,tests/unit/analytics.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/boundaries.test.ts,tests-unit,test,422,tests/unit/boundaries.test.ts,tests-unit,edit,Add fixtures for shell/shared/server rules and kit layering
+tests/unit/ci-profile.test.ts,tests-unit,test,183,tests/unit/ci-profile.test.ts,tests-unit,rewrite,Validates ci-profile.json: every tracked file in a profile; gate semantics
+tests/unit/close-pool.test.ts,tests-unit,test,82,tests/unit/close-pool.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/config.test.ts,tests-unit,test,178,tests/unit/config.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/dependabot-policy.test.ts,tests-unit,test,378,tests/unit/dependabot-policy.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/fixture-safety.test.ts,tests-unit,test,101,tests/unit/fixture-safety.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/layout.test.ts,tests-unit,test,39,tests/unit/layout.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/license.test.ts,tests-unit,test,45,tests/unit/license.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/observability.test.ts,tests-unit,test,171,tests/unit/observability.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/operations.test.ts,tests-unit,test,332,tests/unit/operations.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/proxy-csp.test.ts,tests-unit,test,16,tests/unit/proxy-csp.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tests/unit/skills.test.ts,tests-unit,test,185,tests/unit/skills.test.ts,tests-unit,edit,Adds new layout (.agents canonical) and triggers.json checks
+tests/unit/telemetry.test.ts,tests-unit,test,88,tests/unit/telemetry.test.ts,tests-unit,keep,Kept; mutation/coverage scope per testing.md
+tsconfig.json,config,config,50,tsconfig.json,config,edit,"exactOptionalPropertyTypes, noUncheckedIndexedAccess, erasableSyntaxOnly, verbatimModuleSyntax, imports map"
