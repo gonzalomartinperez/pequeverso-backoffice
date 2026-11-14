@@ -18,14 +18,15 @@ it("builds both existing recipes from root with effective recipe-specific contex
   const workflow = read(".github/workflows/quality.yml");
   assert.match(
     workflow,
-    /uses: docker\/bake-action@[0-9a-f]{40} # v\S+\s+with:\s+source: \.\s+files: docker-bake\.hcl/,
+    /uses: docker\/bake-action@[0-9a-f]{40} # v\S+\n(?: {8}.*\n)*? {8}with:\s+source: \.\s+files: docker-bake\.hcl/,
   );
   const bake = read("docker-bake.hcl");
   assert.match(bake, /context\s+= "\."/);
   assert.match(bake, /target "app" \{[^}]*dockerfile = "infra\/docker\/app\/Dockerfile"/);
   assert.match(bake, /target "postgres" \{[^}]*dockerfile = "infra\/docker\/postgres\/Dockerfile"/);
   assert.match(bake, /group "default" \{\s+targets = \["app", "postgres"\]/);
-  assert.doesNotMatch(bake, /\bpush\b|output\s*=\s*\[[^\]]*registry/);
+  const settings = bake.replace(/^\s*#.*$/gm, "");
+  assert.doesNotMatch(settings, /\bpush\s*=\s*true|output\s*=\s*\[[^\]]*(?:registry|push=true)/);
   for (const old of ["Dockerfile", "Dockerfile.postgres", ".dockerignore"])
     assert.equal(existsSync(old), false, old);
 
@@ -58,7 +59,6 @@ it("stamps revision and version into both images and keeps install scripts off",
     );
   }
   assert.match(runtime, /^ENV SERVICE_REVISION=\$\{SERVICE_REVISION\} VERSION=\$\{VERSION\}$/m);
-  assert.match(app, /^ARG SOURCE_DATE_EPOCH$/m);
   assert.match(app, /npm ci --ignore-scripts /);
 
   const postgres = read("infra/docker/postgres/Dockerfile");

@@ -114,8 +114,9 @@ Build application and IAM fixture recipes from the repository root through `dock
 single local and CI entry point (it stamps the revision, version and commit time into both images):
 
 ```sh
-SERVICE_REVISION="$(git rev-parse HEAD)" SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
-  VERSION="$(node -p "require('./package.json').version")" docker buildx bake --load
+export SERVICE_REVISION="$(git rev-parse HEAD)" SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
+  VERSION="$(node -p "require('./package.json').version")"
+docker buildx bake --load
 scripts/check-image-metadata.sh   # labels, runtime ENV and the PostgreSQL HEALTHCHECK
 ```
 

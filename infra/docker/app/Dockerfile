@@ -12,8 +12,6 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci --ignore-scripts 
 COPY next.config.ts next-env.d.ts tsconfig.json postcss.config.json ./
 COPY src ./src
 COPY public ./public
-# Reproducible timestamps: docker-bake.hcl passes the commit time (BuildKit also rewrites layer times).
-ARG SOURCE_DATE_EPOCH
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 

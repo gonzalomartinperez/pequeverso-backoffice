@@ -1,7 +1,8 @@
 # Single entry point for local and CI image builds (docs/master-plan/ci-cd.md section 8).
-#   SERVICE_REVISION="$(git rev-parse HEAD)" SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
-#     VERSION="$(node -p "require('./package.json').version")" docker buildx bake --load
-# Nothing here pushes: publication happens only in the release workflow (M7), by digest.
+#   export SERVICE_REVISION="$(git rev-parse HEAD)" SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
+#     VERSION="$(node -p "require('./package.json').version")"
+#   docker buildx bake --load
+# No target publishes: publication happens only in the release workflow (M7), by digest.
 
 variable "SERVICE_REVISION" {
   default = "unknown"
@@ -11,7 +12,7 @@ variable "VERSION" {
   default = "0.0.0-dev"
 }
 
-# Commit time; "0" keeps a local build reproducible when unset.
+# Commit time, used by BuildKit for the image creation time; "0" when unset.
 variable "SOURCE_DATE_EPOCH" {
   default = "0"
 }

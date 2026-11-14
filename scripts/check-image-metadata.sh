@@ -30,7 +30,9 @@ expect "$PG user" "$(docker image inspect --format '{{ .Config.User }}' "$PG")" 
 
 docker run -d --name "$DB" -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD="health-only-$$" \
   -e POSTGRES_DB=backoffice --tmpfs /var/lib/postgresql:uid=999,gid=999 "$PG" >/dev/null
+status=starting
 for _ in $(seq 1 60); do
+  [ "$(docker inspect --format '{{ .State.Running }}' "$DB")" = true ] || { status=exited; break; }
   status="$(docker inspect --format '{{ .State.Health.Status }}' "$DB")"
   [ "$status" = healthy ] && { echo "Image metadata and PostgreSQL health check: ok"; exit 0; }
   sleep 2
