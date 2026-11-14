@@ -65,6 +65,15 @@ links and resources without executing procedures or contacting services. See
 [agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
 
+## Standards drift
+
+[drift](../.github/workflows/drift.yml) runs the pinned `engineering-standards` drift check on every
+pull request, weekly and on demand: byte-matched files listed in [standards.lock](../standards.lock)
+must equal the release templates and the Dependabot file must follow the weekly-group policy. It is
+advisory today (not part of **Required checks**); `tests/unit/standards-lock.test.ts` keeps every
+standards pin equal to the lock. The shared PR template carries no repository commands: before a
+PR run `npm run check`, `npm run test:db` and `npm run test:browser` (see `AGENTS.md`).
+
 ## Image gates
 
 Grype downloads its vulnerability database on every run, so a newly published fixable high or
