@@ -14,7 +14,7 @@ if [[ "$(git -C "$REPO" rev-parse --is-shallow-repository)" == true ]]; then
 fi
 
 output="$(docker run --rm -v "$REPO:/repo:ro" "$IMAGE" git /repo \
-  --config /repo/.github/gitleaks.toml --redact=100 --no-banner --no-color --verbose 2>&1)"
+  --config /repo/.gitleaks.toml --redact=100 --no-banner --no-color --verbose 2>&1)"
 status=$?
 printf '%s\n' "$output"
 

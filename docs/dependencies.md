@@ -36,7 +36,7 @@ condition for an authorized maintainer to disable; a read-only job cannot disarm
    security alerts and configured rebase behavior enabled. A hold label is informational;
    it does not grant or revoke repository permissions.
 
-Since 2026-11-09 `.github/dependabot.yml` uses one `multi-ecosystem-groups` group (`weekly-all`: npm,
+Since 2026-11-09 `.github/dependabot.yml` uses one `multi-ecosystem-groups` group (`weekly`: npm,
 github-actions, docker; Monday 09:00 America/Argentina/Buenos_Aires; target `develop`) so a single weekly
 PR carries every ecosystem. `@biomejs/biome` 2.6 formats Markdown, so `biome.json` excludes `**/*.md`
 (byte-identical plan copies must not be reformatted; Markdown gets its own linter in the docs work).

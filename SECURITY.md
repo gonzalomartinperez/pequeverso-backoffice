@@ -1,25 +1,30 @@
-# Security
+# Security policy
 
-Report vulnerabilities privately to the repository owner (GitHub private vulnerability reporting
-or the Pequeverso support address listed on the storefront). Do not open public issues.
+## Supported versions
 
-This repository is public; the application it builds is a **private** backoffice. Design notes:
+Only the latest release on the default branch receives security fixes. Older tags are not patched.
 
-- **Access:** OAuth (Google, GitHub) through Better Auth. No passwords, no public sign-up, no
-  domain-based access. Only `OWNER_EMAIL` and invited, provider-verified e-mails get an account;
-  invitations are single-use, expire after 48 h and are stored as SHA-256 digests. Roles
-  (`owner`, `viewer`) are re-read on every request; removing an account deletes its sessions.
-  See [authentication.md](docs/authentication.md).
-- **Sessions:** server-side in PostgreSQL; HttpOnly, SameSite=Lax, host-only cookies (`Secure` on
-  https). Nothing about sessions or credentials is stored in `localStorage`. Origin checks protect
-  state-changing auth requests; server actions are Origin-checked by Next.js and re-check the role.
-- **Headers:** backoffice routes send a nonce-based CSP (`strict-dynamic`, no `unsafe-inline`
-  scripts), `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `Cache-Control: private, no-store`
-  and `X-Robots-Tag: noindex`.
-- **Operations data:** read server-to-server with `OPS_READ_TOKEN` (server environment only, never
-  `NEXT_PUBLIC_*`), validated at runtime, never cached; it contains aggregates only (no prompts,
-  answers, buyer e-mails, cookies or secrets).
-- **Secrets:** only in the runtime environment (`BETTER_AUTH_SECRET`, `DATABASE_URL`, provider
-  client secrets, `OPS_READ_TOKEN`). Production refuses weak or test settings
-  (`src/server/parse-config.ts`). CI scans files and history for secrets.
-- No analytics, session replay or third-party scripts are loaded.
+## Reporting a vulnerability
+
+Please do not open a public issue for a vulnerability.
+
+1. Open the repository's **Security** tab and choose **Report a vulnerability** (GitHub private vulnerability reporting).
+2. Include the affected version or commit, the impact, and the steps to reproduce.
+3. Do not include real personal data or live credentials in the report.
+
+## What to expect
+
+| Step | Target |
+|---|---|
+| Acknowledgement | within 5 days |
+| Triage and severity (CVSS) | within 10 days |
+| Fix or mitigation for KEV, actively exploited or critical issues | 7 days or less |
+| Fix for high issues | 30 days |
+| Public advisory and credit (if wanted) | after the fix is released |
+
+Secrets that reach the repository are rotated first and removed from history only after rotation.
+
+## Scope
+
+In scope: the code in this repository, its build and release workflows, and its published artifacts.
+Out of scope: third-party services the project integrates with, social engineering, and denial of service by volume.

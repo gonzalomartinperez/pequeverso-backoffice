@@ -4,10 +4,16 @@
 
 ```bash
 nvm use            # Node 24.22.0 from .nvmrc
-npm ci
-npx playwright install --with-deps chromium firefox webkit
+npm run setup      # npm ci --ignore-scripts, then npm run check:fast (about 20 s)
+npx playwright install --with-deps chromium firefox webkit   # browser suite only
 cp .env.example .env.local   # optional: local runtime values (never commit)
 ```
+
+A dev container (`.devcontainer/`) runs `npm run setup` on creation. It uses the host Docker
+engine, so a fixture database published on the host is reached at `host.docker.internal`
+(for example `TEST_DATABASE_URL=postgres://...@host.docker.internal:5432/...`); Playwright browsers
+are installed separately as above. UI terms and their code names
+are in the [glossary](docs/GLOSSARY.md).
 
 ## Commands (and which compiler each uses)
 
@@ -19,7 +25,8 @@ cp .env.example .env.local   # optional: local runtime values (never commit)
 | `npm run typecheck` | `next typegen` (route types) then **TypeScript 7** `tsc --noEmit` over the whole project, tests included |
 | `npm test` | `node --test` on `tests/unit/**/*.test.ts` (Node 24 strips types natively for execution): access rules, pinned ops contract, configuration, CSP, fixture safety and the architecture-boundary check |
 | `npm run lint` / `npm run format` | Biome (lint + format); Biome does not type-check |
-| `npm run check` | Everything above except browsers and databases |
+| `npm run check:fast` | Inner loop: lint, type check and unit tests (including the architecture guard) |
+| `npm run check` | Everything above except browsers and databases, plus knip, public-file, docs and skills checks and the build |
 | `npm run test:db` | `scripts/db-check.ts` (migrations vs Better Auth schema, idempotent re-apply) and `tests/integration` (real OAuth callback against `scripts/fake-idp.ts`); needs a disposable PostgreSQL in `DATABASE_URL` or `TEST_DATABASE_URL`; each run creates and drops its own databases |
 | `npm run test:browser` | Playwright (`playwright.config.ts`, `tests/browser`) against the production build started by `scripts/backoffice-stack.ts`: ports 3241 (web), 8237 (mock ops), 8238 (fake IdP); needs `TEST_DATABASE_URL`. With `LIVE_OPS_URL`/`LIVE_OPS_TOKEN` it reads a running API instead of the mock (`live-ops.spec.ts`) |
 
