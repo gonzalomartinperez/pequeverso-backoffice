@@ -1,0 +1,20 @@
+# .codex/config.toml from engineering-standards harness v1.0.0 (ecosystem 15.6).
+# Keys checked against codex-cli 0.169.0 (see docs/agent-harness.md). No secrets and no MCP servers.
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+network_access = false
+
+# Hooks stay commented out: the hook schema was not validated for this Codex release and an
+# unknown key can stop Codex from starting. Both guard scripts accept Codex events and exit 2 to
+# block. Enable after checking the installed version's documentation, for example:
+#
+# [[hooks.PreToolUse]]
+# matcher = "Bash"
+# hooks = [{ type = "command", command = "python3 -I .claude/hooks/guard-bash.py" }]
+#
+# [[hooks.PreToolUse]]
+# matcher = "apply_patch"
+# hooks = [{ type = "command", command = "python3 -I .claude/hooks/guard-files.py" }]
