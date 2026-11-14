@@ -157,7 +157,7 @@ jobs:
     name: Container verification
     needs: [static]
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -199,6 +199,54 @@ jobs:
           SERVICE_REVISION: ${{ github.sha }}
           VERSION: ${{ steps.meta.outputs.version }}
         run: scripts/check-image-metadata.sh pequeverso-backoffice:rc pequeverso-backoffice-postgres:rc
+      - name: Dockerfile lint, app (hadolint)
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: infra/docker/app/Dockerfile
+          failure-threshold: warning
+      - name: Dockerfile lint, PostgreSQL artifact (hadolint)
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: infra/docker/postgres/Dockerfile
+          failure-threshold: warning
+      - name: CIS image checks (dockle, digest-pinned)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            goodwithtech/dockle:v0.4.15@sha256:eade932f793742de0aa8755406c7677cd7696f8675b6180926f7eeffa7abe6b9 \
+            --exit-code 1 --exit-level warn pequeverso-backoffice:rc
+      - name: Image structure (container-structure-test, checksum-verified)
+        env:
+          CST_VERSION: v1.22.1
+          CST_SHA256: fa35e89512a8978585f76cf41397956d2e3a30c62c2ad3fb857b1597074d14ca
+        run: |
+          curl -fsSL -o /tmp/cst "https://github.com/GoogleContainerTools/container-structure-test/releases/download/${CST_VERSION}/container-structure-test-linux-amd64"
+          echo "${CST_SHA256}  /tmp/cst" | sha256sum -c -
+          chmod +x /tmp/cst
+          /tmp/cst test --image pequeverso-backoffice:rc --config infra/docker/app/structure-test.yaml
+      - name: Vulnerability scan, app image (Grype, fixable high or critical fails)
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        with:
+          image: pequeverso-backoffice:rc
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          output-format: table
+      - name: Vulnerability scan, PostgreSQL artifact (Grype, fixable high or critical fails)
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        with:
+          image: pequeverso-backoffice-postgres:rc
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          output-format: table
+      - name: SBOM of the app image (Syft, CycloneDX JSON artifact)
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: pequeverso-backoffice:rc
+          format: cyclonedx-json
+          output-file: sbom-pequeverso-backoffice.cdx.json
+          artifact-name: sbom-pequeverso-backoffice.cdx.json
+          upload-release-assets: false
       - name: Smoke the exact image hardened (fail-closed, migrations, readiness, headers)
         run: scripts/smoke-image.sh pequeverso-backoffice:rc
       - name: Compare bounded IAM settings and restore with the exact app image

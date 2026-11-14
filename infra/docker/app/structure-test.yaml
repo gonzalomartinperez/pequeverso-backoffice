@@ -1,0 +1,66 @@
+# container-structure-test for the app image (docs/master-plan/ci-cd.md section 8).
+# Runs against the exact image the container job built; complements scripts/smoke-image.sh.
+schemaVersion: 2.0.0
+
+metadataTest:
+  user: "65532:65532"
+  workdir: /app
+  exposedPorts: ["3000"]
+  entrypoint: []
+  cmd: ["node", "server.js"]
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: BACKOFFICE_ENVIRONMENT
+      value: production
+    - key: NEXT_TELEMETRY_DISABLED
+      value: "1"
+  labels:
+    - key: org.opencontainers.image.licenses
+      value: MIT
+    - key: org.opencontainers.image.source
+      value: https://github.com/gonzalomartinperez/pequeverso-backoffice
+
+fileExistenceTests:
+  - name: standalone server
+    path: /app/server.js
+    shouldExist: true
+    uid: 65532
+    gid: 65532
+  - name: static assets
+    path: /app/.next/static
+    shouldExist: true
+  - name: migrations
+    path: /app/migrations
+    shouldExist: true
+  - name: migration runner
+    path: /app/scripts/db-migrate.ts
+    shouldExist: true
+  - name: licence notices
+    path: /app/NOTICE.md
+    shouldExist: true
+  - name: no shell (distroless)
+    path: /bin/sh
+    shouldExist: false
+  - name: no package manager
+    path: /usr/local/bin/npm
+    shouldExist: false
+  - name: no environment file
+    path: /app/.env
+    shouldExist: false
+  - name: no local environment file
+    path: /app/.env.local
+    shouldExist: false
+  - name: no tests in the image
+    path: /app/tests
+    shouldExist: false
+
+commandTests:
+  - name: runs as the non-root runtime user
+    command: node
+    args: ["-e", "process.exit(process.getuid() === 65532 && process.getgid() === 65532 ? 0 : 1)"]
+    exitCode: 0
+  - name: Node 24 runtime
+    command: node
+    args: ["-p", "process.versions.node.split('.')[0]"]
+    expectedOutput: ["^24\\n?$"]
