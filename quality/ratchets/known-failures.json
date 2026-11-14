@@ -1,0 +1,45 @@
+{
+  "$comment": "Expected-red tests: each is marked { todo } in its file so CI stays green, and must be removed from here and un-todo'd together by the plan item that delivers the feature (tests/unit/known-failures.test.ts keeps this list honest).",
+  "failures": [
+    {
+      "id": "log-structured-request-id",
+      "file": "tests/unit/log-redaction.test.ts",
+      "test": "structured server logs carry the request id and no e-mail or token",
+      "reason": "no structured logger with request id exists",
+      "plan": "M4.7",
+      "owner": "M4.7"
+    },
+    {
+      "id": "span-request-id",
+      "file": "tests/unit/log-redaction.test.ts",
+      "test": "trace spans carry the request id and no e-mail or token",
+      "reason": "spans carry no request id attribute",
+      "plan": "M4.7",
+      "owner": "M4.7"
+    },
+    {
+      "id": "request-id-sanitize",
+      "file": "tests/unit/request-id.test.ts",
+      "test": "a valid incoming x-request-id is kept and an invalid one is replaced",
+      "reason": "request-id helper does not exist",
+      "plan": "M4.7",
+      "owner": "M4.7"
+    },
+    {
+      "id": "request-id-proxy",
+      "file": "tests/unit/request-id.test.ts",
+      "test": "proxy.ts creates, sanitizes and echoes x-request-id on every response",
+      "reason": "proxy.ts does not handle x-request-id",
+      "plan": "M4.7",
+      "owner": "M4.7"
+    },
+    {
+      "id": "request-id-ops-call",
+      "file": "tests/unit/request-id.test.ts",
+      "test": "the ops API call carries the sanitized x-request-id",
+      "reason": "ops adapter does not propagate a request id",
+      "plan": "M4.7",
+      "owner": "M4.7"
+    }
+  ]
+}

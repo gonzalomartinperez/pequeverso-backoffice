@@ -1,0 +1,123 @@
+# Nightly OWASP ZAP baseline (passive) scan of the preview stack: production build + disposable
+# PostgreSQL + mock ops + fake identity provider (SYNTHETIC data, TEST ONLY). It is NOT a ci-gate
+# prerequisite. Two scans: anonymous routes, and the panel with a fake-IdP owner session cookie.
+# `schedule` runs only from the default branch (main, frozen until M7): the pull_request trigger,
+# limited to this workflow and its helpers, lets the PR prove it until the schedule activates.
+name: zap-nightly
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/zap-nightly.yml"
+      - ".zap/**"
+      - "scripts/zap-*.ts"
+      - "scripts/ci-postgres.sh"
+      - "scripts/backoffice-stack.ts"
+
+permissions: {}
+
+concurrency:
+  group: zap-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zap:
+    name: ZAP baseline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      # Official image pinned by digest (resolved 2026-11-14 from the `stable` tag).
+      ZAP_IMAGE: ghcr.io/zaproxy/zaproxy:stable@sha256:9624669db72f54d86c4b46a7064518bd9bf79d8c61a4c31befa9923489f328af
+      TEST_DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Production build
+        run: npm run build
+      - name: Start a disposable PostgreSQL (test-only credentials)
+        run: scripts/ci-postgres.sh
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start the preview stack (synthetic)
+        run: |
+          nohup node scripts/backoffice-stack.ts > stack.log 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/stack.pid"
+          for _ in $(seq 1 60); do
+            if curl -fsS http://localhost:3241/healthz >/dev/null 2>&1 \
+              && curl -fsS -o /dev/null -X POST -d '{"email":"owner@example.test","email_verified":true,"sub":"zap-owner"}' http://127.0.0.1:8238/__identity 2>/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat stack.log
+          exit 1
+      - name: Sign in through the fake identity provider
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/session"
+          node scripts/zap-session.ts "$RUNNER_TEMP/session/cookie"
+      - name: Check the session cookie reaches the panel
+        run: |
+          cookie="$(cat "$RUNNER_TEMP/session/cookie")"
+          echo "::add-mask::$cookie"
+          (umask 077; printf 'Cookie: %s\n' "$cookie" > "$RUNNER_TEMP/session/header")
+          code="$(curl -sS -o /dev/null -w '%{http_code}' -H "@$RUNNER_TEMP/session/header" http://localhost:3241/panel)"
+          test "$code" = 200 || { echo "authenticated /panel answered $code (expected 200)" >&2; exit 1; }
+      - name: Prepare the report directory
+        run: |
+          mkdir -m 777 zap-reports
+          cp .zap/rules.tsv zap-reports/rules.tsv
+      # Host networking stays: the app's origin, redirects and cookies are all http://localhost:3241
+      # (BACKOFFICE_ORIGIN), so a bridge network with host.docker.internal would see redirects to an
+      # unreachable localhost. The stack is synthetic and the runner is disposable.
+      - name: ZAP baseline, anonymous routes
+        if: always()
+        run: |
+          docker run --rm --network host -v "$PWD/zap-reports:/zap/wrk:rw" "$ZAP_IMAGE" \
+            zap-baseline.py -t http://localhost:3241/ingresar -c rules.tsv -I \
+            -r anonymous.html -J anonymous.json
+      - name: ZAP baseline, authenticated panel (owner session cookie)
+        if: always()
+        run: |
+          cookie="$(cat "$RUNNER_TEMP/session/cookie")"
+          echo "::add-mask::$cookie"
+          opts="-config replacer.full_list(0).description=session"
+          opts="$opts -config replacer.full_list(0).enabled=true"
+          opts="$opts -config replacer.full_list(0).matchtype=REQ_HEADER"
+          opts="$opts -config replacer.full_list(0).matchstr=Cookie"
+          opts="$opts -config replacer.full_list(0).regex=false"
+          opts="$opts -config replacer.full_list(0).replacement=$cookie"
+          docker run --rm --network host -v "$PWD/zap-reports:/zap/wrk:rw" "$ZAP_IMAGE" \
+            zap-baseline.py -t http://localhost:3241/panel -c rules.tsv -I \
+            -r authenticated.html -J authenticated.json -z "$opts"
+      - name: Gate on High alerts (both reports)
+        if: always()
+        run: |
+          status=0
+          node scripts/zap-gate.ts zap-reports/anonymous.json http://localhost:3241 || status=1
+          node scripts/zap-gate.ts zap-reports/authenticated.json http://localhost:3241 || status=1
+          exit "$status"
+      - name: Stop the stack
+        if: always()
+        run: |
+          kill -TERM "$(cat "$RUNNER_TEMP/stack.pid")" 2>/dev/null || true
+          sleep 5
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: zap-reports
+          # The rules copy is public config; reports hold no cookie (it is a request header only).
+          path: |
+            zap-reports/*.html
+            zap-reports/*.json
+          retention-days: 14

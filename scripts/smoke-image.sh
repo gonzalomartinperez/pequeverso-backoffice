@@ -71,6 +71,13 @@ headers="$(curl --max-time 6 -sS -o /dev/null -D - "http://127.0.0.1:$PORT/ingre
 grep -qi '^content-security-policy:.*frame-ancestors .none.' <<<"$headers"
 grep -qi '^cache-control:.*no-store' <<<"$headers"
 grep -qi '^x-robots-tag:.*noindex' <<<"$headers"
+grep -qi '^x-frame-options: *deny' <<<"$headers"
+grep -qi '^x-content-type-options: *nosniff' <<<"$headers"
+! grep -qi '^x-powered-by:' <<<"$headers"
+# Liveness and readiness answers carry the no-framing policy too and expose no stack details.
+probe_headers="$(curl --max-time 6 -sS -o /dev/null -D - "http://127.0.0.1:$PORT/healthz")"
+grep -qi '^x-frame-options: *deny' <<<"$probe_headers"
+! grep -qi '^x-powered-by:' <<<"$probe_headers"
 code="$(curl --max-time 6 -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/panel")"
 [[ "$code" =~ ^30[37]$ ]] || { echo "unauthenticated /panel answered $code" >&2; exit 1; }
 ! docker logs "$APP" 2>&1 | grep -q "$PW"
