@@ -17,6 +17,7 @@
     "test": "node --test \"tests/unit/**/*.test.ts\"",
     "test:property:nightly": "FC_NUM_RUNS=1000 FC_FUZZ_RUNS=5000 node --test tests/unit/properties.test.ts tests/unit/validator-fuzz.test.ts",
     "test:browser": "playwright test",
+    "test:browser:pr": "playwright test --project=chromium --project=mobile-webkit",
     "security:check": "node scripts/check-public-files.ts",
     "docs:check": "node scripts/check-docs.ts",
     "skills:check": "node scripts/check-skills.ts",
