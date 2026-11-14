@@ -41,11 +41,32 @@
       "preset": "recommended",
       "style": {
         "noNonNullAssertion": "error",
-        "useImportType": "error"
+        "useImportType": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "next/router": "App Router only: use next/navigation.",
+              "child_process": "The app never spawns processes; scripts/ may.",
+              "node:child_process": "The app never spawns processes; scripts/ may."
+            }
+          }
+        }
       },
       "suspicious": {
-        "noExplicitAny": "error"
+        "noExplicitAny": "error",
+        "noImportCycles": "error"
+      },
+      "correctness": {
+        "noPrivateImports": "error",
+        "noUndeclaredDependencies": "error"
       }
+    },
+    "domains": {
+      "next": "recommended",
+      "react": "recommended",
+      "test": "recommended",
+      "project": "recommended"
     }
   },
   "assist": {
@@ -54,5 +75,17 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["scripts/**", "tests/**", "*.config.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }

@@ -78,7 +78,7 @@ const accessModels = {
 } satisfies BetterAuthPlugin;
 
 /** Invitation consumption on the adapter of the current Better Auth transaction. */
-export function transactionalInvitations(
+function transactionalInvitations(
   adapter: Pick<DBAdapter, "updateMany" | "findOne" | "create">,
 ): InvitationConsumer {
   return {
