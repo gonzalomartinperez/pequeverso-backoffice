@@ -6,5 +6,7 @@
     "tests/integration/**/*.test.ts",
     "tests/browser/**/*.spec.ts"
   ],
-  "project": ["src/**/*.{ts,tsx,css}", "scripts/**/*.ts", "tests/**/*.ts", "*.config.ts"]
+  "ignore": ["tests/authz/fixtures/**"],
+  "project": ["src/**/*.{ts,tsx,css}", "scripts/**/*.ts", "tests/**/*.ts", "*.config.ts"],
+  "ignoreDependencies": ["c8"]
 }

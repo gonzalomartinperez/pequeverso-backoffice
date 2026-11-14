@@ -21,7 +21,7 @@ runs everything. A unit test keeps every tracked file inside some profile.
 | `docs` | Docs checks | docs, code, contract, workflow | Public-file scan, local links, skills catalog (Node built-ins, no install) |
 | `static` | Static checks | code, database, container, contract, workflow | `npm run setup` (install and `check:fast`), dependency audit, knip |
 | `build` | Production build | code, contract, workflow | `next build` once; the `.next` output is the browser job's artifact |
-| `database` | Database tests | database paths, contract, workflow | Mandatory PostgreSQL migrations and IAM integration suite |
+| `database` | Database tests | code, database paths, contract, workflow | Mandatory PostgreSQL migrations and IAM integration suite, merged coverage and its gates |
 | `container` | Container verification | container paths, workflow | Bake build of both images, metadata, image gates, smoke and restore drill |
 | `browser` | Browser tests | code, contract, workflow | The build artifact, disposable PostgreSQL, fake identity provider, synthetic ops data; pull requests run chromium and mobile-webkit (iPhone 15), push and merge queue run all projects |
 | `ci-gate` | ci-gate | always | Fails on a failed or cancelled job and on a skipped job the profile expected |
@@ -67,6 +67,34 @@ Database and browser verification require their documented isolated fixtures; se
 source-only review or local policy-test pass does not establish database, browser or container
 success. Hosted checks must pass on the exact proposed head and again after integration before
 reporting the new workflow verified.
+
+## Merged coverage gate
+
+The `database` job runs `npm run coverage` (`scripts/coverage.ts`): the unit and the PostgreSQL
+integration suites under one `NODE_V8_COVERAGE` directory, merged by `c8` into
+`coverage/lcov.info` and `coverage/coverage-summary.json` (uploaded as the `coverage` artifact;
+needs `DATABASE_URL`). `npm test` stays fast and unchanged. The `code` profile adds the `database`
+job, so every code PR (including `src/shared/**` and `tests/unit/**`) runs the gate. On push and
+merge-queue runs only the floors and the ratchet run (no base needed); on pull requests two
+dependency-free scripts then gate the result ([decision](adr/009-coverage-c8-merged.md)):
+
+- `scripts/check-coverage.ts`: branch floor 80% whole repo; branch coverage of
+  `src/features/auth/**` and `src/server/auth.ts` has the plan target 90% (reported) and an interim
+  80% floor until the measured gap closes; 80% line coverage of the IAM store file; and the raise-only ratchet
+  `quality/ratchets/coverage.json` (measured values rounded down; a PR may raise it, never lower
+  it: the script compares it with the base revision). Every ratchet key must be a finite number in
+  [0, 100]; a missing key, a non-number, an empty file set or an unresolvable base ref fails closed.
+  The base is the merge commit's first parent (CI checks out the PR merge ref), else the merge base.
+- `scripts/diff-coverage.ts`: changed executable lines under `src/**` need 90% coverage on auth
+  paths and 80% elsewhere (lcov plus `git diff -U0`). A changed `src/**/*.ts` file missing from lcov
+  fails unless it is type-only; changed `.tsx` lines are unmeasured and their count is printed.
+
+Both gates read only standard lcov and the istanbul `coverage-summary.json` (no c8-specific
+assumptions), so they survive the planned move to Vitest and `@vitest/coverage-v8` (M2.2); only
+`scripts/coverage.ts` is c8-specific.
+
+Both have fixture tests, including failing cases, in `tests/unit/coverage-gate.test.ts`. Locally:
+`DATABASE_URL=... npm run coverage && npm run coverage:check`.
 
 The unit suite includes [ci-profile.test.ts](../tests/unit/ci-profile.test.ts): every tracked file
 is in a profile, every job is gated on `classify` and named in the map, `ci-gate` needs every job
@@ -128,6 +156,28 @@ All three call or copy the pinned `engineering-standards` v1.0.0 templates:
 GitHub runs scheduled and manually dispatched workflows only from the default branch (`main`), so
 these start when `develop` is promoted (M7); the guard's pull-request trigger works on `develop`
 now. CodeQL uses the repository's default setup (no workflow file), an owner setting.
+
+## ZAP baseline (nightly, not a gate)
+
+[zap-nightly](../.github/workflows/zap-nightly.yml) builds the app, starts the preview stack
+(disposable PostgreSQL, mock ops, fake IdP; synthetic data) and runs the OWASP ZAP baseline
+(passive) scan twice with the official image pinned by digest: the anonymous `/ingresar`, and
+`/panel` with the fixture owner's session cookie taken from a fake-IdP sign-in
+(`scripts/zap-session.ts`, injected through a ZAP replacer rule). Triage lives in
+[`.zap/rules.tsv`](../.zap/rules.tsv) (each rule needs a reason comment). `scripts/zap-gate.ts`
+fails the job on any remaining High alert; Medium and lower stay visible in the HTML and JSON
+report artifact (`zap-reports`, 14 days). It is not a `ci-gate` prerequisite. The baseline does
+not attack; an active scan and spider-driven coverage of every panel route are follow-ups.
+`schedule` runs only from `main` (M7); until then the pull-request trigger, limited to the
+workflow and its helper scripts, and `workflow_dispatch` run it. The pinned digest moves in a
+normal task PR (resolve it from the registry without pulling).
+
+## Expected-red tests
+
+Tests for features that do not exist yet are marked `{ todo: "M<k>.<n> ..." }` (reported, never
+failing) and listed in `quality/ratchets/known-failures.json`;
+`tests/unit/known-failures.test.ts` fails when a listed test vanishes or stops being todo, or a
+todo test is unlisted. Today: log redaction and `x-request-id` (owner M4.7).
 
 ## Release PR
 
