@@ -14,11 +14,13 @@ if (!output) {
 const app = process.env.ZAP_APP_URL ?? "http://localhost:3241";
 const idp = process.env.ZAP_IDP_URL ?? "http://127.0.0.1:8238";
 
-await fetch(`${idp}/__identity`, {
+const identity = await fetch(`${idp}/__identity`, {
   method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify({ email: "owner@example.test", email_verified: true, sub: "zap-owner" }),
+  signal: AbortSignal.timeout(10_000),
 });
+if (!identity.ok) throw new Error(`fake IdP refused the identity (${identity.status})`);
 const browser = await chromium.launch();
 try {
   const context = await browser.newContext();

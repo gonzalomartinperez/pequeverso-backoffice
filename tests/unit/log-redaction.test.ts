@@ -8,10 +8,12 @@ import { parseObservability } from "../../src/server/observability-config.ts";
 // synthetic secrets. Passing tests prove today's server paths stay quiet and clean; the todo
 // tests need structured logging with a request id (M4.7) and are listed in
 // quality/ratchets/known-failures.json.
-const TOKEN = "planted-ops-token-0000000000000000";
-const SCRAPE = "planted-scrape-token-1111111111111111";
-const EMAIL = "planted.person@example.test";
-const SECRETS = [TOKEN, SCRAPE, EMAIL, "Bearer"];
+const plant = (label: string) => ({
+  token: `planted-ops-token-${label}-0000000000000000`,
+  scrape: `planted-scrape-token-${label}-1111111111111111`,
+  email: `planted.${label}@example.test`,
+});
+type Planted = ReturnType<typeof plant>;
 
 type Sink = "log" | "info" | "warn" | "error" | "debug";
 const SINKS: Sink[] = ["log", "info", "warn", "error", "debug"];
@@ -39,39 +41,59 @@ async function captured(body: () => Promise<unknown>): Promise<string> {
   return lines.join("\n");
 }
 
-function assertClean(output: string) {
-  for (const secret of SECRETS) assert.ok(!output.includes(secret), `log leaked ${secret}`);
+function assertClean(output: string, planted: Planted) {
+  for (const secret of [...Object.values(planted), "Bearer"])
+    assert.ok(!output.includes(secret), `log leaked ${secret}`);
 }
 
 test("a failing ops request leaves the bearer token out of logs and the reading", async () => {
+  const planted = plant("ops-fail");
   const failing = (async () => {
-    throw new Error(`connect failed with Authorization: Bearer ${TOKEN} for ${EMAIL}`);
+    throw new Error(
+      `connect failed with Authorization: Bearer ${planted.token} for ${planted.email}`,
+    );
   }) as unknown as typeof fetch;
   let reading: unknown;
   const output = await captured(async () => {
-    reading = await httpOpsSource({ url: "http://ops.invalid", token: TOKEN }, failing).read();
+    reading = await httpOpsSource(
+      { url: "http://ops.invalid", token: planted.token },
+      failing,
+    ).read();
   });
   assert.equal((reading as { status: string; reason: string }).reason, "unreachable");
-  assertClean(output);
-  assertClean(JSON.stringify(reading));
+  assertClean(output, planted);
+  assertClean(JSON.stringify(reading), planted);
 });
 
 test("a rejected or malformed ops response leaves no secret in logs or the reading", async () => {
-  for (const body of [`{"error":"${TOKEN} ${EMAIL}"}`, `not json ${TOKEN}`]) {
-    const fetcher = (async () =>
-      new Response(body, { status: body.startsWith("{") ? 401 : 200 })) as typeof fetch;
+  const planted = plant("ops-reject");
+  const cases = [
+    { body: `{"error":"${planted.token} ${planted.email}"}`, status: 401, reason: "rejected" },
+    { body: `not json ${planted.token}`, status: 200, reason: "invalid" },
+  ];
+  for (const { body, status, reason } of cases) {
+    const fetcher = (async () => new Response(body, { status })) as typeof fetch;
     let reading: unknown;
     const output = await captured(async () => {
-      reading = await httpOpsSource({ url: "http://ops.invalid", token: TOKEN }, fetcher).read();
+      reading = await httpOpsSource(
+        { url: "http://ops.invalid", token: planted.token },
+        fetcher,
+      ).read();
     });
-    assertClean(output);
-    assertClean(JSON.stringify(reading));
+    assert.equal((reading as { status: string }).status, "unavailable");
+    assert.equal((reading as { reason: string }).reason, reason);
+    assertClean(output, planted);
+    assertClean(JSON.stringify(reading), planted);
   }
 });
 
 test("observed operations never put planted secrets in logs, metrics or errors", async () => {
+  const planted = plant("observed");
   const observed = new SafeObservability(
-    parseObservability({ OBSERVABILITY_METRICS_ENABLED: "true", OBSERVABILITY_READ_TOKEN: SCRAPE }),
+    parseObservability({
+      OBSERVABILITY_METRICS_ENABLED: "true",
+      OBSERVABILITY_READ_TOKEN: planted.scrape,
+    }),
   );
   let thrown = "";
   const output = await captured(async () => {
@@ -84,7 +106,7 @@ test("observed operations never put planted secrets in logs, metrics or errors",
       await observed.observe(
         "ops_summary",
         async () => {
-          throw new Error(`failure for ${EMAIL}`);
+          throw new Error(`failure for ${planted.email}`);
         },
         () => "ok",
       );
@@ -92,34 +114,39 @@ test("observed operations never put planted secrets in logs, metrics or errors",
       thrown = error instanceof Error ? error.message : "";
     }
   });
-  assertClean(output);
-  assertClean(observed.metrics());
+  assertClean(output, planted);
+  assertClean(observed.metrics(), planted);
   assert.match(thrown, /failure/); // the error propagates to the caller, which owns its handling
 });
 
 test("rejected scrape credentials are not echoed", async () => {
+  const planted = plant("scrape");
   const observed = new SafeObservability(
-    parseObservability({ OBSERVABILITY_METRICS_ENABLED: "true", OBSERVABILITY_READ_TOKEN: SCRAPE }),
+    parseObservability({
+      OBSERVABILITY_METRICS_ENABLED: "true",
+      OBSERVABILITY_READ_TOKEN: planted.scrape,
+    }),
   );
   const output = await captured(async () => {
-    assert.equal(observed.authorize(`Bearer ${SCRAPE}x`), "rejected");
+    assert.equal(observed.authorize(`Bearer ${planted.scrape}x`), "rejected");
   });
-  assertClean(output);
+  assertClean(output, planted);
 });
 
 test("structured server logs carry the request id and no e-mail or token", {
   todo: "M4.7: structured logger with request id does not exist yet",
 }, async () => {
+  const planted = plant("log");
   // Expected shape once M4.7 lands: src/server/log.ts exports log(event, fields, requestId).
   const modulePath = "../../src/server/log.ts";
   const { log } = (await import(modulePath)) as {
     log: (event: string, fields: Record<string, unknown>, requestId: string) => void;
   };
   const output = await captured(async () =>
-    log("sign_up_denied", { email: EMAIL, token: TOKEN }, "req-12345678"),
+    log("sign_up_denied", { email: planted.email, token: planted.token }, "req-12345678"),
   );
   assert.match(output, /req-12345678/);
-  assertClean(output);
+  assertClean(output, planted);
 });
 
 test("trace spans carry the request id and no e-mail or token", {
