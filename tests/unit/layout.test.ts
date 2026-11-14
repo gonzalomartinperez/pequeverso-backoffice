@@ -8,8 +8,14 @@ it("discovers the real browser specifications from the canonical directory", () 
   assert.match(read("playwright.config.ts"), /testDir: "\.\/tests\/browser"/);
   assert.deepEqual(readdirSync("tests/browser").sort(), [
     "analytics.spec.ts",
-    "backoffice.spec.ts",
+    "dashboard.spec.ts",
+    "errors.spec.ts",
+    "invitation.spec.ts",
     "live-ops.spec.ts",
+    "navigation.spec.ts",
+    "operations.spec.ts",
+    "sign-in.spec.ts",
+    "support.ts",
   ]);
   assert.equal(existsSync("tests/backoffice"), false);
 });
