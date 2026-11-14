@@ -9,7 +9,7 @@ name: CI
 on:
   pull_request:
     branches: [develop, main]
-    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+    types: [opened, synchronize, reopened, labeled, unlabeled, edited, ready_for_review]
   push:
     branches: [develop, main]
   merge_group:
@@ -97,6 +97,8 @@ jobs:
       # Node built-ins only: no dependency install on the docs fast path.
       - name: Public-file scan, documentation links and skills
         run: npm run security:check && npm run docs:check && npm run skills:check
+      - name: Unit tests that read docs and root files (retired domain, licence, skills)
+        run: node --test tests/unit/old-domain.test.ts tests/unit/license.test.ts tests/unit/skills.test.ts
 
   static:
     name: Static checks
