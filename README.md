@@ -63,8 +63,8 @@ browser suites. For the preview stack, the PostgreSQL recipe and the real-API re
 ## Usage
 
 Where it runs: deployment needs the owner's explicit authorization and follows the `vps-ops`
-handoff in the [deployment contract](docs/deployment-contract.md). Locally, `npm run preview:backoffice`
-starts the production build with a fake identity provider ("Proveedor de prueba") and the synthetic
+handoff in the [deployment contract](docs/deployment-contract.md). Locally, after `npm run build` and with a
+disposable PostgreSQL in `TEST_DATABASE_URL`, `npm run preview:backoffice` serves that build with a fake identity provider ("Proveedor de prueba") and the synthetic
 fixture from `scripts/mock-ops.ts`. Set `LIVE_OPS_URL` and `LIVE_OPS_TOKEN` to read a real API
 instead.
 
