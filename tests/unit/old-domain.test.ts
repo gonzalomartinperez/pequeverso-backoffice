@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
-// OD-53: the retired domain is never used as a contact, link or fixture value.
-// Built at runtime so this test file does not match itself.
-const retiredDomain = ["digitalproducts", "team", ".com"].join("");
-const pattern = new RegExp(retiredDomain.replaceAll(".", "\\."), "i");
+// OD-53: the retired domain (and its brand label, under any TLD) is never used as a contact, link
+// or fixture value. Built at runtime so this test file does not match itself.
+const retiredBrand = ["digitalproducts", "team"].join("");
+const retiredDomain = `${retiredBrand}.com`;
+const pattern = new RegExp(retiredBrand, "i");
 
 // Files that record the decision itself (owner registers and the plan that schedules the sweep).
 // Exact paths, not prefixes: a new mention anywhere else fails and needs review.
@@ -29,7 +32,7 @@ function retiredDomainReferences(entries: Iterable<Entry>): string[] {
 }
 
 function* repositoryEntries(): Generator<Entry> {
-  const root = new URL("../../", import.meta.url);
+  const root = fileURLToPath(new URL("../../", import.meta.url));
   const files = execFileSync(
     "git",
     ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
@@ -41,9 +44,9 @@ function* repositoryEntries(): Generator<Entry> {
     .split("\0")
     .filter(Boolean);
   for (const path of new Set(files)) {
-    const url = new URL(path, root);
-    if (!existsSync(url) || !statSync(url).isFile()) continue;
-    const bytes = readFileSync(url);
+    const file = join(root, path);
+    if (!existsSync(file) || !statSync(file).isFile()) continue;
+    const bytes = readFileSync(file);
     if (bytes.includes(0)) continue;
     yield { path, text: bytes.toString("utf8") };
   }
@@ -62,6 +65,8 @@ describe("retired domain (OD-53)", () => {
         text: `{"contact":"https://${retiredDomain.toUpperCase()}"}`,
       },
       { path: "docs/master-plan/progress.md", text: retiredDomain },
+      { path: "src/mail.ts", text: `"mail.${retiredDomain}"` },
+      { path: "docs/brand.md", text: `${retiredBrand}.net` },
       { path: "README.md", text: "Write to soporte@pequeverso.com." },
       { path: "docs/master-plan/owner-decisions.md", text: retiredDomain },
     ];
@@ -69,13 +74,15 @@ describe("retired domain (OD-53)", () => {
       "SECURITY.md",
       "tests/fixtures/ops.json",
       "docs/master-plan/progress.md",
+      "src/mail.ts",
+      "docs/brand.md",
     ]);
   });
 
-  it("does not match look-alike domains", () => {
+  it("does not match look-alike names", () => {
     assert.deepEqual(
       retiredDomainReferences([
-        { path: "a.md", text: "digitalproductsteam.co digitalproducts.com" },
+        { path: "a.md", text: "digitalproducts.com digital-products-team.com pequeverso.com" },
       ]),
       [],
     );
