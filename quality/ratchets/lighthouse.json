@@ -2,7 +2,7 @@
   "$comment": "Lighthouse ratchet (M2.8). baseline = audit measurement until the first clean CI run of .github/workflows/lighthouse.yml replaces it (then update in the same PR, only improving). budgets = testing.md targets. Warn-only: the 14-day warn-then-fail plan starts at warnSince.",
   "baselineSource": "docs/master-plan/audit/lighthouse-summary.json (audit, single runs; not CI medians of 5)",
   "mode": "warn",
-  "warnSince": null,
+  "warnSince": "2026-11-14",
   "enforceAfterDays": 14,
   "budgets": {
     "performance": 0.9,
