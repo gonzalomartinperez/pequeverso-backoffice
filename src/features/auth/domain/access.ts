@@ -5,7 +5,7 @@
  * invitation that was presented together with the sign-in.
  */
 
-export const ROLES = ["owner", "viewer"] as const;
+const ROLES = ["owner", "viewer"] as const;
 export type Role = (typeof ROLES)[number];
 
 export type Action = "read_operations" | "manage_access";
@@ -83,7 +83,7 @@ export function routeSignUp(input: SignUpInput, hasInvitationToken: boolean): Si
 }
 
 /** Invitation tokens: 32 random bytes, base64url. Only their SHA-256 digest is stored. */
-export const INVITATION_TOKEN = /^[A-Za-z0-9_-]{43}$/;
+const INVITATION_TOKEN = /^[A-Za-z0-9_-]{43}$/;
 
 export function isInvitationToken(value: unknown): value is string {
   return typeof value === "string" && INVITATION_TOKEN.test(value);

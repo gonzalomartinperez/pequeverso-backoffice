@@ -6,8 +6,8 @@ export const profile = {
   "/": ["hero", "leer", "bebe", "preguntas"],
   "/grafismo-fonetico/": ["hero", "incluye", "metodo", "preguntas"],
 } as const;
-export type Route = keyof typeof profile;
-export type Section = (typeof profile)[Route][number];
+type Route = keyof typeof profile;
+type Section = (typeof profile)[Route][number];
 export type Selection = {
   period: "day" | "week" | "month";
   offset: 0 | 1 | 2;

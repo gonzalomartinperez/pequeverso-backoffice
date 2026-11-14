@@ -101,15 +101,14 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci --no-audit --no-fund
+      # Fresh clone to green inner loop in one command: npm ci --ignore-scripts, then check:fast
+      # (Biome lint and format, TypeScript 7 with route types, unit/contract/architecture tests).
+      - name: One-command setup (install and check:fast)
+        run: npm run setup
       - name: Audit locked dependencies
         run: npm audit --audit-level=moderate
-      - name: Lint and format (Biome)
-        run: npm run lint
-      - name: Type-check with TypeScript 7 (route types included)
-        run: npm run typecheck
-      - name: Contract snapshot, unit tests and architecture boundaries
-        run: npm test
+      - name: Unused files, exports and dependencies (knip)
+        run: npm run knip
       - name: Public-file scan, documentation links and skills
         run: npm run security:check && npm run docs:check && npm run skills:check
 

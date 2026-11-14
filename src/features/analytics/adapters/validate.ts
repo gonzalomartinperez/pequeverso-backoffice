@@ -51,8 +51,7 @@ function counts(value: unknown, daily = false): Counts {
   need(sum(result) <= (daily ? 10000 : 310000));
   return result;
 }
-export const sum = (counts: Counts) =>
-  counts.page_views + counts.section_views + counts.public_clicks;
+const sum = (counts: Counts) => counts.page_views + counts.section_views + counts.public_clicks;
 export function parseAnalyticsReport(value: unknown, expected: Selection): Report {
   const root = object(value, [
     "schema_version",

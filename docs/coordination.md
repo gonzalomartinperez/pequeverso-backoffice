@@ -122,8 +122,8 @@ no architecture or runtime behavior changes.
 
 Inspected the portfolio backoffice's committed
 `a124139e1cfa1d0d496fcf76c518830491fc1679` source with `git show`; its working tree was
-not edited. Adopted the canonical `.claude/skills` catalog and relative directory symlinks
-from `.agents/skills`. The three existing Pequeverso web procedures, names, descriptions
+not edited. Adopted the canonical `.agents/skills` catalog and relative directory symlinks
+from `.claude/skills`. The three existing Pequeverso web procedures, names, descriptions
 and limits retain their own content. The stdlib-only validator and filesystem negative
 tests follow this repository's Node/TypeScript toolchain without adding dependencies.
 See [agent skills](agent-skills.md) and the [architecture map](architecture.md#paired-repository-conventions).

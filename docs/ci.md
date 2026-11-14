@@ -9,7 +9,7 @@ alter rulesets, approvals or branch settings. Changes follow task branch → `de
 | --- | --- | --- | --- |
 | `workflows` | Workflow validation | None | SHA-pinned actionlint and zizmor |
 | `secrets` | Secret scan | None | Redacted full-history secret scan |
-| `static` | Static checks | None | Locked dependency audit, Biome, type checking, unit/contract/architecture tests, public-file/docs/skill checks |
+| `static` | Static checks | None | Locked dependency audit, Biome (including import-cycle, undeclared-dependency, private-import and restricted-import rules), type checking, unit/contract/architecture tests, knip (unused files, exports, dependencies), public-file/docs/skill checks |
 | `database` | Database tests | `static` | Mandatory PostgreSQL migrations and IAM integration suite |
 | `container` | Container verification | `static` | Both images built through `docker-bake.hcl`; image metadata; hadolint, dockle (CIS), container-structure-test, Grype (fixable high or critical fails) and a CycloneDX SBOM artifact; production app image smoke and PostgreSQL artifact/restore verification |
 | `browser` | Browser tests | `static` | Production build, disposable PostgreSQL, fake identity provider and synthetic private operations data |
