@@ -16,7 +16,7 @@ to this backoffice; they do not import another language's formatting rules or de
   at the server boundary near the protected operation; hiding controls is not authorization.
 - Coordinate contract and lockfile ownership before editing. Consume committed producer pins;
   extend contracts compatibly or document the migration and rollback requirements explicitly.
-- Record meaningful architectural decisions in the [architecture](architecture.md) and ADRs.
+- Record meaningful architectural decisions in the [architecture](explanation/architecture.md) and ADRs.
   Keep application artifacts separate from deployment infrastructure owned by vps-ops.
 
 ## Repository checks

@@ -41,7 +41,7 @@ browser suite (axe and screenshots).
 | `line`, `line-strong` | navy 14 % / 28 % | white 12 % / 26 % | Borders |
 | `ring` | navy | turquoise | Focus outline (3 px, offset 2 px) |
 
-Automated axe scans pass on the backoffice pages in both themes ([verification.md](verification.md));
+Automated axe scans pass on the backoffice pages in both themes ([verification.md](explanation/history/verification-2026-10.md));
 that is not a full contrast audit of every state. Chart series use `--chart-*` roles (never coral).
 
 ## Typography

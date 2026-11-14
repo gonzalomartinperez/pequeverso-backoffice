@@ -1,240 +1,124 @@
-# pequeverso-backoffice
+<!-- Variant: PUBLIC -->
+<div align="center">
+  <img src="public/brand/brand-isotipo-w96-cf729aa6.webp" alt="" width="56" height="56">
+  <h1>Pequeverso backoffice</h1>
+  <p>Private operations panel for the Pequeverso shopping assistant: OAuth access, roles and a live dashboard.</p>
+  <a href="https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/gonzalomartinperez/pequeverso-backoffice/releases"><img alt="Release" src="https://img.shields.io/github/v/release/gonzalomartinperez/pequeverso-backoffice"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/gonzalomartinperez/pequeverso-backoffice"></a>
+</div>
 
-Private backoffice for Pequeverso. Its implemented capabilities are OAuth sign-in for the owner
-and invited people, access management, and the shopping assistant's operations dashboard:
-health, catalog freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
-(`pequeverso`); the former chat shells were removed from this repository (see git history).
-
-The repository is public; the application is private. Owner-authored software uses
-the [MIT License](LICENSE); [NOTICE.md](NOTICE.md) reserves brand, content and data
-and preserves third-party rights.
-
-The repository was renamed to `pequeverso-backoffice` on 2026-10-17; earlier GitHub URLs
-redirect, while local checkout paths and persistent identifiers remain unchanged. This name
-does not claim a completed business analytics suite. An independently disabled site-activity
-report consumes the API's bounded synthetic or production-class aggregates through a pinned
-contract and existing IAM checks. Received events are not people, orders, revenue or conversion.
-It adds no browser collector or production activation. Existing assistant
-feedback may inform human review, deterministic fixtures/evaluations, a reviewed PR and a
-release. It does not imply automatic model training or additional conversation storage.
-
-Dependency triage is read-only and every merge remains manual after review and required checks;
-updates, native rebases and security alerts stay active. An eligible assessment or label is not
-merge authority. See [the dependency procedure](docs/dependencies.md).
-
-**Runtime maintenance — 2026-10-17:** the selected cohort is Node24.22.0 LTS,
-Next16.4.2, React/DOM19.3.1, Better Auth1.7.10 and Playwright1.64.1. The framework security
-patch is already released at `29b293f` through [PR60](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/60);
-this separate maintenance change keeps admission, roles, contracts and SQL migrations intact.
-Read [the cohort review and verification limits](docs/verification/runtime-cohort-2026-10-17.md)
-before choosing an image. Current-head protected CI determines acceptance; no deployment is implied.
-
-**Historical dashboard release — 2026-10-13:** the compact availability and telemetry dashboard and maintained
-distroless runtime were integrated into `main` at `f96d30d` through
-[release PR #50](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/50).
-[Release CI](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/38384606345)
-passed all seven jobs, including the exact CI image smoke and 51 browser tests across four
-projects (three optional live-API tests skipped; no retries). Its runtime design uses Node24,
-Debian13 and UID/GID65532; the maintenance pins above are separate from that historical evidence.
-Earlier local failures and image drills remain dated history in
-[verification](docs/verification.md). CI fixture evidence does not prove deployment,
-real OAuth, TLS cookies, VPS capacity or provider billing. This project has not deployed the
-backoffice, and the dashboard never enables the storefront.
-
-`Next.js 16 · Active LTS` `Node24 · LTS` `PostgreSQL18.6 · supported to2030`
-`React19` `TypeScript7` `Better Auth` `Tailwind4` `OpenTelemetry` `Prometheus/Grafana handoff`
-
-## Local site-activity gallery — 2026-10-19
-
-These native captures use the local production build, an isolated synthetic API/PostgreSQL/Neo4j
-fixture and a fake OAuth provider. Received events are not people, orders, revenue or conversions.
-The application reads the API from its server; browser views contain no private API bearer.
-The disabled view makes no private report read. The enabled views select nine synthetic events:
-two page views, three section views and four public clicks, with three visible clicks and one
-withheld by the privacy threshold.
-
-| Local fixture view | Native capture |
-| --- | --- |
-| Report disabled · desktop | ![Disabled local site-activity report](docs/verification/analytics-native-2026-10-19/off-desktop.png) |
-| Nine synthetic events · desktop | ![Desktop report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-desktop-nine.png) |
-| Nine synthetic events · mobile | ![Mobile report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-mobile-nine.png) |
-
-[Exact source, capture manifest and verification limits](docs/verification/native-runtime2026-10-19.md).
-This is a local fixture, not a VPS deployment, live production traffic, real Google/GitHub OAuth,
-provider availability or model-quality evidence. Production configuration capability does not
-activate collection or establish a trusted deployed edge. The historical availability gallery
-below retains its original 2026-10-13 fixtures and provenance; these images do not recertify it.
-
-
-## Rendered dashboard gallery
-
-These are native-resolution screenshots of the actual local production build, captured at
-2× device scale with desktop 1440×1000 and mobile 390×844 viewports. **Every image uses local
-MOCK/fixture operations data and a fake OAuth provider.** They show the UI, not external OAuth,
-a VPS deployment, production metrics, OpenAI availability or model quality. Unknown resource
-values remain “No disponible”; reported token usage produces a calculated cost, not a
-reconciled provider invoice. The historical daily budget is explicitly labelled with its day.
-The synthetic API may report enabled; the storefront has its own assistant switch and stays
-disabled in this release preparation.
-
-Open each PNG for legible original pixels. Mobile overview/focus images show the first
-viewport; daily/resource details show complete sections. Mobile table views disclose different
-columns through actual horizontal scrolling. The [capture notes](docs/verification/compact-availability-2026-10-13/README.md)
-record provenance and agent inspection; they do not claim human review.
-
-| Actual rendered view | Light fixture | Dark fixture |
-| --- | --- | --- |
-| Complete desktop overview · local MOCK | ![Light local MOCK Complete desktop overview](docs/verification/compact-availability-2026-10-13/desktop-light-overview.png) | ![Dark local MOCK Complete desktop overview](docs/verification/compact-availability-2026-10-13/desktop-dark-overview.png) |
-| Point-in-time availability and remaining budget · local MOCK | ![Light local MOCK Point-in-time availability and remaining budget](docs/verification/compact-availability-2026-10-13/desktop-light-availability-budget-overview.png) | ![Dark local MOCK Point-in-time availability and remaining budget](docs/verification/compact-availability-2026-10-13/desktop-dark-availability-budget-overview.png) |
-| Catalog freshness and origin · local MOCK | ![Light local MOCK Catalog freshness and origin](docs/verification/compact-availability-2026-10-13/desktop-light-catalog.png) | ![Dark local MOCK Catalog freshness and origin](docs/verification/compact-availability-2026-10-13/desktop-dark-catalog.png) |
-| Reported usage, estimated cost and reserved spend · local MOCK | ![Light local MOCK Reported usage, estimated cost and reserved spend](docs/verification/compact-availability-2026-10-13/desktop-light-budget.png) | ![Dark local MOCK Reported usage, estimated cost and reserved spend](docs/verification/compact-availability-2026-10-13/desktop-dark-budget.png) |
-| 24-hour and 30-day outcomes, latency, tokens and failures · local MOCK | ![Light local MOCK 24-hour and 30-day outcomes, latency, tokens and failures](docs/verification/compact-availability-2026-10-13/desktop-light-quality-latency-errors-tokens.png) | ![Dark local MOCK 24-hour and 30-day outcomes, latency, tokens and failures](docs/verification/compact-availability-2026-10-13/desktop-dark-quality-latency-errors-tokens.png) |
-| Daily charts and accessible table · local MOCK | ![Light local MOCK Daily charts and accessible table](docs/verification/compact-availability-2026-10-13/desktop-light-daily-history.png) | ![Dark local MOCK Daily charts and accessible table](docs/verification/compact-availability-2026-10-13/desktop-dark-daily-history.png) |
-| Opaque synthetic recent-run identifiers · local MOCK | ![Light local MOCK Opaque synthetic recent-run identifiers](docs/verification/compact-availability-2026-10-13/desktop-light-recent-runs.png) | ![Dark local MOCK Opaque synthetic recent-run identifiers](docs/verification/compact-availability-2026-10-13/desktop-dark-recent-runs.png) |
-| Resources, HTTP counters and trace diagnostics · local MOCK | ![Light local MOCK Resources, HTTP counters and trace diagnostics](docs/verification/compact-availability-2026-10-13/desktop-light-telemetry-resources.png) | ![Dark local MOCK Resources, HTTP counters and trace diagnostics](docs/verification/compact-availability-2026-10-13/desktop-dark-telemetry-resources.png) |
-| Mobile first viewport · local MOCK | ![Light local MOCK Mobile first viewport](docs/verification/compact-availability-2026-10-13/mobile-light-overview.png) | ![Dark local MOCK Mobile first viewport](docs/verification/compact-availability-2026-10-13/mobile-dark-overview.png) |
-| Mobile actual keyboard focus · local MOCK | ![Light local MOCK Mobile actual keyboard focus](docs/verification/compact-availability-2026-10-13/mobile-light-navigation-focus.png) | ![Dark local MOCK Mobile actual keyboard focus](docs/verification/compact-availability-2026-10-13/mobile-dark-navigation-focus.png) |
-| Mobile complete daily activity, left table columns · local MOCK | ![Light local MOCK Mobile complete daily activity, left table columns](docs/verification/compact-availability-2026-10-13/mobile-light-daily-history.png) | ![Dark local MOCK Mobile complete daily activity, left table columns](docs/verification/compact-availability-2026-10-13/mobile-dark-daily-history.png) |
-| Mobile actual horizontal scroll, right table columns · local MOCK | ![Light local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/compact-availability-2026-10-13/mobile-light-daily-history-scroll-right.png) | ![Dark local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/compact-availability-2026-10-13/mobile-dark-daily-history-scroll-right.png) |
-| Mobile complete technical resources section · local MOCK | ![Light local MOCK Mobile complete technical resources section](docs/verification/compact-availability-2026-10-13/mobile-light-telemetry-resources.png) | ![Dark local MOCK Mobile complete technical resources section](docs/verification/compact-availability-2026-10-13/mobile-dark-telemetry-resources.png) |
-
-## Source and build locations
-
-Browser specifications live in `tests/browser`, with unit and PostgreSQL integrations in
-`tests/unit` and `tests/integration`. Application and IAM fixture recipes use repository-root
-build context and colocated context filters:
-
-```sh
-docker buildx build --load -f infra/docker/app/Dockerfile -t pequeverso-backoffice:reviewed .
-docker buildx build --load -f infra/docker/postgres/Dockerfile -t pequeverso-backoffice-postgres:reviewed .
-```
-
-The second recipe is an owned local/CI artifact, not a second production database service.
-Production targets one API-owned PostgreSQL 18.6 Alpine/pgvector engine and separate API/IAM databases.
-No production Compose or deployment controller is introduced. See the
-[architecture map](docs/architecture.md#container-and-browser-test-locations) and
-[deployment contract](docs/deployment-contract.md).
-
-Agent procedures use one canonical `.agents/skills` catalog and relative directory discovery
-links in `.claude/skills`. See [skill maintenance and validation](docs/agent-skills.md).
-
-## Architecture and data flow
-
-<p align="center">
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/system-dark.svg">
-  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: the owner or invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/verification/backoffice/desktop-dashboard-dark.png">
+  <img src="docs/verification/backoffice/desktop-dashboard.png" alt="Operations dashboard rendered from synthetic fixture data, showing availability, catalog freshness, usage and spend.">
 </picture>
-</p>
 
-[Full-size light diagram](docs/architecture/system-light.svg) ·
-[Full-size dark diagram](docs/architecture/system-dark.svg) ·
-[Editable light source](docs/architecture/system-light.mmd) ·
-[Editable dark source](docs/architecture/system-dark.mmd)
+## Why
 
-[Diagram editing and provenance](docs/architecture/README.md) ·
-[Asset hashes](docs/architecture/manifest.json). Both themes are authored, self-contained SVGs;
-Mermaid preserves their semantic relationships without generating the same pixel layout.
-No application dependency is added.
+The public conversation lives only in the Pequeverso storefront. The owner and invited
+operators still need to know whether the assistant is healthy, how fresh the catalog is and what
+it costs, without exposing prompts, answers or buyer data. This application is that private view:
+access is by Better Auth OAuth only, every page and server action re-checks the role on the
+server, and operations data comes from the API's pinned private contracts, validated at the
+adapter boundary. Missing values read "No disponible" and fixture data is labelled synthetic.
 
-The private dashboard reads operational evidence through a bounded, validated server adapter.
-Summary revision 1.2 and optional telemetry revision 1.0 come from the assistant API. Private
-PostgreSQL stores operator identity, sessions and invitations; the API owns its catalog,
-conversations and accounting behind the private operations contract. This backoffice serves no
-chat and receives no conversation content, buyer data or provider keys. The storefront talks directly to the API only when its
-assistant is separately enabled; publishable storefront builds currently keep it disabled.
+## Highlights
 
-Point-in-time process readings are not historical availability: no uptime percentage is invented
-from a single observation, process uptime or successful scrape. Optional OTLP and private
-Prometheus scraping complement Grafana and require vps-ops configuration and separate
-authorization. These boundaries describe integration, not an existing deployment or validated
-VPS capacity. On a narrow screen, use this prose and the full-size links alongside the diagram.
+- OAuth sign-in (Google, GitHub) with invitation-only admission, no passwords and no implicit account linking.
+- Roles and sessions stored in PostgreSQL through append-only migrations in `migrations/`.
+- Operations dashboard with health, catalog freshness, runs, latency, tokens and spend, plus an optional telemetry panel.
+- Independently disabled site-activity report over bounded aggregates, behind the same IAM guard.
+- Architecture boundaries enforced by `scripts/check-boundaries.ts` as part of `npm test`.
+- One required CI aggregate (`ci-gate`) over the profiles described in [docs/ci.md](docs/ci.md).
+
+## Architecture
 
 ```mermaid
-sequenceDiagram
-  actor Operator
-  participant BO as Backoffice server
-  participant PG as PostgreSQL IAM
-  participant API as Private operations API
-  Operator->>BO: Open protected panel (session cookie)
-  BO->>PG: Re-read verified identity and role
-  PG-->>BO: Invited owner or viewer
-  par Summary (existing contract)
-    BO->>API: GET summary, server-only bearer
-    API-->>BO: Content-free business aggregates
-  and Optional telemetry
-    BO->>API: GET telemetry, same private bearer
-    API-->>BO: Current sample or unavailable
-  end
-  BO->>BO: Validate both contracts independently
-  BO-->>Operator: Honest values and fixture labels, no credentials
+flowchart LR
+  Operator([Owner or invited operator]) --> BO[Backoffice server]
+  BO --> IdP[Google or GitHub OAuth]
+  BO --> PG[(PostgreSQL IAM)]
+  BO --> API[Private operations API]
+  BO -. optional .-> Tel[Private telemetry]
 ```
 
-## Quick start (no real credentials)
+Dependencies point inward through domain, application, adapters and presentation. Only the
+server adapters talk to the API and PostgreSQL. Full map:
+[docs/explanation/architecture.md](docs/explanation/architecture.md) and the
+[diagram sources](docs/explanation/architecture-diagrams.md).
+
+## Quickstart
 
 ```bash
-nvm use && npm ci
-npx playwright install --with-deps chromium firefox webkit
-docker run -d --rm --name bo-pg -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test \
-  -p 127.0.0.1:55432:5432 postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
-npm run build
-TEST_DATABASE_URL=postgres://test:test@127.0.0.1:55432/postgres npm run preview:backoffice
+nvm use && npm ci                 # Node from .nvmrc, restore dependencies
+npm run check                     # lint, types, unit tests, knip, docs and skills checks, build
+npm run test:browser              # Playwright with fake identity provider and mock ops data
 ```
 
-Open http://localhost:3241/ingresar and choose "Proveedor de prueba": a local fake identity
-provider signs you in as `owner@example.test`; the dashboard shows the **synthetic** fixture from
-`scripts/mock-ops.ts`, clearly labelled. Its static numbers and startup-refreshed sample timestamps
-are demonstration data, not live process measurements. To read a real API instead, run
-`pequeverso-assistant-api` with `OPS_READ_TOKEN` set and start the stack with `LIVE_OPS_URL` and
-`LIVE_OPS_TOKEN` (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+Requirements: Node 24.22.0 (`.nvmrc`), Docker for the local PostgreSQL used by the database and
+browser suites. For the preview stack, the PostgreSQL recipe and the real-API reading, follow
+[CONTRIBUTING.md](CONTRIBUTING.md) and
+[PostgreSQL runtime and restore](docs/how-to/postgres-runtime-and-restore.md).
 
-The official PostgreSQL image above is an isolated local test server, not the final hardened
-artifact or a deployment recipe. The initialized `postgres` database exists and the
-synthetic `test` administrator can create the disposable databases used by the suites.
-No real credentials or remote database are permitted. Stop only this own server after use:
-`docker stop bo-pg`. For the reviewed non-root/read-only artifact, use
-[PostgreSQL runtime](docs/postgresql-runtime.md) and its exact-image SQL backup/restore drill.
+## Usage
 
-## Commands
+Where it runs: deployment needs the owner's explicit authorization and follows the `vps-ops`
+handoff in the [deployment contract](docs/deployment-contract.md). Locally, after `npm run build` and with a
+disposable PostgreSQL in `TEST_DATABASE_URL`, `npm run preview:backoffice` serves that build with a fake identity provider ("Proveedor de prueba") and the synthetic
+fixture from `scripts/mock-ops.ts`. Set `LIVE_OPS_URL` and `LIVE_OPS_TOKEN` to read a real API
+instead.
 
-| Command | Purpose |
-|---|---|
-| `npm run check` | Biome, TypeScript 7, unit/contract/boundary tests, file/docs/skills checks, build |
-| `npm run test:db` | Schema drift check + PostgreSQL integration suite (`DATABASE_URL` or `TEST_DATABASE_URL`: a disposable server) |
-| `npm run test:browser` | Playwright against the production build, real PostgreSQL, fake IdP, mock ops |
-| `npm run db:migrate` | Apply `migrations/` to `DATABASE_URL` |
+## Quality
+
+| Gate | Tool | Threshold |
+|---|---|---|
+| Lint and format | Biome | zero errors and warnings |
+| Types | TypeScript 7 (strict) | zero errors |
+| Unit and contract tests | `node:test` | all pass |
+| Database tests | PostgreSQL integration suite | all pass; merged coverage floors in [docs/ci.md](docs/ci.md) |
+| Browser and accessibility | Playwright and axe-core | all pass |
+| Dead code | knip | zero findings |
+| Secrets and workflows | gitleaks, zizmor | zero findings |
+
+Scores are tracked in the [scorecard](docs/master-plan/scorecard.md); the latest result is the
+[CI workflow](https://github.com/gonzalomartinperez/pequeverso-backoffice/actions/workflows/ci.yml).
 
 ## Documentation
 
-- [Engineering standards](docs/engineering-standards.md): review, boundaries, reproducibility and evidence.
-- [Architecture](docs/architecture.md) and decisions: [auth](docs/adr/005-backoffice-auth-better-auth.md),
-  [IAM in PostgreSQL](docs/adr/006-iam-in-postgresql.md), [ops data](docs/adr/007-ops-data-source.md)
-- [Deployment contract](docs/deployment-contract.md) — vps-ops handoff: image, PostgreSQL, secrets, routing
-- [Availability and observability](docs/observability.md) — safe signals, optional exporters, private scrape and BO-only Grafana/alert proposals
-- [Verification](docs/verification.md) — what ran, what it proves, screenshots, limits
-- [Design system](docs/design-system.md), [dependencies](docs/dependencies.md), [security policy](SECURITY.md), [security design](docs/security.md)
+- Tutorials: none yet.
+- How-to: [PostgreSQL runtime and restore](docs/how-to/postgres-runtime-and-restore.md).
+- Reference: [permissions](docs/reference/permissions.md), [observability](docs/reference/observability.md),
+  [product analytics](docs/reference/product-analytics.md), [runtime baseline](docs/reference/runtime-baseline.md),
+  [agent skills](docs/reference/agent-skills.md), [CI](docs/ci.md), [dependencies](docs/dependencies.md).
+- Explanation: [architecture](docs/explanation/architecture.md), [authentication](docs/explanation/authentication.md),
+  [security design](docs/security.md), [design system](docs/design-system.md), [decisions (ADRs)](docs/decisions/),
+  [history](docs/explanation/history/verification-2026-10.md).
+- Master plan: [docs/master-plan](docs/master-plan/README.md).
 
-## Stack
+## Ecosystem
 
-Next.js 16.4.2 (App Router, standalone), React 19.3.1, TypeScript 7.0.2, Better Auth 1.7.10,
-PostgreSQL (`pg` 8.23), Recharts 3.10, Tailwind CSS 4.3 with owned primitives, lucide icons,
-Biome 2.5, Playwright 1.64.1 + axe-core. Node 24.22.0. Support classifications and exact versions are recorded in
-[the runtime inventory](docs/dependencies.md#runtime-support-inventory-2026-10-17);
-maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
+| Repository | Role |
+|---|---|
+| [portfolio](https://github.com/gonzalomartinperez/portfolio) | Public portfolio site |
+| [portfolio-assistant-api](https://github.com/gonzalomartinperez/portfolio-assistant-api) | Portfolio assistant API |
+| [portfolio-backoffice](https://github.com/gonzalomartinperez/portfolio-backoffice) | Portfolio backoffice |
+| [pequeverso](https://github.com/gonzalomartinperez/pequeverso) | Public store site |
+| [pequeverso-assistant-api](https://github.com/gonzalomartinperez/pequeverso-assistant-api) | Store assistant API |
+| [pequeverso-backoffice](https://github.com/gonzalomartinperez/pequeverso-backoffice) | This repository: store backoffice |
+| `vps-ops` (private) | Ops CLI and deploy contract |
 
-Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
+## Contributing and security
 
-## Software license
+See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Agents follow [AGENTS.md](AGENTS.md).
 
-Owner-authored software and technical documentation use the [MIT License](LICENSE).
-Brand, product/commercial content, media, datasets, private data and third-party
-material are excluded; see [NOTICE.md](NOTICE.md) and the preserved
-[third-party attribution](THIRD_PARTY_NOTICES.md). The runtime carries all three
-notices under `/app/`; the application's access controls and privacy obligations
-are unchanged.
+## Scope and limits
 
-The independently disabled [site-activity report](docs/product-analytics.md) reads bounded
-site-event aggregates behind the existing IAM guard, distinguishing synthetic fixtures from
-production-class data. Country defaults to unknown; enabling configuration does not prove a
-trusted deployed edge. It adds no visitor collector or production activation and keeps the
-operational dashboard and its contracts separate.
+- The backoffice serves no public chat, collects no visitor analytics and receives no conversation content, buyer data or provider keys.
+- CI fixture evidence does not prove a deployment, real OAuth, TLS cookies, VPS capacity or provider billing.
+- Estimated cost comes from reported token usage and is not a reconciled provider invoice.
+- Nothing is deployed without explicit owner authorization.
+
+## License
+
+Software is MIT-licensed ([LICENSE](LICENSE)); brand, content and data are reserved in [NOTICE.md](NOTICE.md), and third-party rights are kept in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

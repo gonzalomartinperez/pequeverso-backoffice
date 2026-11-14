@@ -13,7 +13,7 @@ import type { InvitationConsumer } from "../application/ports.ts";
 import { isRole, type Role } from "../domain/access.ts";
 
 /**
- * Better Auth configuration. Security-relevant choices (docs/adr/005-backoffice-auth-better-auth.md):
+ * Better Auth configuration. Security-relevant choices (docs/decisions/0005-backoffice-auth-better-auth.md):
  * - Only OAuth (Google, GitHub); no e-mail/password, no magic links, no public sign-up.
  * - Account creation is gated by `admitSignUp` (owner e-mail or a presented invitation) in the
  *   `user.create.before` hook: a denied identity never gets a user row or a session.

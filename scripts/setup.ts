@@ -1,7 +1,7 @@
 // One-command setup from a fresh clone: check the Node line, install the locked dependencies
 // without install scripts, then run the fast check. Uses only Node built-ins (runs before npm ci).
 // Never reads or writes .env files; database and browser suites need their own fixtures
-// (docs/verification.md).
+// (docs/explanation/history/verification-2026-10.md).
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
