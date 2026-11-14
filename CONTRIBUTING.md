@@ -9,7 +9,10 @@ npx playwright install --with-deps chromium firefox webkit   # browser suite onl
 cp .env.example .env.local   # optional: local runtime values (never commit)
 ```
 
-A dev container (`.devcontainer/`) runs `npm run setup` on creation. UI terms and their code names
+A dev container (`.devcontainer/`) runs `npm run setup` on creation. It uses the host Docker
+engine, so a fixture database published on the host is reached at `host.docker.internal`
+(for example `TEST_DATABASE_URL=postgres://...@host.docker.internal:5432/...`); Playwright browsers
+are installed separately as above. UI terms and their code names
 are in the [glossary](docs/GLOSSARY.md).
 
 ## Commands (and which compiler each uses)

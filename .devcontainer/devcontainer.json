@@ -2,9 +2,9 @@
   "name": "pequeverso-backoffice",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:24-trixie@sha256:e1fd824e03c68d8f406ef45b574023a2d683a5acc98906743f8d60aaf78b0174",
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": { "moby": false }
   },
-  "runArgs": ["--init"],
+  "runArgs": ["--init", "--add-host=host.docker.internal:host-gateway"],
   "mounts": [
     "source=pequeverso-backoffice-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
   ],
