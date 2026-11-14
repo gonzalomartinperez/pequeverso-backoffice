@@ -109,7 +109,8 @@
         ".github/workflows/**",
         ".github/scripts/**",
         ".github/ci-profile.json",
-        ".github/dependabot.yml"
+        ".github/dependabot.yml",
+        ".zap/**"
       ],
       "adds": ["docs", "static", "build", "browser", "database", "container"],
       "budgetP50Minutes": 8,

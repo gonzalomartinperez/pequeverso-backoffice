@@ -153,6 +153,28 @@ GitHub runs scheduled and manually dispatched workflows only from the default br
 these start when `develop` is promoted (M7); the guard's pull-request trigger works on `develop`
 now. CodeQL uses the repository's default setup (no workflow file), an owner setting.
 
+## ZAP baseline (nightly, not a gate)
+
+[zap-nightly](../.github/workflows/zap-nightly.yml) builds the app, starts the preview stack
+(disposable PostgreSQL, mock ops, fake IdP; synthetic data) and runs the OWASP ZAP baseline
+(passive) scan twice with the official image pinned by digest: the anonymous `/ingresar`, and
+`/panel` with the fixture owner's session cookie taken from a fake-IdP sign-in
+(`scripts/zap-session.ts`, injected through a ZAP replacer rule). Triage lives in
+[`.zap/rules.tsv`](../.zap/rules.tsv) (each rule needs a reason comment). `scripts/zap-gate.ts`
+fails the job on any remaining High alert; Medium and lower stay visible in the HTML and JSON
+report artifact (`zap-reports`, 14 days). It is not a `ci-gate` prerequisite. The baseline does
+not attack; an active scan and spider-driven coverage of every panel route are follow-ups.
+`schedule` runs only from `main` (M7); until then the pull-request trigger, limited to the
+workflow and its helper scripts, and `workflow_dispatch` run it. The pinned digest moves in a
+normal task PR (resolve it from the registry without pulling).
+
+## Expected-red tests
+
+Tests for features that do not exist yet are marked `{ todo: "M<k>.<n> ..." }` (reported, never
+failing) and listed in `quality/ratchets/known-failures.json`;
+`tests/unit/known-failures.test.ts` fails when a listed test vanishes or stops being todo, or a
+todo test is unlisted. Today: log redaction and `x-request-id` (owner M4.7).
+
 ## Release PR
 
 [Release PR](../.github/workflows/release-please.yml) runs release-please in manifest mode on pushes
