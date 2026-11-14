@@ -1,0 +1,49 @@
+{
+  "$comment": "Lighthouse ratchet (M2.8). baseline = audit measurement until the first clean CI run of .github/workflows/lighthouse.yml replaces it (then update in the same PR, only improving). budgets = testing.md targets. Warn-only: the 14-day warn-then-fail plan starts at warnSince.",
+  "baselineSource": "docs/master-plan/audit/lighthouse-summary.json (audit, single runs; not CI medians of 5)",
+  "mode": "warn",
+  "warnSince": null,
+  "enforceAfterDays": 14,
+  "budgets": {
+    "performance": 0.9,
+    "accessibility": 1,
+    "bestPractices": 0.95,
+    "tbtMs": 200,
+    "lcpMs": 2000,
+    "cls": 0.05
+  },
+  "baseline": {
+    "dashboard_mobile": {
+      "performance": 0.7,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 2966,
+      "lcpMs": 2122,
+      "cls": 0
+    },
+    "dashboard_desktop": {
+      "performance": 0.78,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 513,
+      "lcpMs": 673,
+      "cls": 0
+    },
+    "signin_mobile": {
+      "performance": 0.78,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 1025,
+      "lcpMs": 1559,
+      "cls": 0
+    },
+    "signin_desktop": {
+      "performance": 0.98,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 126,
+      "lcpMs": 391,
+      "cls": 0
+    }
+  }
+}
