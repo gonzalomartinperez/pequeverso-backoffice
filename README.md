@@ -115,8 +115,8 @@ No production Compose or deployment controller is introduced. See the
 [architecture map](docs/architecture.md#container-and-browser-test-locations) and
 [deployment contract](docs/deployment-contract.md).
 
-Agent procedures use one canonical `.claude/skills` catalog and relative directory discovery
-links in `.agents/skills`. See [skill maintenance and validation](docs/agent-skills.md).
+Agent procedures use one canonical `.agents/skills` catalog and relative directory discovery
+links in `.claude/skills`. See [skill maintenance and validation](docs/agent-skills.md).
 
 ## Architecture and data flow
 

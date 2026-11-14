@@ -1,18 +1,18 @@
 # Agent skills
 
-The three backoffice procedures have one source in `.claude/skills`. Claude reads that
-catalog directly. Codex discovers the same folders through relative directory symlinks
-in the real `.agents/skills` directory:
+The three backoffice procedures have one source in `.agents/skills`. Codex reads that
+catalog directly. Claude discovers the same folders through relative directory symlinks
+in the real `.claude/skills` directory:
 
 ```text
-.claude/skills/
+.agents/skills/
   web-change-backoffice/SKILL.md
   web-review-delivery/SKILL.md
   web-verify-backoffice/SKILL.md
-.agents/skills/
-  web-change-backoffice -> ../../.claude/skills/web-change-backoffice
-  web-review-delivery -> ../../.claude/skills/web-review-delivery
-  web-verify-backoffice -> ../../.claude/skills/web-verify-backoffice
+.claude/skills/
+  web-change-backoffice -> ../../.agents/skills/web-change-backoffice
+  web-review-delivery -> ../../.agents/skills/web-review-delivery
+  web-verify-backoffice -> ../../.agents/skills/web-verify-backoffice
 ```
 
 Automatic selection remains the default. Naming a skill explicitly is optional. There are
@@ -34,7 +34,7 @@ procedure text. If a link must be restored, run from the repository root, substi
 existing skill name:
 
 ```sh
-ln -s ../../.claude/skills/web-change-backoffice .agents/skills/web-change-backoffice
+ln -s ../../.agents/skills/web-change-backoffice .claude/skills/web-change-backoffice
 ```
 
 No resource folders or client metadata are needed for the current procedures. Add a
