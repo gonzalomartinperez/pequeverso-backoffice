@@ -1,6 +1,6 @@
 // Authorization matrix against real PostgreSQL: every server action in tests/authz/matrix.ts is
 // exercised per caller (owner, second owner, viewer, second viewer, anonymous). The gate under
-// test is the one `requireActor` composes (`resolveActor` + `can`); the use cases are then called
+// test is the production decision (`authorize`, which `requireActor` also applies); the use cases are then called
 // with a forged owner role to prove the store re-verifies the role itself (defense in depth).
 // Needs a disposable database: TEST_DATABASE_URL=postgres://… npm run test:integration
 import assert from "node:assert/strict";
@@ -14,6 +14,7 @@ import { PostgresAccessStore } from "../../src/features/auth/adapters/postgres-a
 import {
   type AccessDeps,
   type Actor,
+  authorize,
   inviteMember,
   removeMember,
   resolveActor,
@@ -90,27 +91,38 @@ describe("authorization matrix (PostgreSQL)", {
     { name: "anonymous", person: null },
   ];
 
-  /** The decision `requireActor` makes, from a session of that person (or none). */
+  /** The production decision (`decide`, the one `requireActor` applies) for a person's session. */
   async function gate(guard: Parameters<typeof can>[1], person: string | null): Promise<Outcome> {
     const who = person ? people[person] : null;
-    const actor = await resolveActor(
+    const decision = await authorize(
       deps,
       who ? { userId: who.id, email: who.email, emailVerified: true } : null,
+      guard,
     );
-    if (!actor) return "redirect:/ingresar";
-    return can(actor.role, guard) ? "allowed" : "redirect:/panel";
+    if (decision.allowed) return "allowed";
+    return decision.reason === "unauthenticated" ? "redirect:/ingresar" : "redirect:/panel";
   }
 
   /** One driver per server action: creates a fresh target, then runs the use case behind it. */
   type Driver = {
     target(): Promise<string>;
-    run(actor: Actor, target: string): Promise<boolean>;
+    /** `ok`, or the refusal the use case reports. */
+    run(actor: Actor, target: string): Promise<string>;
+    /** What a refusal of an owner-only call looks like for this action. */
+    denied: string;
+    /** The same refusal when a stale owner role reaches the store, which then finds no row to act on. */
+    deniedStale: string;
   };
   const prefix = "action:src/app/panel/accesos/actions.ts#";
   const drivers: Record<string, Driver> = {
     [`${prefix}inviteAction`]: {
       target: async () => `invitee-${randomBytes(3).toString("hex")}@example.test`,
-      run: async (actor, email) => (await inviteMember(deps, actor, email, "viewer")).ok,
+      run: async (actor, email) => {
+        const result = await inviteMember(deps, actor, email, "viewer");
+        return result.ok ? "ok" : result.reason;
+      },
+      denied: "forbidden",
+      deniedStale: "forbidden",
     },
     [`${prefix}revokeInvitationAction`]: {
       target: async () => {
@@ -119,13 +131,20 @@ describe("authorization matrix (PostgreSQL)", {
         if (!made.ok) throw new Error("setup invitation failed");
         return made.invitation.id;
       },
-      run: (actor, id) => revokeInvitation(deps, actor, id),
+      run: async (actor, id) => ((await revokeInvitation(deps, actor, id)) ? "ok" : "refused"),
+      denied: "refused",
+      deniedStale: "refused",
     },
     [`${prefix}removeMemberAction`]: {
       target: async () =>
         (await seed("victim", `victim-${randomBytes(3).toString("hex")}@example.test`, "viewer"))
           .id,
-      run: async (actor, id) => (await removeMember(deps, actor, id)).ok,
+      run: async (actor, id) => {
+        const result = await removeMember(deps, actor, id);
+        return result.ok ? "ok" : result.reason;
+      },
+      denied: "forbidden",
+      deniedStale: "not_found",
     },
   };
 
@@ -147,7 +166,7 @@ describe("authorization matrix (PostgreSQL)", {
         const who = caller.person ? people[caller.person] : null;
         if (expected === "allowed") {
           assert.ok(who);
-          assert.equal(await driver.run(who, target), true);
+          assert.equal(await driver.run(who, target), "ok");
           assert.notDeepEqual(await snapshot(), before, "an allowed action changes state");
           return;
         }
@@ -156,11 +175,11 @@ describe("authorization matrix (PostgreSQL)", {
         const forged: Actor = who
           ? { id: who.id, email: who.email, role: "owner" }
           : { id: "ghost", email: "ghost@example.test", role: "owner" };
-        assert.equal(await driver.run(forged, target), false);
+        assert.equal(await driver.run(forged, target), driver.deniedStale);
         assert.deepEqual(await snapshot(), before, "a refused action leaves no trace");
         if (who) {
           const honest: Actor = { id: who.id, email: who.email, role: who.role };
-          assert.equal(await driver.run(honest, target), false);
+          assert.equal(await driver.run(honest, target), driver.denied);
           assert.deepEqual(await snapshot(), before);
         }
       });
@@ -274,13 +293,25 @@ describe("authorization matrix (PostgreSQL)", {
       assert.equal(await revokeInvitation(deps, people.owner as Actor, made.invitation.id), false);
     });
 
-    it("the audit trail records the actor id of each allowed mutation", async () => {
+    it("the audit trail records the actor id of each allowed mutation and none of the refused", async () => {
+      const marker = `audit-${randomBytes(3).toString("hex")}@example.test`;
+      assert.equal((await inviteMember(deps, people.viewer as Actor, marker, "viewer")).ok, false);
+      const allowed = await inviteMember(deps, people.owner2 as Actor, marker, "viewer");
+      assert.ok(allowed.ok);
+      if (!allowed.ok) return;
       const { rows } = await pool.query<{ actor_id: string }>(
-        "SELECT DISTINCT actor_id FROM backoffice_access_audit",
+        "SELECT actor_id FROM backoffice_access_audit WHERE subject_id = $1",
+        [allowed.invitation.id],
       );
-      const ids = new Set(rows.map((row) => row.actor_id));
-      assert.ok(!ids.has((people.viewer as Seed).id) && !ids.has((people.viewer2 as Seed).id));
-      assert.ok(ids.has((people.owner as Seed).id));
+      assert.deepEqual(
+        rows.map((row) => row.actor_id),
+        [(people.owner2 as Seed).id],
+      );
+      const refused = await pool.query(
+        "SELECT 1 FROM backoffice_access_audit WHERE actor_id = ANY($1)",
+        [[(people.viewer as Seed).id, (people.viewer2 as Seed).id]],
+      );
+      assert.equal(refused.rowCount, 0);
     });
   });
 });

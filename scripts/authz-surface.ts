@@ -1,24 +1,42 @@
 // Enumerates the authorization surface of the app from source (static, TS compiler API): every
-// server action, every route handler and every page/layout under src/app/panel. The authz matrix
-// (tests/authz/matrix.ts) must list exactly this set; see tests/unit/authz-matrix.test.ts.
+// server action, every route handler and every page/layout/template/default under src/app, and
+// verifies which guards each entry really runs. The authz matrix (tests/authz/matrix.ts) must list
+// exactly this set; tests/authz/check.ts compares them. Fail closed: shapes that cannot be
+// resolved (`export *`, the pages router) become entries or problems that no matrix row can match.
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import ts from "@typescript/typescript6";
 
 export type SurfaceKind = "action" | "route" | "page";
 export type SurfaceEntry = {
-  /** Stable key: `<kind>:<posix path from root>#<export>`. */
+  /** Stable key: `<kind>:<posix path from root>#<export>`; inline actions are scope-qualified. */
   id: string;
   kind: SurfaceKind;
   file: string;
   name: string;
   /** Anything but a GET route handler, and every server action, may change state. */
   mutating: boolean;
-  /** String literals passed to `requireActor(...)` inside this entry's own code. */
+  /** Literals of `requireActor(...)` that run unconditionally at the top of the entry (or of a verified helper). */
   guards: string[];
+  /** Imported helpers whose own top-level guard supplies some of `guards`. */
+  via: string[];
+  /** Recognized non-session mechanisms in a route handler. */
+  markers: ("better-auth" | "bearer-token")[];
+  /** Re-exported from another module: its body (and guards) cannot be verified here. */
+  reexport: boolean;
+  problems: string[];
 };
 
+/** Source files by posix path relative to the project root (only `src/` is read). */
+export type Files = Record<string, string>;
+
 const HTTP_METHODS = new Set(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]);
+const SOURCE = /\.[cm]?[jt]sx?$/;
+const DECLARATION = /\.d\.[cm]?ts$/;
+const ROUTE = /^src\/app\/(?:.*\/)?route\.[cm]?[jt]sx?$/;
+const PAGE = /^src\/app\/(?:.*\/)?(?:page|layout|template|default)\.[cm]?[jt]sx?$/;
+const AUTH_MODULE = /(?:^|\/)auth(?:\.[cm]?[jt]s)?$/;
+const EXTENSIONS = ["", ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
 
 function walk(dir: string): string[] {
   const out: string[] = [];
@@ -30,18 +48,28 @@ function walk(dir: string): string[] {
   return out;
 }
 
-const posix = (root: string, file: string) => path.relative(root, file).split(path.sep).join("/");
-
-function parse(file: string): ts.SourceFile {
-  return ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
+export function readTree(root: string): Files {
+  const files: Files = {};
+  for (const file of walk(path.join(root, "src")).sort()) {
+    const rel = path.relative(root, file).split(path.sep).join("/");
+    if (SOURCE.test(rel) && !DECLARATION.test(rel)) files[rel] = readFileSync(file, "utf8");
+  }
+  return files;
 }
 
-const hasExport = (node: ts.Node) =>
-  ts.canHaveModifiers(node) &&
-  (ts.getModifiers(node) ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
-const hasDefault = (node: ts.Node) =>
-  ts.canHaveModifiers(node) &&
-  (ts.getModifiers(node) ?? []).some((m) => m.kind === ts.SyntaxKind.DefaultKeyword);
+type Exported = { name: string; node: ts.Node; reexport: boolean };
+type Parsed = {
+  file: string;
+  source: ts.SourceFile;
+  imports: Map<string, { spec: string; imported: string }>;
+  local: Map<string, ts.Node>;
+  exported: Exported[];
+};
+
+const modifiers = (node: ts.Node) =>
+  ts.canHaveModifiers(node) ? (ts.getModifiers(node) ?? []) : [];
+const hasModifier = (node: ts.Node, kind: ts.SyntaxKind) =>
+  modifiers(node).some((m) => m.kind === kind);
 
 function isDirective(statement: ts.Statement, text: string): boolean {
   return (
@@ -51,142 +79,286 @@ function isDirective(statement: ts.Statement, text: string): boolean {
   );
 }
 
-/** Literals of `requireActor("…")` calls under a node. A non-literal argument is reported as `?`. */
-function guardsIn(node: ts.Node): string[] {
-  const found: string[] = [];
-  const visit = (child: ts.Node): void => {
-    if (
-      ts.isCallExpression(child) &&
-      ts.isIdentifier(child.expression) &&
-      child.expression.text === "requireActor"
-    ) {
-      const [arg] = child.arguments;
-      found.push(arg && ts.isStringLiteralLike(arg) ? arg.text : "?");
-    }
-    ts.forEachChild(child, visit);
-  };
-  visit(node);
-  return found;
+function bindingNames(name: ts.BindingName): string[] {
+  if (ts.isIdentifier(name)) return [name.text];
+  return name.elements.flatMap((element) =>
+    ts.isOmittedExpression(element) ? [] : bindingNames(element.name),
+  );
 }
 
-type Exported = { name: string; node: ts.Node };
-
-/** Every exported binding of a module; `export *` and `export … from` cannot be enumerated. */
-function exportsOf(source: ts.SourceFile): Exported[] {
+function parseFile(file: string, text: string): Parsed {
+  const kind = /x$/.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
+  const imports = new Map<string, { spec: string; imported: string }>();
   const local = new Map<string, ts.Node>();
-  const out: Exported[] = [];
   for (const statement of source.statements) {
-    if (ts.isFunctionDeclaration(statement) && statement.name) {
+    if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
+      const bindings = statement.importClause?.namedBindings;
+      if (bindings && ts.isNamedImports(bindings))
+        for (const element of bindings.elements)
+          imports.set(element.name.text, {
+            spec: statement.moduleSpecifier.text,
+            imported: (element.propertyName ?? element.name).text,
+          });
+    } else if (ts.isFunctionDeclaration(statement) && statement.name) {
       local.set(statement.name.text, statement);
-      if (hasExport(statement))
-        out.push({
-          name: hasDefault(statement) ? "default" : statement.name.text,
-          node: statement,
-        });
-      else if (hasDefault(statement)) out.push({ name: "default", node: statement });
-    } else if (ts.isFunctionDeclaration(statement) && hasDefault(statement)) {
-      out.push({ name: "default", node: statement });
     } else if (ts.isVariableStatement(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        if (!ts.isIdentifier(declaration.name)) continue;
-        local.set(declaration.name.text, declaration);
-        if (hasExport(statement)) out.push({ name: declaration.name.text, node: declaration });
-      }
-    } else if (ts.isExportAssignment(statement)) {
-      out.push({ name: "default", node: statement });
-    } else if (ts.isExportDeclaration(statement)) {
-      if (!statement.exportClause || statement.moduleSpecifier)
-        out.push({
-          name: `*:${statement.moduleSpecifier ? statement.moduleSpecifier.getText(source).slice(1, -1) : "all"}`,
-          node: statement,
-        });
-      else if (ts.isNamedExports(statement.exportClause) && !statement.isTypeOnly)
-        for (const element of statement.exportClause.elements)
-          if (!element.isTypeOnly)
-            out.push({
-              name: element.name.text,
-              node: local.get((element.propertyName ?? element.name).text) ?? element,
-            });
-    } else if (
-      (ts.isClassDeclaration(statement) || ts.isEnumDeclaration(statement)) &&
-      hasExport(statement) &&
-      statement.name
-    ) {
-      out.push({ name: statement.name.text, node: statement });
+      for (const declaration of statement.declarationList.declarations)
+        for (const name of bindingNames(declaration.name)) local.set(name, declaration);
     }
   }
-  return out;
+  const exported: Exported[] = [];
+  for (const statement of source.statements) {
+    const exports = hasModifier(statement, ts.SyntaxKind.ExportKeyword);
+    const isDefault = hasModifier(statement, ts.SyntaxKind.DefaultKeyword);
+    if (
+      (ts.isFunctionDeclaration(statement) ||
+        ts.isClassDeclaration(statement) ||
+        ts.isEnumDeclaration(statement)) &&
+      exports
+    ) {
+      const name = isDefault ? "default" : statement.name?.text;
+      if (name) exported.push({ name, node: statement, reexport: false });
+    } else if (ts.isVariableStatement(statement) && exports) {
+      for (const declaration of statement.declarationList.declarations)
+        for (const name of bindingNames(declaration.name))
+          exported.push({ name, node: declaration, reexport: false });
+    } else if (ts.isExportAssignment(statement)) {
+      exported.push({ name: "default", node: statement.expression, reexport: false });
+    } else if (ts.isExportDeclaration(statement) && !statement.isTypeOnly) {
+      const spec =
+        statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier)
+          ? statement.moduleSpecifier.text
+          : null;
+      const clause = statement.exportClause;
+      if (!clause || ts.isNamespaceExport(clause)) {
+        exported.push({ name: `*:${spec ?? "local"}`, node: statement, reexport: true });
+      } else {
+        for (const element of clause.elements) {
+          if (element.isTypeOnly) continue;
+          const target = local.get((element.propertyName ?? element.name).text);
+          exported.push({
+            name: element.name.text,
+            node: spec ? element : (target ?? element),
+            reexport: spec !== null,
+          });
+        }
+      }
+    }
+  }
+  return { file, source, imports, local, exported };
 }
 
-function inlineActions(source: ts.SourceFile): Exported[] {
-  const found: Exported[] = [];
-  const visit = (node: ts.Node): void => {
-    if (
-      (ts.isFunctionDeclaration(node) ||
-        ts.isFunctionExpression(node) ||
-        ts.isArrowFunction(node) ||
-        ts.isMethodDeclaration(node)) &&
-      node.body &&
-      ts.isBlock(node.body) &&
-      node.body.statements.some((s) => isDirective(s, "use server"))
-    ) {
-      const line = source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
-      const name = ts.isFunctionDeclaration(node) && node.name ? node.name.text : `inline@${line}`;
-      found.push({ name: `inline:${name}`, node });
+type FunctionLike = ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction;
+
+function unwrap(node: ts.Node): ts.Node {
+  let current = node;
+  while (
+    ts.isParenthesizedExpression(current) ||
+    ts.isAsExpression(current) ||
+    ts.isSatisfiesExpression(current) ||
+    ts.isNonNullExpression(current)
+  )
+    current = current.expression;
+  return current;
+}
+
+function functionOf(node: ts.Node, parsed: Parsed, hops = 2): FunctionLike | null {
+  if (ts.isFunctionDeclaration(node)) return node;
+  const target = ts.isVariableDeclaration(node) ? node.initializer : node;
+  if (!target) return null;
+  const inner = unwrap(target);
+  if (ts.isArrowFunction(inner) || ts.isFunctionExpression(inner)) return inner;
+  if (ts.isIdentifier(inner) && hops > 0) {
+    const next = parsed.local.get(inner.text);
+    return next ? functionOf(next, parsed, hops - 1) : null;
+  }
+  return null;
+}
+
+function containsReturn(node: ts.Node): boolean {
+  if (ts.isReturnStatement(node)) return true;
+  if (ts.isFunctionLike(node)) return false;
+  return ts.forEachChild(node, (child) => (containsReturn(child) ? true : undefined)) === true;
+}
+
+/** `await f(...)` as the whole statement or as the initializer of its first declaration. */
+function awaitedCall(statement: ts.Statement): ts.CallExpression | null {
+  let expression: ts.Node | undefined;
+  if (ts.isExpressionStatement(statement)) expression = statement.expression;
+  else if (ts.isVariableStatement(statement))
+    expression = statement.declarationList.declarations[0]?.initializer;
+  if (!expression) return null;
+  const inner = unwrap(expression);
+  if (!ts.isAwaitExpression(inner)) return null;
+  const call = unwrap(inner.expression);
+  return ts.isCallExpression(call) ? call : null;
+}
+
+function resolveModule(files: Files, from: string, spec: string): string | null {
+  let base: string;
+  if (spec.startsWith("@/")) base = `src/${spec.slice(2)}`;
+  else if (spec.startsWith(".")) base = path.posix.join(path.posix.dirname(from), spec);
+  else return null;
+  for (const ext of EXTENSIONS) {
+    if (base + ext in files) return base + ext;
+    if (`${base}/index${ext}` in files) return `${base}/index${ext}`;
+  }
+  return null;
+}
+
+type Verified = { guards: string[]; via: string[] };
+
+/**
+ * Guards that run on every path through the function: awaited, top-level statements that precede
+ * any statement able to `return` early. One import level of helper is resolved (`depth` 0 only).
+ */
+function verifiedGuards(
+  fn: FunctionLike,
+  parsed: Parsed,
+  files: Files,
+  cache: Map<string, Parsed>,
+  depth: number,
+): Verified {
+  const result: Verified = { guards: [], via: [] };
+  if (!fn.body || !ts.isBlock(fn.body)) return result;
+  for (const statement of fn.body.statements) {
+    const call = awaitedCall(statement);
+    const callee = call && ts.isIdentifier(call.expression) ? call.expression.text : null;
+    if (call && callee) {
+      const binding = parsed.imports.get(callee);
+      if (callee === "requireActor" && binding && AUTH_MODULE.test(binding.spec)) {
+        const [arg] = call.arguments;
+        result.guards.push(arg && ts.isStringLiteralLike(arg) ? arg.text : "?");
+      } else if (binding && depth === 0) {
+        const target = resolveModule(files, parsed.file, binding.spec);
+        const text = target ? files[target] : undefined;
+        if (target && text !== undefined) {
+          const helper = cache.get(target) ?? parseFile(target, text);
+          cache.set(target, helper);
+          const item = helper.exported.find((e) => e.name === binding.imported && !e.reexport);
+          const helperFn = item ? functionOf(item.node, helper) : null;
+          if (helperFn) {
+            const inner = verifiedGuards(helperFn, helper, files, cache, 1);
+            if (inner.guards.length > 0) {
+              result.guards.push(...inner.guards);
+              result.via.push(callee);
+            }
+          }
+        }
+      }
     }
-    ts.forEachChild(node, visit);
+    if (containsReturn(statement)) break;
+  }
+  return result;
+}
+
+function markersOf(node: ts.Node, source: ts.SourceFile): SurfaceEntry["markers"] {
+  const text = node.getText(source);
+  const markers: SurfaceEntry["markers"] = [];
+  if (/\btoNextJsHandler\s*\(/.test(text)) markers.push("better-auth");
+  if (/\.authorize\s*\([^)]*authorization/i.test(text) && /\b401\b/.test(text))
+    markers.push("bearer-token");
+  return markers;
+}
+
+function inlineActions(source: ts.SourceFile): { name: string; node: FunctionLike }[] {
+  const found: { name: string; node: FunctionLike }[] = [];
+  const anonymous = new Map<string, number>();
+  const visit = (node: ts.Node, scope: string[]): void => {
+    let next = scope;
+    if (
+      ts.isFunctionDeclaration(node) ||
+      ts.isFunctionExpression(node) ||
+      ts.isArrowFunction(node)
+    ) {
+      let own: string | null = null;
+      if ((ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node)) && node.name)
+        own = node.name.text;
+      else if (ts.isVariableDeclaration(node.parent) && ts.isIdentifier(node.parent.name))
+        own = node.parent.name.text;
+      if (own === null) {
+        const key = scope.join(">");
+        const count = anonymous.get(key) ?? 0;
+        anonymous.set(key, count + 1);
+        own = `anon${count}`;
+      }
+      next = [...scope, own];
+      if (
+        node.body &&
+        ts.isBlock(node.body) &&
+        node.body.statements.some((s) => isDirective(s, "use server"))
+      )
+        found.push({ name: `inline:${next.join(">")}`, node });
+    }
+    ts.forEachChild(node, (child) => visit(child, next));
   };
-  visit(source);
+  visit(source, []);
   return found;
 }
 
-export function discoverSurface(root: string): SurfaceEntry[] {
+export function surfaceOf(files: Files): SurfaceEntry[] {
   const entries: SurfaceEntry[] = [];
-  const src = path.join(root, "src");
-  for (const file of walk(src).sort()) {
-    const rel = posix(root, file);
-    const base = path.basename(file);
-    if (!/\.(ts|tsx)$/.test(base) || /\.d\.ts$/.test(base)) continue;
-    const source = parse(file);
-    const add = (kind: SurfaceKind, item: Exported, mutating: boolean) =>
+  const cache = new Map<string, Parsed>();
+  for (const rel of Object.keys(files).sort()) {
+    const text = files[rel] ?? "";
+    if (rel.startsWith("src/pages/")) {
       entries.push({
-        id: `${kind}:${rel}#${item.name}`,
+        id: `page:${rel}#pages-router`,
+        kind: "page",
+        file: rel,
+        name: "pages-router",
+        mutating: false,
+        guards: [],
+        via: [],
+        markers: [],
+        reexport: false,
+        problems: ["the pages router is not covered by the matrix; use src/app"],
+      });
+      continue;
+    }
+    const parsed = parseFile(rel, text);
+    cache.set(rel, parsed);
+    const add = (
+      kind: SurfaceKind,
+      name: string,
+      node: ts.Node,
+      reexport: boolean,
+      mutating: boolean,
+    ) => {
+      const fn = functionOf(node, parsed);
+      const verified = fn ? verifiedGuards(fn, parsed, files, cache, 0) : { guards: [], via: [] };
+      entries.push({
+        id: `${kind}:${rel}#${name}`,
         kind,
         file: rel,
-        name: item.name,
+        name,
         mutating,
-        guards: guardsIn(item.node),
+        guards: verified.guards,
+        via: verified.via,
+        markers: kind === "route" ? markersOf(node, parsed.source) : [],
+        reexport,
+        problems: name.startsWith("*:") ? ["`export *` cannot be enumerated"] : [],
       });
-
-    if (source.statements.some((s) => isDirective(s, "use server"))) {
-      for (const item of exportsOf(source)) add("action", item, true);
+    };
+    if (parsed.source.statements.some((s) => isDirective(s, "use server"))) {
+      for (const item of parsed.exported) add("action", item.name, item.node, item.reexport, true);
     } else {
-      for (const item of inlineActions(source)) add("action", item, true);
+      for (const item of inlineActions(parsed.source))
+        add("action", item.name, item.node, false, true);
     }
-    if (/^src\/app\/(?:.*\/)?route\.ts$/.test(rel)) {
-      for (const item of exportsOf(source)) {
+    if (ROUTE.test(rel))
+      for (const item of parsed.exported)
         if (HTTP_METHODS.has(item.name) || item.name.startsWith("*:"))
-          add("route", item, item.name !== "GET");
-      }
-    }
-    if (/^src\/app\/panel\/(?:.*\/)?(?:page|layout)\.tsx$/.test(rel)) {
-      for (const item of exportsOf(source).filter((e) => e.name === "default"))
-        add("page", item, false);
-    }
+          add("route", item.name, item.node, item.reexport, item.name !== "GET");
+    if (PAGE.test(rel))
+      for (const item of parsed.exported)
+        if (item.name === "default" || item.name.startsWith("*:"))
+          add("page", item.name, item.node, item.reexport, false);
   }
   return entries.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** Guards that apply to a panel page: its own plus those of every ancestor layout. */
-export function inheritedGuards(entries: SurfaceEntry[], entry: SurfaceEntry): string[] {
-  if (entry.kind !== "page") return entry.guards;
-  const chain = new Set<string>(entry.guards);
-  let dir = path.posix.dirname(entry.file);
-  while (dir.startsWith("src/app/panel")) {
-    for (const other of entries)
-      if (other.kind === "page" && other.file === `${dir}/layout.tsx`)
-        for (const guard of other.guards) chain.add(guard);
-    dir = path.posix.dirname(dir);
-  }
-  return [...chain].sort();
+export function discoverSurface(root: string): SurfaceEntry[] {
+  return surfaceOf(readTree(root));
 }
