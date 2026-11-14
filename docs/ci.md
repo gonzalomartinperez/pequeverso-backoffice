@@ -93,6 +93,29 @@ digest move or a signed Debian security pin. The PostgreSQL artifact pins its se
 exact Debian versions and is built without cache, so a superseded version fails the build loudly;
 refresh the pins from the Debian archive (or move the base digest) in a normal task PR.
 
+## Scheduled supply-chain workflows
+
+All three call or copy the pinned `engineering-standards` v1.0.0 templates:
+
+| Workflow | When | What |
+| --- | --- | --- |
+| [deps-weekly-guard](../.github/workflows/deps-weekly-guard.yml) | Monday 10:30 ART and Dependabot PR events | At most one open Dependabot PR (older one superseded with a comment), branch kept up to date, `needs-fix` label and one tracking issue when CI is red |
+| [vuln-daily](../.github/workflows/vuln-daily.yml) | Daily 07:00 ART | Records findings silently in one pinned `vuln` tracking issue; only the Monday run posts the weekly summary that notifies (OD-75) |
+| [scorecard](../.github/workflows/scorecard.yml) | Weekly and on pushes to `main` | OpenSSF Scorecard with SARIF upload; the first run is the baseline |
+
+GitHub runs scheduled and manually dispatched workflows only from the default branch (`main`), so
+these start when `develop` is promoted (M7); the guard's pull-request trigger works on `develop`
+now. CodeQL uses the repository's default setup (no workflow file), an owner setting.
+
+## Release PR
+
+[Release PR](../.github/workflows/release-please.yml) runs release-please in manifest mode on pushes
+to `develop` ([config](../release-please-config.json), [manifest](../.release-please-manifest.json)):
+it opens or updates one release PR with the version and `CHANGELOG.md`; it never tags, builds or
+publishes. It is skipped until the owner grants a GitHub App (`RELEASE_APP_ID` variable and
+`RELEASE_APP_PRIVATE_KEY` secret), because PRs opened with `GITHUB_TOKEN` do not trigger CI. The
+redesign ships as 2.0.0 (`Release-As: 2.0.0`, PVB-D13) at M7.
+
 ## Node LTS trial
 
 [Node LTS trial](../.github/workflows/node-matrix.yml) runs type checking, unit tests and the
