@@ -391,10 +391,14 @@ jobs:
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-${{ env.BROWSER_SET }}
       - name: Install Playwright browsers
         if: steps.browsers.outputs.cache-hit != 'true'
-        # BROWSER_ENGINES is a space-separated list of fixed engine names, split on purpose.
-        run: npx playwright install $BROWSER_ENGINES
+        # BROWSER_ENGINES is a space-separated list of fixed engine names, split into an array.
+        run: |
+          read -ra engines <<< "$BROWSER_ENGINES"
+          npx playwright install "${engines[@]}"
       - name: Install browser system dependencies
-        run: npx playwright install-deps $BROWSER_ENGINES
+        run: |
+          read -ra engines <<< "$BROWSER_ENGINES"
+          npx playwright install-deps "${engines[@]}"
       - name: Backoffice suite (pull request - chromium and mobile-webkit; otherwise all engines)
         run: |
           if [ "$PR_ENGINES" = "true" ]; then npm run test:browser:pr; else npm run test:browser; fi
