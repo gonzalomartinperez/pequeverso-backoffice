@@ -11,7 +11,7 @@ alter rulesets, approvals or branch settings. Changes follow task branch → `de
 | `secrets` | Secret scan | None | Redacted full-history secret scan |
 | `static` | Static checks | None | Locked dependency audit, Biome (including import-cycle, undeclared-dependency, private-import and restricted-import rules), type checking, unit/contract/architecture tests, knip (unused files, exports, dependencies), public-file/docs/skill checks |
 | `database` | Database tests | `static` | Mandatory PostgreSQL migrations and IAM integration suite |
-| `container` | Container verification | `static` | Production app image smoke and PostgreSQL artifact/restore verification |
+| `container` | Container verification | `static` | Both images built through `docker-bake.hcl`; image metadata; hadolint, dockle (CIS), container-structure-test, Grype (fixable high or critical fails) and a CycloneDX SBOM artifact; production app image smoke and PostgreSQL artifact/restore verification |
 | `browser` | Browser tests | `static` | Production build, disposable PostgreSQL, fake identity provider and synthetic private operations data |
 | `checks` | Required checks | All six jobs above | Always runs; every explicit result must equal `success` |
 
@@ -64,6 +64,14 @@ through the existing `npm test` unit glob before that step. They check actual di
 links and resources without executing procedures or contacting services. See
 [agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
+
+## Image gates
+
+Grype downloads its vulnerability database on every run, so a newly published fixable high or
+critical advisory can turn the container job red without a code change; the fix is a base-image
+digest move or a signed Debian security pin. The PostgreSQL artifact pins its security packages to
+exact Debian versions and is built without cache, so a superseded version fails the build loudly;
+refresh the pins from the Debian archive (or move the base digest) in a normal task PR.
 
 ## Node LTS trial
 
