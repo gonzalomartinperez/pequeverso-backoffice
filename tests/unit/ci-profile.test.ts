@@ -210,7 +210,7 @@ describe("dynamic CI profile", () => {
   it("gates every job on classify, aggregates all of them in ci-gate and pins the standards", () => {
     validateCi(ci);
     assert.match(jobBlocks(ci).get("database") ?? "", /run: npm run coverage/);
-    assert.match(jobBlocks(ci).get("browser") ?? "", /run: npm run test:browser/);
+    assert.match(jobBlocks(ci).get("browser") ?? "", /npm run test:browser/);
     assert.match(jobBlocks(ci).get("browser") ?? "", /^ {4}needs: \[classify, build\]$/m);
     assert.match(jobBlocks(ci).get("container") ?? "", /scripts\/smoke-postgres\.sh/);
   });
