@@ -22,6 +22,14 @@ RUN apt-get purge -y gpg \
 # The unchanged official entrypoint only uses gosu when uid=0. Root startup is unsupported;
 # initialize a NEW volume's ownership separately, then always execute as postgres.
 USER 999:999
-ARG SERVICE_REVISION=
-LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice"
-LABEL org.opencontainers.image.revision=${SERVICE_REVISION}
+# Readiness over TCP: during first-start init the temporary server listens on the socket only, so a
+# socket probe would report healthy too early. The variables are the official image's, defaults included.
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
+  CMD ["sh", "-c", "pg_isready -q -h 127.0.0.1 -U \"${POSTGRES_USER:-postgres}\" -d \"${POSTGRES_DB:-${POSTGRES_USER:-postgres}}\""]
+ARG SERVICE_REVISION=unknown
+ARG VERSION=0.0.0-dev
+LABEL org.opencontainers.image.title="pequeverso-backoffice-postgres" \
+      org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice" \
+      org.opencontainers.image.description="PostgreSQL 18 IAM database artifact for the Pequeverso backoffice (CI and restore drills)" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${SERVICE_REVISION}"

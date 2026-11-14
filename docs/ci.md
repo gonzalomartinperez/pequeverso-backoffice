@@ -65,6 +65,13 @@ links and resources without executing procedures or contacting services. See
 [agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
 
+## Node LTS trial
+
+[Node LTS trial](../.github/workflows/node-matrix.yml) runs type checking, unit tests and the
+production build on Node 24 and Node 26 for pull requests into and pushes to `develop` during the
+two-week trial of [ADR 008](adr/008-node-26-trial.md). It is advisory: not a required context and
+not part of **Required checks**.
+
 ## Dependencies and check-name maintenance
 
 [Dependency policy](../.github/workflows/dependency-policy.yml) remains read-only and manual by
