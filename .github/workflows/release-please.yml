@@ -1,0 +1,41 @@
+name: Release PR
+
+# release-please in manifest mode on develop (docs/master-plan/ci-cd.md section 9). It only opens or
+# updates one release PR (version and CHANGELOG); the owner merges it, and promotion to main stays a
+# separate owner-approved PR. It needs a GitHub App token, because PRs opened with GITHUB_TOKEN do
+# not trigger CI: the job is skipped until the owner sets the repository variable RELEASE_APP_ID and
+# the secret RELEASE_APP_PRIVATE_KEY (owner-only scope grant). Nothing is tagged, built or published.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-pr:
+    name: Release PR (release-please)
+    if: vars.RELEASE_APP_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Mint a short-lived App token for this repository only
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app.outputs.token }}
+          target-branch: develop
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: true

@@ -93,6 +93,15 @@ digest move or a signed Debian security pin. The PostgreSQL artifact pins its se
 exact Debian versions and is built without cache, so a superseded version fails the build loudly;
 refresh the pins from the Debian archive (or move the base digest) in a normal task PR.
 
+## Release PR
+
+[Release PR](../.github/workflows/release-please.yml) runs release-please in manifest mode on pushes
+to `develop` ([config](../release-please-config.json), [manifest](../.release-please-manifest.json)):
+it opens or updates one release PR with the version and `CHANGELOG.md`; it never tags, builds or
+publishes. It is skipped until the owner grants a GitHub App (`RELEASE_APP_ID` variable and
+`RELEASE_APP_PRIVATE_KEY` secret), because PRs opened with `GITHUB_TOKEN` do not trigger CI. The
+redesign ships as 2.0.0 (`Release-As: 2.0.0`, PVB-D13) at M7.
+
 ## Node LTS trial
 
 [Node LTS trial](../.github/workflows/node-matrix.yml) runs type checking, unit tests and the
