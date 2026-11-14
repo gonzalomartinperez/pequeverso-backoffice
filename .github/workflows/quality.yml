@@ -209,17 +209,20 @@ jobs:
         with:
           dockerfile: infra/docker/postgres/Dockerfile
           failure-threshold: warning
-      - name: CIS image checks (dockle, digest-pinned)
+      - name: CIS image checks (dockle, digest-pinned, no Docker socket)
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          docker save pequeverso-backoffice:rc -o "$RUNNER_TEMP/app-image.tar"
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            -v "$RUNNER_TEMP/app-image.tar:/app-image.tar:ro" \
             goodwithtech/dockle:v0.4.15@sha256:eade932f793742de0aa8755406c7677cd7696f8675b6180926f7eeffa7abe6b9 \
-            --exit-code 1 --exit-level warn pequeverso-backoffice:rc
+            --input /app-image.tar --exit-code 1 --exit-level warn
+          rm "$RUNNER_TEMP/app-image.tar"
       - name: Image structure (container-structure-test, checksum-verified)
         env:
           CST_VERSION: v1.22.1
           CST_SHA256: fa35e89512a8978585f76cf41397956d2e3a30c62c2ad3fb857b1597074d14ca
         run: |
-          curl -fsSL -o /tmp/cst "https://github.com/GoogleContainerTools/container-structure-test/releases/download/${CST_VERSION}/container-structure-test-linux-amd64"
+          curl -fsSL --retry 3 -o /tmp/cst "https://github.com/GoogleContainerTools/container-structure-test/releases/download/${CST_VERSION}/container-structure-test-linux-amd64"
           echo "${CST_SHA256}  /tmp/cst" | sha256sum -c -
           chmod +x /tmp/cst
           /tmp/cst test --image pequeverso-backoffice:rc --config infra/docker/app/structure-test.yaml
@@ -246,6 +249,7 @@ jobs:
           format: cyclonedx-json
           output-file: sbom-pequeverso-backoffice.cdx.json
           artifact-name: sbom-pequeverso-backoffice.cdx.json
+          upload-artifact-retention: 14
           upload-release-assets: false
       - name: Smoke the exact image hardened (fail-closed, migrations, readiness, headers)
         run: scripts/smoke-image.sh pequeverso-backoffice:rc

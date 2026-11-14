@@ -42,8 +42,14 @@ fileExistenceTests:
   - name: no shell (distroless)
     path: /bin/sh
     shouldExist: false
-  - name: no package manager
-    path: /usr/local/bin/npm
+  - name: no npm in the runtime
+    path: /nodejs/bin/npm
+    shouldExist: false
+  - name: no bash
+    path: /bin/bash
+    shouldExist: false
+  - name: no busybox
+    path: /busybox
     shouldExist: false
   - name: no environment file
     path: /app/.env
