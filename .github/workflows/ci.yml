@@ -187,6 +187,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0 # the diff coverage gate needs the merge base
       - name: Record checked source identity
         env:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -202,10 +203,30 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Start a disposable PostgreSQL (test-only credentials)
         run: scripts/ci-postgres.sh
-      - name: Database tests
+      - name: Database tests with merged coverage (c8)
         env:
           DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
-        run: npm run test:db
+        run: npm run coverage
+      - name: Coverage floors and ratchet
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-coverage.ts coverage/coverage-summary.json --base-ref "$PR_BASE_SHA"
+      - name: Diff coverage
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/diff-coverage.ts coverage/lcov.info --base "$PR_BASE_SHA"
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: |
+            coverage/lcov.info
+            coverage/coverage-summary.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   container:
     name: Container verification

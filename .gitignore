@@ -11,3 +11,5 @@ blob-report/
 .integration/
 *.log
 .DS_Store
+coverage/
+.coverage-tmp/

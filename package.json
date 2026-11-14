@@ -27,6 +27,8 @@
     "preview:backoffice": "node scripts/backoffice-stack.ts",
     "db:migrate": "node scripts/db-migrate.ts",
     "db:check": "node scripts/db-check.ts",
+    "coverage": "node scripts/coverage.ts",
+    "coverage:check": "node scripts/check-coverage.ts && node scripts/diff-coverage.ts",
     "test:db": "node scripts/db-check.ts && npm run test:integration"
   },
   "dependencies": {
@@ -56,6 +58,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@typescript/typescript6": "6.0.2",
+    "c8": "12.0.0",
     "knip": "6.45.1",
     "tailwindcss": "4.3.4",
     "typescript": "7.0.2"

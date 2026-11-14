@@ -64,6 +64,29 @@ source-only review or local policy-test pass does not establish database, browse
 success. Hosted checks must pass on the exact proposed head and again after integration before
 reporting the new workflow verified.
 
+## Merged coverage gate
+
+The `database` job runs `npm run coverage` (`scripts/coverage.ts`): the unit and the PostgreSQL
+integration suites under one `NODE_V8_COVERAGE` directory, merged by `c8` into
+`coverage/lcov.info` and `coverage/coverage-summary.json` (uploaded as the `coverage` artifact;
+needs `DATABASE_URL`). `npm test` stays fast and unchanged. On pull requests two dependency-free
+scripts then gate the result ([decision](adr/009-coverage-c8-merged.md)):
+
+- `scripts/check-coverage.ts`: branch floor 80% whole repo; branch coverage of
+  `src/features/auth/**` and `src/server/auth.ts` has the plan target 90% (reported) and an interim
+  80% floor until the measured gap closes; 80% line coverage of the IAM store file; and the raise-only ratchet
+  `quality/ratchets/coverage.json` (measured values rounded down; a PR may raise it, never lower
+  it: the script compares it with the base revision).
+- `scripts/diff-coverage.ts`: changed executable lines under `src/**` need 90% coverage on auth
+  paths and 80% elsewhere (lcov plus `git diff -U0`).
+
+Both gates read only standard lcov and the istanbul `coverage-summary.json` (no c8-specific
+assumptions), so they survive the planned move to Vitest and `@vitest/coverage-v8` (M2.2); only
+`scripts/coverage.ts` is c8-specific.
+
+Both have fixture tests, including failing cases, in `tests/unit/coverage-gate.test.ts`. Locally:
+`DATABASE_URL=... npm run coverage && npm run coverage:check`.
+
 The unit suite includes [ci-profile.test.ts](../tests/unit/ci-profile.test.ts): every tracked file
 is in a profile, every job is gated on `classify` and named in the map, `ci-gate` needs every job
 and pins the standards action, the alias passes only on a green gate, and workflow and required
