@@ -36,15 +36,15 @@
     "test:db": "node scripts/db-check.ts && npm run test:integration"
   },
   "dependencies": {
-    "@opentelemetry/api": "1.9.1",
-    "@opentelemetry/exporter-trace-otlp-http": "0.223.0",
-    "@opentelemetry/resources": "2.12.0",
+    "@opentelemetry/api": "1.10.0",
+    "@opentelemetry/exporter-trace-otlp-http": "0.301.0",
+    "@opentelemetry/resources": "3.0.0",
     "@opentelemetry/sdk-trace-base": "2.12.0",
-    "better-auth": "1.7.15",
+    "better-auth": "1.7.21",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "lucide-react": "1.66.0",
-    "next": "16.4.4",
+    "lucide-react": "1.70.0",
+    "next": "16.4.6",
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -55,8 +55,8 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@biomejs/biome": "2.6.7",
-    "@playwright/test": "1.64.1",
-    "@tailwindcss/postcss": "4.3.4",
+    "@playwright/test": "1.65.0",
+    "@tailwindcss/postcss": "4.3.5",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
@@ -65,7 +65,7 @@
     "c8": "12.0.0",
     "fast-check": "4.10.2",
     "knip": "6.45.1",
-    "tailwindcss": "4.3.4",
+    "tailwindcss": "4.3.5",
     "typescript": "7.0.2"
   },
   "overrides": {
