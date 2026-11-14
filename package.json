@@ -20,6 +20,8 @@
     "docs:check": "node scripts/check-docs.ts",
     "skills:check": "node scripts/check-skills.ts",
     "knip": "knip --no-progress",
+    "setup": "node scripts/setup.ts",
+    "check:fast": "npm run lint && npm run typecheck && npm test",
     "check": "npm run lint && npm run typecheck && npm test && npm run knip && npm run security:check && npm run docs:check && npm run skills:check && npm run build",
     "test:integration": "node --test \"tests/integration/**/*.test.ts\"",
     "preview:backoffice": "node scripts/backoffice-stack.ts",
