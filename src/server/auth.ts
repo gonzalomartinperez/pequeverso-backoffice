@@ -67,7 +67,7 @@ export function accessDeps(): AccessDeps {
   return compose().access;
 }
 
-export function databasePool(): Pool {
+function databasePool(): Pool {
   return compose().pool;
 }
 

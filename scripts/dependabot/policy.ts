@@ -6,7 +6,7 @@
  */
 
 /** Patch updates eligible for lower-risk review: small, well-covered libraries and tools. */
-export const PATCH_ALLOW: ReadonlySet<string> = new Set([
+const PATCH_ALLOW: ReadonlySet<string> = new Set([
   "lucide-react",
   "clsx",
   "tailwind-merge",
@@ -19,17 +19,13 @@ export const PATCH_ALLOW: ReadonlySet<string> = new Set([
 ]);
 
 /** Minor updates eligible for lower-risk review (additive, exercised by the suites). */
-export const MINOR_ALLOW: ReadonlySet<string> = new Set([
-  "lucide-react",
-  "clsx",
-  "@axe-core/playwright",
-]);
+const MINOR_ALLOW: ReadonlySet<string> = new Set(["lucide-react", "clsx", "@axe-core/playwright"]);
 
 /**
  * Always elevated review: runtime/compiler/framework/styling migrations and the browser engine.
  * (Deny wins over allow.)
  */
-export const DENY: ReadonlySet<string> = new Set([
+const DENY: ReadonlySet<string> = new Set([
   "next",
   "react",
   "react-dom",
@@ -40,8 +36,8 @@ export const DENY: ReadonlySet<string> = new Set([
   "server-only",
 ]);
 
-export const DEPENDABOT_LOGIN = "dependabot[bot]";
-export const TARGET_BRANCH = "develop";
+const DEPENDABOT_LOGIN = "dependabot[bot]";
+const TARGET_BRANCH = "develop";
 const MANIFESTS = new Set(["package.json", "package-lock.json"]);
 const DEPENDENCY_FIELDS = ["dependencies", "devDependencies"] as const;
 
@@ -68,7 +64,7 @@ export type PullRequestFacts = {
   automation: string | undefined;
 };
 
-export type Update = { name: string; from: string; to: string; kind: UpdateKind };
+type Update = { name: string; from: string; to: string; kind: UpdateKind };
 export type UpdateKind = "patch" | "minor" | "major" | "prerelease" | "unknown";
 
 export type Decision =
@@ -78,7 +74,7 @@ export type Decision =
 type Version = { major: number; minor: number; patch: number; prerelease: boolean };
 
 /** Exact versions only (this repository pins with `npm install -E`); ranges are "unknown". */
-export function parseVersion(value: string): Version | null {
+function parseVersion(value: string): Version | null {
   const match = /^(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$/.exec(value);
   if (!match) return null;
   return {
@@ -137,7 +133,7 @@ function dependencyMap(
  * Semantic package.json comparison: only dependency version strings may change. Scripts, engines,
  * added/removed packages or any other field make the PR ineligible.
  */
-export function manifestUpdates(
+function manifestUpdates(
   base: string | null,
   head: string | null,
 ): { updates: Update[]; problems: string[] } {

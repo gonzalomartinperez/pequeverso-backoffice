@@ -7,7 +7,7 @@ import { cn } from "./cn";
  * (`sm` included; `icon-sm` is 40 px and only used inside the 56 px header row with 44 px hit
  * padding). `purchase` (coral) is reserved for the purchase action, as on the storefront.
  */
-export const buttonVariants = cva(
+const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 border font-sans font-extrabold leading-tight no-underline select-none transition-[background-color,border-color,color,box-shadow,translate] duration-150 ease-out disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {

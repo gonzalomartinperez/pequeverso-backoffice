@@ -110,6 +110,8 @@ jobs:
         run: npm run typecheck
       - name: Contract snapshot, unit tests and architecture boundaries
         run: npm test
+      - name: Unused files, exports and dependencies (knip)
+        run: npm run knip
       - name: Public-file scan, documentation links and skills
         run: npm run security:check && npm run docs:check && npm run skills:check
 
