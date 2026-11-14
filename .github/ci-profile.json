@@ -28,6 +28,7 @@
         "tests/**",
         "public/**",
         "observability/**",
+        "quality/**",
         "package.json",
         "package-lock.json",
         "next.config.ts",

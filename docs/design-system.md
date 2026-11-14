@@ -103,3 +103,23 @@ Only state changes animate (150 ms colour/opacity transitions); charts render wi
 - Long values (e-mails, revisions, ids) wrap (`overflow-wrap: anywhere`); wide tables scroll
   horizontally inside a focusable region.
 - Touch targets ≥ 44 px.
+
+## Copy lint
+
+UI copy uses neutral Latin American Spanish with "tú". `quality/copy/voseo-denylist.json`
+contains whole-word voseo forms and regionalisms, matched case-insensitively with Unicode
+accents. The scanner checks string literals, template segments and JSX text in `src/**/*.ts`
+and `src/**/*.tsx`, excluding tests, comments and module specifiers. All literals are
+conservative copy candidates; this scaffolding does not infer whether a string is Spanish.
+
+`quality/copy/voseo-baseline.json` records existing matches by file and word with counts,
+so line changes do not churn it. Even context-dependent words such as "dale" and "plata"
+go through this baseline. New matches fail; stale entries or counts also fail. The baseline
+only shrinks during normal maintenance.
+
+- Run `npm run copy:check` (or `node scripts/copy-lint.ts`); the full `npm run check` includes it.
+- After removing matches, run `node scripts/copy-lint.ts --write-baseline` to remove entries
+  or lower counts. It refuses additions to an existing baseline.
+- The same command creates an absent baseline. Explicit initialization or reinitialization
+  with additions requires `node scripts/copy-lint.ts --write-baseline --init`; review those
+  changes carefully.
