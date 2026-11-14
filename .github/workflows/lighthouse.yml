@@ -1,0 +1,125 @@
+name: Lighthouse
+
+# Lighthouse CI, WARN MODE (M2.8, docs/master-plan/testing.md). Audits the production build on the
+# preview stack (real PostgreSQL, fake identity provider, SYNTHETIC mock ops) for /ingresar and
+# /panel, mobile and desktop, 5 runs each, and reports the medians in the job summary. Separate
+# workflow on purpose: it is NOT a ci-gate prerequisite and never blocks a merge.
+# Warn then fail: budgets are annotations for 14 days from `warnSince` in
+# quality/ratchets/lighthouse.json (set when this workflow first merges); after that the owner flips
+# the `--enforce` flag below and adds the job to the ci-gate needs. Medians from the first clean CI
+# run replace the audit baseline in quality/ratchets/lighthouse.json.
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "package.json"
+      - "package-lock.json"
+      - "quality/lighthouse/**"
+      - "migrations/**"
+      - "contracts/**"
+      - "tsconfig.json"
+      - "scripts/browser-database.ts"
+      - "scripts/ci-postgres.sh"
+      - "next.config.ts"
+      - "scripts/lighthouse-*.ts"
+      - "scripts/backoffice-stack.ts"
+      - "scripts/fake-idp.ts"
+      - "scripts/mock-ops.ts"
+      - "quality/ratchets/lighthouse.json"
+      - ".github/workflows/lighthouse.yml"
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  lighthouse:
+    name: Lighthouse (warn only)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Production build
+        run: npm run build
+      - name: Install the pinned Lighthouse (quality/lighthouse/package-lock.json)
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix quality/lighthouse
+      - name: Start a disposable PostgreSQL (test-only credentials)
+        run: scripts/ci-postgres.sh
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Restore Playwright browsers
+        id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-chromium
+      - name: Install Playwright Chromium
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+      - name: Install browser system dependencies
+        run: npx playwright install-deps chromium
+      - name: Start the preview stack
+        env:
+          TEST_DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
+        run: |
+          nohup node scripts/backoffice-stack.ts > stack.log 2>&1 &
+          echo "STACK_PID=$!" >> "$GITHUB_ENV"
+          for _ in $(seq 1 90); do
+            curl -fsS http://localhost:3241/healthz >/dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          cat stack.log
+          exit 1
+      - name: Lighthouse, median of 5 (warn only)
+        run: >
+          node scripts/lighthouse-ci.ts
+          --lighthouse-bin quality/lighthouse/node_modules/.bin/lighthouse
+          --runs 5 --out lighthouse-out
+      - name: Stop the preview stack
+        if: always()
+        run: kill "$STACK_PID" 2>/dev/null || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: lighthouse-stack-log
+          path: stack.log
+          retention-days: 7
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: lighthouse-summary
+          path: lighthouse-out/lighthouse-summary.json
+          retention-days: 30
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: lighthouse-raw-reports
+          path: lighthouse-out/*.json
+          retention-days: 7
+          if-no-files-found: warn

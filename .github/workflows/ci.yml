@@ -164,6 +164,8 @@ jobs:
           restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
       - name: Production build (once; consumed by the browser job)
         run: npm run build
+      - name: Bundle size (warn mode; budgets in quality/ratchets/bundle.json)
+        run: node scripts/check-bundle.ts
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: next-build

@@ -1,0 +1,87 @@
+{
+  "$comment": "Lighthouse ratchet (M2.8). baseline = CI medians of 5 and may only improve. budgets = testing.md targets. Warn-only: the 14-day warn-then-fail plan starts at warnSince. auditReference is NOT comparable (single runs on a loaded local machine).",
+  "baselineSource": "CI run 43603749237, 2026-11-14, GitHub ubuntu-24.04, Lighthouse 13.6.0, Playwright Chromium (simulated mobile throttling, 4x CPU, median of 5). The tool is now pinned to 13.5.0 because 13.6.0 pulls the FSL-1.1 licensed sentry CLI (through @sentry/node 11), which dependency review rejects; the first 13.5.0 run re-confirms these medians. Null = not recorded in the run summary shared with the author; fill from the lighthouse-summary artifact.",
+  "mode": "warn",
+  "warnSince": "2026-11-14",
+  "enforceAfterDays": 14,
+  "budgets": {
+    "performance": 0.9,
+    "accessibility": 1,
+    "bestPractices": 0.95,
+    "tbtMs": 200,
+    "lcpMs": 2000,
+    "cls": 0.05
+  },
+  "baseline": {
+    "signin_mobile": {
+      "performance": 1.0,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 31,
+      "lcpMs": 621,
+      "cls": 0
+    },
+    "signin_desktop": {
+      "performance": 1.0,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 0,
+      "lcpMs": 164,
+      "cls": 0
+    },
+    "dashboard_mobile": {
+      "performance": 0.98,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 178,
+      "lcpMs": 773,
+      "cls": 0
+    },
+    "dashboard_desktop": {
+      "performance": 1.0,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "tbtMs": 0,
+      "lcpMs": 212,
+      "cls": 0
+    }
+  },
+  "auditReference": {
+    "note": "Measured on a loaded local machine (host load about 90), single runs; not comparable with the CI baseline. Kept for the audit trail.",
+    "source": "docs/master-plan/audit/lighthouse-summary.json",
+    "values": {
+      "dashboard_mobile": {
+        "performance": 0.7,
+        "accessibility": 1,
+        "bestPractices": 1,
+        "tbtMs": 2966,
+        "lcpMs": 2122,
+        "cls": 0
+      },
+      "dashboard_desktop": {
+        "performance": 0.78,
+        "accessibility": 1,
+        "bestPractices": 1,
+        "tbtMs": 513,
+        "lcpMs": 673,
+        "cls": 0
+      },
+      "signin_mobile": {
+        "performance": 0.78,
+        "accessibility": 1,
+        "bestPractices": 1,
+        "tbtMs": 1025,
+        "lcpMs": 1559,
+        "cls": 0
+      },
+      "signin_desktop": {
+        "performance": 0.98,
+        "accessibility": 1,
+        "bestPractices": 1,
+        "tbtMs": 126,
+        "lcpMs": 391,
+        "cls": 0
+      }
+    }
+  }
+}

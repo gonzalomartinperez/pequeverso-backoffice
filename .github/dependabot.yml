@@ -26,6 +26,15 @@ updates:
       # Node typings follow the Node LTS line in .nvmrc (24.x).
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
+  - package-ecosystem: npm
+    # Pinned Lighthouse CLI for .github/workflows/lighthouse.yml (not an application dependency).
+    directory: /quality/lighthouse
+    multi-ecosystem-group: weekly
+    patterns: ["*"]
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-patch-days: 3
   - package-ecosystem: github-actions
     directory: /
     multi-ecosystem-group: weekly

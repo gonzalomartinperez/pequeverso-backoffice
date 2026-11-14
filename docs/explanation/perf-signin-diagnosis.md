@@ -132,3 +132,16 @@ unchanged; this is a presentation and transport change only.
 Run the Method commands above on a quiet host (or rely on M2.8). Compare the per-chunk shares in
 `audit/signin-tbt-summary.json`; they should stay within a few points even when absolute TBT
 moves.
+
+## Addendum: clean CI baseline (M2.8, 2026-11-14)
+
+The first Lighthouse CI run (run 43603749237, GitHub ubuntu-24.04, Lighthouse 13.6.0, Playwright
+Chromium, simulated mobile throttling at 4x CPU, median of 5) measured sign-in mobile **TBT 31 ms**
+(performance 1.00, LCP 621 ms) and dashboard mobile **TBT 178 ms** (performance 0.98, LCP 773 ms).
+The audit's 1,025 ms and 2,966 ms were therefore host load on a busy local machine, not a property
+of the pages. Consequences:
+
+- The M5.2-SIGNIN target (TBT at or below 600 ms) is already met on CI; the fix item should be
+  justified by the chunk attribution and footprint, not by TBT.
+- The attribution (runtime chunk share of bootup) still stands: shares move little with load.
+- A-P1-3 should be re-scored at M3.5 against the CI baseline in `quality/ratchets/lighthouse.json`.
