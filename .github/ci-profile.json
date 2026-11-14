@@ -26,8 +26,10 @@
         "src/**",
         "scripts/**",
         "tests/**",
+        "quality/**",
         "public/**",
         "observability/**",
+        "quality/**",
         "package.json",
         "package-lock.json",
         "next.config.ts",
@@ -51,7 +53,7 @@
         ".claude/settings.json",
         ".claude/agents/**"
       ],
-      "adds": ["docs", "static", "build", "browser"],
+      "adds": ["docs", "static", "build", "browser", "database"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },
@@ -66,7 +68,11 @@
         "tests/integration/**",
         "package.json",
         "package-lock.json",
-        "scripts/ci-postgres.sh"
+        "scripts/ci-postgres.sh",
+        "scripts/coverage.ts",
+        "scripts/check-coverage.ts",
+        "scripts/diff-coverage.ts",
+        "quality/**"
       ],
       "adds": ["docs", "static", "build", "browser", "database"],
       "budgetP50Minutes": 6,

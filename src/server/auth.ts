@@ -13,14 +13,8 @@ export { INVITATION_COOKIE, SECURE_INVITATION_COOKIE };
 
 import { nodeSecrets } from "../features/auth/adapters/node-secrets.ts";
 import { PostgresAccessStore } from "../features/auth/adapters/postgres-access-store.ts";
-import {
-  type AccessDeps,
-  type Actor,
-  DENIAL_REDIRECT,
-  decide,
-  resolveActor,
-} from "../features/auth/application/access.ts";
-import type { Action } from "../features/auth/domain/access.ts";
+import { type AccessDeps, type Actor, resolveActor } from "../features/auth/application/access.ts";
+import { type Action, can } from "../features/auth/domain/access.ts";
 import { config } from "./config.ts";
 
 /** Composition root for authentication and access (server only). */
@@ -108,9 +102,9 @@ export async function requireActor(action: Action): Promise<Actor> {
     console.error(JSON.stringify({ event: "access_check_failed" }));
     redirect("/ingresar?error=unavailable");
   }
-  const decision = decide(actor, action);
-  if (!decision.allowed) redirect(DENIAL_REDIRECT[decision.reason]);
-  return decision.actor;
+  if (!actor) redirect("/ingresar");
+  if (!can(actor.role, action)) redirect("/panel");
+  return actor;
 }
 
 function isRedirectOrDynamic(error: unknown): boolean {

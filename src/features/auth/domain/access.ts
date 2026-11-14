@@ -20,7 +20,8 @@ export function isRole(value: unknown): value is Role {
 }
 
 export function can(role: Role | null | undefined, action: Action): boolean {
-  return role != null && PERMISSIONS[role].includes(action);
+  // Fail closed on any value that is not a known role (untyped input, prototype keys).
+  return isRole(role) && PERMISSIONS[role].includes(action);
 }
 
 const EMAIL =
