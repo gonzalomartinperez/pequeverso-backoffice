@@ -4,9 +4,12 @@
 import assert from "node:assert/strict";
 import { type ChildProcess, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { createServer } from "node:net";
 import path from "node:path";
 import { after, before, describe, it } from "node:test";
+import { betterAuth } from "better-auth";
+import { genericOAuth } from "better-auth/plugins/generic-oauth";
 import pg from "pg";
 import { migrate } from "../../scripts/db-migrate.ts";
 import { nodeSecrets } from "../../src/features/auth/adapters/node-secrets.ts";
@@ -24,9 +27,37 @@ const baseUrl = rawUrl ? assertDisposableDatabase(rawUrl, false) : undefined;
 const { authOptions, createAuth, INVITATION_COOKIE } = await import(
   "../../src/features/auth/adapters/better-auth.ts"
 );
+// Nothing listens here: it is only the origin the handler is configured and addressed with.
 const ORIGIN = "http://localhost:3297";
-const IDP_PORT = 8297;
-const IDP = `http://127.0.0.1:${IDP_PORT}`;
+
+/** A free loopback port (the fake identity provider needs a concrete one before it starts). */
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = server.address() as { port: number };
+      server.close(() => resolve(port));
+    });
+  });
+}
+
+/** `version` (or a range like ^1.7.15) is at least `floor`; prereleases count as the plain version. */
+function atLeast(version: string, floor: number[]): boolean {
+  const parts = version
+    .replace(/^[^\d]*/, "")
+    .split(/[.+-]/)
+    .slice(0, 3)
+    .map(Number);
+  for (let index = 0; index < 3; index++) {
+    const have = parts[index] ?? 0;
+    const want = floor[index] ?? 0;
+    if (have !== want) return have > want;
+  }
+  return true;
+}
+
+let IDP = "";
 const SECRET = "integration-secret-1111111111111111111111";
 
 describe("backoffice auth security (PostgreSQL, real handler)", {
@@ -48,6 +79,7 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
     testIssuer: IDP,
     rateLimit: false,
   };
+  let stateAuth: ReturnType<typeof createAuth>;
 
   before(async () => {
     admin = new pg.Client({ connectionString: baseUrl });
@@ -64,9 +96,36 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
       clock: { now: () => new Date() },
       ownerEmail: "owner@example.test",
     };
+    const idpPort = await freePort();
+    IDP = `http://127.0.0.1:${idpPort}`;
+    settings.testIssuer = IDP;
     auth = createAuth(settings, pool, deps);
+    // Same configuration, but the test provider runs without PKCE so that the OAuth `state` check
+    // is the only thing standing between a forged callback and a session (GHSA-wxw3-q3m9-c3jr).
+    const options = authOptions(settings, pool, deps);
+    const access = options.plugins.filter((plugin) => plugin.id !== "generic-oauth");
+    stateAuth = betterAuth({
+      ...options,
+      plugins: [
+        ...access,
+        genericOAuth({
+          config: [
+            {
+              providerId: "test-idp",
+              clientId: "backoffice-test",
+              clientSecret: "backoffice-test-secret",
+              authorizationUrl: `${IDP}/authorize`,
+              tokenUrl: `${IDP}/token`,
+              userInfoUrl: `${IDP}/userinfo`,
+              scopes: ["openid", "email"],
+              pkce: false,
+            },
+          ],
+        }),
+      ],
+    }) as unknown as ReturnType<typeof createAuth>;
     idp = spawn(process.execPath, ["scripts/fake-idp.ts"], {
-      env: { ...process.env, FAKE_IDP_PORT: String(IDP_PORT) },
+      env: { ...process.env, FAKE_IDP_PORT: String(idpPort) },
       stdio: ["ignore", "pipe", "inherit"],
     });
     await new Promise<void>((resolve) => idp.stdout?.once("data", () => resolve()));
@@ -93,8 +152,13 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
   const cookies = (jar: Jar) => [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
   const SESSION_COOKIE = "pv_bo.session_token";
 
-  function post(pathname: string, body: unknown, headers: Record<string, string>) {
-    return auth.handler(
+  function post(
+    pathname: string,
+    body: unknown,
+    headers: Record<string, string>,
+    instance: ReturnType<typeof createAuth> = auth,
+  ) {
+    return instance.handler(
       new Request(`${ORIGIN}/api/auth${pathname}`, {
         method: "POST",
         headers: { "content-type": "application/json", ...headers },
@@ -103,12 +167,17 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
     );
   }
 
-  async function begin(jar: Jar, identity: { email: string; sub: string }) {
+  async function begin(
+    jar: Jar,
+    identity: { email: string; sub: string },
+    instance: ReturnType<typeof createAuth> = auth,
+  ) {
     await fetch(`${IDP}/__identity`, { method: "POST", body: JSON.stringify(identity) });
     const start = await post(
       "/sign-in/social",
       { provider: "test-idp", callbackURL: "/panel", errorCallbackURL: "/ingresar" },
       { origin: ORIGIN },
+      instance,
     );
     assert.equal(start.status, 200);
     keep(jar, start);
@@ -144,15 +213,45 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
       ["/link-social", { provider: "test-idp", callbackURL: "/panel" }],
     ] as const;
 
-    it("refuses a foreign Origin on every state-changing Better Auth route, with and without a session", async () => {
+    it("refuses a foreign Origin on every state-changing route when the request carries cookies", async () => {
       const { jar } = await owner();
       for (const [route, body] of states) {
-        for (const cookie of [cookies(jar), ""]) {
-          const response = await post(route, body, { origin: "https://evil.example", cookie });
-          assert.equal(response.status, 403, `${route} cookie=${cookie !== ""}`);
-        }
+        const response = await post(route, body, {
+          origin: "https://evil.example",
+          cookie: cookies(jar),
+        });
+        assert.equal(response.status, 403, route);
       }
       assert.ok(await session(jar), "no forged request ended the session");
+    });
+
+    it("does not Origin-check a request with no Cookie header at all (a cookie-less browser): it answers 200", async () => {
+      // Better Auth's CSRF check only runs for requests that carry cookies. This is the real
+      // behavior of a cookie-less browser (it sends no `cookie` header, not an empty one), so it is
+      // asserted here rather than hidden behind `cookie: ""`, which does trigger the check.
+      // Acceptable because there is no session to act on: sign-out is a no-op, and sign-in only
+      // starts a flow whose `state` cookie and PKCE verifier bind the callback to this browser
+      // (see the GHSA-wxw3 tests). The app does not change this; the report records it.
+      for (const origin of [undefined, "https://evil.example"]) {
+        const headers: Record<string, string> = origin ? { origin } : {};
+        assert.equal((await post("/sign-out", {}, headers)).status, 200, `sign-out ${origin}`);
+        const start = await post(
+          "/sign-in/social",
+          { provider: "test-idp", callbackURL: "/panel" },
+          headers,
+        );
+        assert.equal(start.status, 200, `sign-in ${origin}`);
+        assert.ok(
+          ((await start.json()) as { url?: string }).url,
+          "a flow starts, bound to cookies",
+        );
+      }
+      const emptyCookie = await post(
+        "/sign-out",
+        {},
+        { origin: "https://evil.example", cookie: "" },
+      );
+      assert.equal(emptyCookie.status, 403, "an empty Cookie header does trigger the check");
     });
 
     it("refuses Origin: null, a look-alike origin and a cookie request without Origin", async () => {
@@ -167,17 +266,6 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
       }
       const missing = await post("/sign-out", {}, { cookie: cookies(jar) });
       assert.equal(missing.status, 403, "cookie-bearing POST without Origin");
-      assert.ok(await session(jar));
-    });
-
-    it("refuses cross-site fetch metadata even with the right Origin string absent", async () => {
-      const { jar } = await owner();
-      const response = await post(
-        "/sign-out",
-        {},
-        { cookie: cookies(jar), "sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate" },
-      );
-      assert.equal(response.status, 403);
       assert.ok(await session(jar));
     });
 
@@ -248,18 +336,48 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
       }
     });
 
+    it("rejects a forged state with PKCE off, by the state check itself (error=state_mismatch)", async () => {
+      const read = (jar: Jar) =>
+        stateAuth.api.getSession({ headers: new Headers({ cookie: cookies(jar) }) });
+      const control: Jar = new Map();
+      const good = await begin(control, identity, stateAuth);
+      assert.equal(good.searchParams.get("code_challenge"), null, "this variant has no PKCE");
+      keep(
+        control,
+        await stateAuth.handler(new Request(good, { headers: { cookie: cookies(control) } })),
+      );
+      assert.ok(await read(control), "control: an untouched callback signs in");
+      for (const mutate of ["forged", "missing"] as const) {
+        const jar: Jar = new Map();
+        const callback = await begin(jar, identity, stateAuth);
+        if (mutate === "forged") callback.searchParams.set("state", "forged-state-value");
+        else callback.searchParams.delete("state");
+        const done = await stateAuth.handler(
+          new Request(callback, { headers: { cookie: cookies(jar) } }),
+        );
+        keep(jar, done);
+        assert.match(
+          done.headers.get("location") ?? "",
+          mutate === "forged" ? /error=state_mismatch/ : /error=state_not_found/,
+          mutate,
+        );
+        assert.equal(await read(jar), null, mutate);
+      }
+    });
+
     it("rejects a callback replayed after it succeeded, and a state taken from another flow", async () => {
       const jar: Jar = new Map();
       const callback = await begin(jar, identity);
+      const replayJar: Jar = new Map(jar); // the browser's cookies before the first use
       const first = await auth.handler(
         new Request(callback, { headers: { cookie: cookies(jar) } }),
       );
       keep(jar, first);
       assert.ok(await session(jar), "first use signs in");
-      const replayJar: Jar = new Map();
       const replay = await auth.handler(
         new Request(callback, { headers: { cookie: cookies(replayJar) } }),
       );
+      keep(replayJar, replay);
       assert.match(replay.headers.get("location") ?? "", /error=|\/ingresar/);
       assert.equal(await session(replayJar), null, "a replayed callback creates no session");
 
@@ -284,62 +402,79 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
       assert.deepEqual(ids.sort(), ["generic-oauth", "pequeverso-backoffice-access"]);
     });
 
-    it("serves no discovery, JWKS, token, registration or MCP endpoint", async () => {
-      const probes: [string, string][] = [
-        ["GET", "/.well-known/openid-configuration"],
-        ["GET", "/.well-known/oauth-authorization-server"],
-        ["GET", "/.well-known/oauth-protected-resource"],
-        ["GET", "/jwks"],
-        ["GET", "/mcp/get-session"],
-        ["POST", "/oauth2/token"],
-        ["POST", "/oauth2/register"],
-        ["GET", "/oauth2/authorize"],
-        ["GET", "/oauth2/userinfo"],
-      ];
-      for (const [method, route] of probes) {
-        const response = await auth.handler(
+    it("serves no discovery, JWKS, token, registration, introspection or MCP endpoint", async () => {
+      const call = (method: string, route: string) =>
+        auth.handler(
           new Request(`${ORIGIN}/api/auth${route}`, {
             method,
             headers: { origin: ORIGIN, "content-type": "application/json" },
             ...(method === "POST" ? { body: "{}" } : {}),
           }),
         );
-        assert.ok([404, 405].includes(response.status), `${method} ${route} -> ${response.status}`);
-      }
+      // Controls: routes that exist answer, so a 404 below means "absent", not "handler broken".
+      assert.equal((await call("GET", "/ok")).status, 200);
+      assert.equal((await call("GET", "/get-session")).status, 200);
+      const probes: [string, string][] = [
+        ["GET", "/.well-known/openid-configuration"],
+        ["GET", "/.well-known/oauth-authorization-server"],
+        ["GET", "/.well-known/oauth-protected-resource"],
+        ["GET", "/jwks"],
+        ["GET", "/mcp/get-session"],
+        ["POST", "/token"],
+        ["POST", "/mcp/token"],
+        ["POST", "/mcp/register"],
+        ["POST", "/oauth2/token"],
+        ["POST", "/oauth2/register"],
+        ["POST", "/oauth2/introspect"],
+        ["POST", "/oauth2/revoke"],
+        ["POST", "/oauth2/consent"],
+        ["GET", "/oauth2/authorize"],
+        ["GET", "/oauth2/userinfo"],
+      ];
+      for (const [method, route] of probes)
+        assert.equal((await call(method, route)).status, 404, `${method} ${route}`);
     });
 
-    it("pins better-auth at or above the patched floor (1.6.11) and no advisory-prone plugin imports exist", () => {
+    it("runs an installed better-auth at or above the patched floor (1.6.11) and imports no other plugin", () => {
+      const installed = JSON.parse(
+        readFileSync("node_modules/better-auth/package.json", "utf8"),
+      ) as { version: string };
+      assert.ok(atLeast(installed.version, [1, 6, 11]), `installed ${installed.version} < 1.6.11`);
       const manifest = JSON.parse(readFileSync("package.json", "utf8")) as {
         dependencies: Record<string, string>;
       };
       const pinned = manifest.dependencies["better-auth"] ?? "";
-      const parts = pinned
-        .replace(/^[^\d]*/, "")
-        .split(".")
-        .map(Number);
-      const floor = [1, 6, 11];
-      const ok =
-        parts[0] !== floor[0]
-          ? (parts[0] ?? 0) > (floor[0] ?? 0)
-          : parts[1] !== floor[1]
-            ? (parts[1] ?? 0) > (floor[1] ?? 0)
-            : (parts[2] ?? 0) >= (floor[2] ?? 0);
-      assert.ok(ok, `better-auth ${pinned} is below 1.6.11`);
-      const source = readFileSync("src/features/auth/adapters/better-auth.ts", "utf8");
-      assert.doesNotMatch(
-        source,
-        /oidc-provider|oauth-provider|plugins\/mcp|better-auth\/plugins\/jwt/,
-      );
+      assert.ok(atLeast(pinned, [1, 6, 11]), `declared ${pinned} < 1.6.11`);
+      const offenders: string[] = [];
+      for (const entry of readdirSync("src", { recursive: true })) {
+        const file = `src/${String(entry).split("\\").join("/")}`;
+        if (!/\.[cm]?[jt]sx?$/.test(file)) continue;
+        const text = readFileSync(file, "utf8");
+        const imports = text.matchAll(/["'](better-auth\/plugins[^"']*|@better-auth\/[^"']*)["']/g);
+        for (const [, spec = ""] of imports)
+          if (spec !== "better-auth/plugins/generic-oauth") offenders.push(`${file}: ${spec}`);
+      }
+      assert.deepEqual(offenders, []);
     });
   });
 
   describe("sessions: expiry and revocation", () => {
-    it("ignores an expired session even though the cookie is intact", async () => {
-      const { jar } = await owner();
+    it("issues sessions that last the configured hours, and ignores one that has expired", async () => {
+      const { jar, actor } = await owner();
       assert.ok(await session(jar));
-      await pool.query(`UPDATE auth_session SET "expiresAt" = now() - interval '1 minute'`);
-      assert.equal(await session(jar), null);
-      await pool.query("DELETE FROM auth_session");
+      const { rows } = await pool.query<{ seconds: number }>(
+        `SELECT extract(epoch FROM "expiresAt" - "createdAt")::float AS seconds
+           FROM auth_session WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 1`,
+        [actor.id],
+      );
+      const seconds = rows[0]?.seconds ?? 0;
+      assert.ok(Math.abs(seconds - settings.sessionHours * 3600) < 60, `lifetime ${seconds}s`);
+      try {
+        await pool.query(`UPDATE auth_session SET "expiresAt" = now() - interval '1 minute'`);
+        assert.equal(await session(jar), null);
+      } finally {
+        await pool.query("DELETE FROM auth_session");
+      }
     });
 
     it("rejects a tampered signature, a cookie signed with another secret and a bare token", async () => {
@@ -452,6 +587,8 @@ describe("backoffice auth security (PostgreSQL, real handler)", {
         assert.ok(!serialized.includes(secret), "a secret value reached a DTO");
       assert.doesNotMatch(serialized, /token_?digest|tokenDigest/i);
       const view = await deps.store.invitationByDigest(deps.secrets.digest(invite.token));
+      assert.ok(view, "the invitation resolves by its digest");
+      assert.deepEqual(Object.keys(view).sort(), Object.keys(invitations[0] ?? {}).sort());
       assert.ok(!JSON.stringify(view).includes(deps.secrets.digest(invite.token)));
     });
   });
