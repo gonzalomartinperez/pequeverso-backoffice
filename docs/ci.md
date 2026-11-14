@@ -202,7 +202,8 @@ suppressions and missing doc links, reads every `quality/ratchets/*.json`, and w
 `scorecard.json` (artifact `scorecard-<sha>`, 30 days) validated against
 `quality/scorecard.schema.json`. Every axis of the master-plan scorecard has a measured value or a
 named gap with a reason and the milestone that closes it; a gap is never a number. It fails when a
-measurement is worse than its ratchet (a file may set `"mode": "warn"` for the 14-day maturity
+measurement is worse than its ratchet, when a command crashes or a ratchet or artifact is incomplete,
+and (on pull requests, `--base origin/<base>`) when a ratchet file is looser than at the base branch (a file may set `"mode": "warn"` for the 14-day maturity
 window). Coverage, bundle and Lighthouse readings are accepted through `--coverage`, `--bundle` and
 `--lighthouse` and are named gaps until a run supplies them.
 

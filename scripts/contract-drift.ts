@@ -80,10 +80,20 @@ export const render = (findings: Finding[]): string =>
         "Re-pin deliberately in a normal task PR; the pins are never updated automatically.",
       ].join("\n");
 
-const fetchRaw: Fetcher = async (url) => {
-  const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+export const MAX_BYTES = 1024 * 1024;
+
+/** Redirects are errors and a body over 1 MiB is refused while streaming. */
+export const fetchRaw: Fetcher = async (url) => {
+  const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(20_000) });
   if (!response.ok) throw new Error(`GET ${url} answered ${response.status}`);
-  return new Uint8Array(await response.arrayBuffer());
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for await (const chunk of response.body ?? []) {
+    size += chunk.byteLength;
+    if (size > MAX_BYTES) throw new Error(`GET ${url} exceeds ${MAX_BYTES} bytes`);
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 };
 
 if (import.meta.main) {

@@ -4,10 +4,11 @@
 //
 //   node scripts/scorecard.ts [--out scorecard.json] [--coverage coverage-summary.json]
 //     [--bundle bundle-report.json] [--lighthouse lighthouse-summary.json]
+//     [--base origin/develop]   fail when a ratchet is looser than at that base revision
 import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { measure, type Summary } from "./check-coverage.ts";
+import { measure, readBaseRatchet, resolveBase, type Summary } from "./check-coverage.ts";
 
 export type AxisId = (typeof AXES)[number][0];
 type Better = "lower" | "higher";
@@ -110,81 +111,135 @@ function ratchetGaps(ratchets: Ratchets): Gap[] {
 const pending = (axis: AxisId, id: string, plannedIn: string): Gap =>
   g(axis, id, "CI artifact not supplied to this run", plannedIn);
 
+/** Ratchet value that must exist: a missing or non-numeric limit is an error, never "unmeasured". */
+const limit = (file: Json | undefined, key: string, label: string): number =>
+  need(file?.[key], `ratchet ${label}`);
+
+const LOWER = new Set(["tbtMs", "lcpMs", "fcpMs", "cls"]);
+const HIGHER = new Set(["performance", "accessibility", "bestPractices"]);
+/** Direction of a Lighthouse metric; an unknown key is an error, not a guess. */
+export const lighthouseBetter = (key: string): Better => {
+  if (LOWER.has(key)) return "lower";
+  if (HIGHER.has(key)) return "higher";
+  throw new Error(`unknown Lighthouse metric "${key}": add it to the direction table`);
+};
+
+const reading = (
+  axis: AxisId,
+  id: string,
+  value: unknown,
+  ratchet: number,
+  better: Better,
+  file: Json | undefined,
+): Reading => ({ axis, id, value: need(value, id), ratchet, better, mode: modeOf(file) });
+
+function bundleReadings(artifact: Json, ratchet: Json | undefined): Reading[] {
+  const base = ratchet?.baseline;
+  if (!isObject(base) || !isObject(base.routes) || Object.keys(base.routes).length === 0)
+    throw new Error(
+      "--bundle was supplied but quality/ratchets/bundle.json has no baseline routes",
+    );
+  if (!Array.isArray(artifact.routes)) throw new Error("bundle artifact has no routes array");
+  const sizes = new Map<string, unknown>(
+    (artifact.routes as Json[]).map((r) => [String(r.route), r.gzBytes]),
+  );
+  const out = Object.entries(base.routes).map(([route, max]) => {
+    if (!sizes.has(route)) throw new Error(`bundle artifact lacks the baseline route ${route}`);
+    return reading(
+      "D6",
+      `bundle.route.${route}`,
+      sizes.get(route),
+      need(max, route),
+      "lower",
+      ratchet,
+    );
+  });
+  const fonts = isObject(artifact.fonts) ? artifact.fonts.bytes : undefined;
+  const recharts = isObject(artifact.recharts) ? artifact.recharts.gzBytes : undefined;
+  out.push(
+    reading(
+      "D6",
+      "bundle.fontsBytes",
+      fonts,
+      limit(base, "fontsBytes", "bundle.fontsBytes"),
+      "lower",
+      ratchet,
+    ),
+    reading(
+      "D6",
+      "bundle.rechartsGzBytes",
+      recharts,
+      limit(base, "rechartsGzBytes", "bundle.rechartsGzBytes"),
+      "lower",
+      ratchet,
+    ),
+  );
+  return out;
+}
+
+function lighthouseReadings(artifact: Json, ratchet: Json | undefined): Reading[] {
+  const scenarios = ratchet?.baseline;
+  if (!isObject(scenarios) || Object.keys(scenarios).length === 0)
+    throw new Error(
+      "--lighthouse was supplied but quality/ratchets/lighthouse.json has no baseline",
+    );
+  if (artifact.complete !== true || !isObject(artifact.results))
+    throw new Error("lighthouse artifact is incomplete or has no results");
+  const out: Reading[] = [];
+  for (const [name, baseline] of Object.entries(scenarios)) {
+    const entry = (artifact.results as Json)[name];
+    const median = isObject(entry) && isObject(entry.median) ? entry.median : null;
+    if (!median || !isObject(baseline)) throw new Error(`lighthouse artifact lacks ${name}`);
+    for (const [key, max] of Object.entries(baseline))
+      out.push(
+        reading(
+          "D6",
+          `lighthouse.${name}.${key}`,
+          median[key],
+          need(max, `${name}.${key}`),
+          lighthouseBetter(key),
+          ratchet,
+        ),
+      );
+  }
+  return out;
+}
+
 export function readings(input: Inputs): { readings: Reading[]; gaps: Gap[] } {
   const { ratchets, local } = input;
   const out: Reading[] = [];
   const gaps = [...GAPS, ...ratchetGaps(ratchets)];
   for (const [axis, id, file, key] of LOCAL)
-    out.push({
-      axis,
-      id,
-      value: need(local[id], id),
-      ratchet: num(ratchets[file]?.[key]),
-      better: "lower",
-      mode: modeOf(ratchets[file]),
-    });
+    out.push(
+      reading(
+        axis,
+        id,
+        local[id],
+        limit(ratchets[file], key, `${file}.${key}`),
+        "lower",
+        ratchets[file],
+      ),
+    );
 
   if (input.coverage) {
     const m = measure(input.coverage as Summary, `${process.cwd()}/`);
     for (const key of ["branchRepo", "branchAuth", "linesStore"] as const)
-      out.push({
-        axis: "D3",
-        id: `coverage.${key}`,
-        value: need(m[key], `coverage.${key}`),
-        ratchet: num(ratchets.coverage?.[key]),
-        better: "higher",
-        mode: modeOf(ratchets.coverage),
-      });
+      out.push(
+        reading(
+          "D3",
+          `coverage.${key}`,
+          m[key],
+          limit(ratchets.coverage, key, `coverage.${key}`),
+          "higher",
+          ratchets.coverage,
+        ),
+      );
   } else gaps.push(pending("D3", "coverage", "M2.1"));
 
-  const bundle = ratchets.bundle;
-  const base = isObject(bundle?.baseline) ? bundle.baseline : {};
-  if (input.bundle) {
-    const routes = (input.bundle.routes as { route: string; gzBytes: number }[]) ?? [];
-    const known = isObject(base.routes) ? base.routes : {};
-    const over = routes.filter((r) => {
-      const limit = num(known[r.route]);
-      return limit !== null && need(r.gzBytes, `bundle ${r.route}`) > limit;
-    });
-    const mode = modeOf(bundle);
-    out.push({
-      axis: "D6",
-      id: "bundle.routesOverBaseline",
-      value: over.length,
-      ratchet: 0,
-      better: "lower",
-      mode,
-    });
-    const recharts = isObject(input.bundle.recharts) ? input.bundle.recharts : {};
-    out.push({
-      axis: "D6",
-      id: "bundle.rechartsGzBytes",
-      value: need(recharts.gzBytes, "bundle recharts.gzBytes"),
-      ratchet: num(base.rechartsGzBytes),
-      better: "lower",
-      mode,
-    });
-  } else gaps.push(pending("D6", "bundle", "M2.8"));
-
-  if (input.lighthouse) {
-    const scenarios = isObject(ratchets.lighthouse?.baseline) ? ratchets.lighthouse.baseline : {};
-    for (const [name, baseline] of Object.entries(scenarios)) {
-      const entry = input.lighthouse[name];
-      if (!isObject(entry) || !isObject(baseline))
-        throw new Error(`lighthouse summary lacks ${name}`);
-      const median = isObject(entry.median) ? entry.median : entry;
-      for (const [key, limit] of Object.entries(baseline))
-        if (num(limit) !== null)
-          out.push({
-            axis: "D6",
-            id: `lighthouse.${name}.${key}`,
-            value: need(median[key], `lighthouse ${name}.${key}`),
-            ratchet: num(limit),
-            better: /^(performance|accessibility|bestPractices)$/.test(key) ? "higher" : "lower",
-            mode: modeOf(ratchets.lighthouse),
-          });
-    }
-  } else gaps.push(pending("D6", "lighthouse", "M2.8"));
+  if (input.bundle) out.push(...bundleReadings(input.bundle, ratchets.bundle));
+  else gaps.push(pending("D6", "bundle", "M2.8"));
+  if (input.lighthouse) out.push(...lighthouseReadings(input.lighthouse, ratchets.lighthouse));
+  else gaps.push(pending("D6", "lighthouse", "M2.8"));
   return { readings: out, gaps };
 }
 
@@ -307,39 +362,89 @@ export function countSuppressions(root: string): number {
   return count;
 }
 
-function run(args: string[]): string {
+export type Run = { status: number | null; error?: Error | undefined; out: string };
+export type Runner = (args: string[]) => Run;
+export const run: Runner = (args) => {
   const r = spawnSync(process.execPath, args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-  return `${r.stdout}\n${r.stderr}`;
-}
-const grab = (text: string, re: RegExp, label: string): number => {
-  const m = re.exec(text);
-  if (!m) throw new Error(`could not read ${label} from the command output`);
-  return Number(m[1]);
+  return { status: r.status, error: r.error, out: `${r.stdout}\n${r.stderr}` };
 };
 
-export function measureLocal(root: string): Record<string, number> {
+/** A command that crashed, was killed, or failed without a countable finding is an error, not 0. */
+function counted(r: Run, count: number | null, label: string): number {
+  if (r.error) throw new Error(`${label} could not run: ${r.error.message}`);
+  if (r.status === null) throw new Error(`${label} was killed or did not exit`);
+  if (count === null) throw new Error(`could not read ${label} from the command output`);
+  if (r.status !== 0 && count === 0)
+    throw new Error(`${label} exited ${r.status} but reported no findings`);
+  return count;
+}
+const grab = (r: Run, re: RegExp) => {
+  const m = re.exec(r.out);
+  return m ? Number(m[1]) : null;
+};
+
+export function measureLocal(root: string, runner: Runner = run): Record<string, number> {
+  const guard = runner(["scripts/check-boundaries.ts"]);
+  const docs = runner(["scripts/check-docs.ts"]);
+  const tsc = runner(["node_modules/typescript/bin/tsc", "--noEmit"]);
   return {
-    "guard.violations": grab(run(["scripts/check-boundaries.ts"]), /(\d+) violations/, "guard"),
-    "docs.missingLinks": grab(run(["scripts/check-docs.ts"]), /(\d+) missing/, "docs:check"),
-    "types.errors": (
-      run(["node_modules/typescript/bin/tsc", "--noEmit"]).match(/error TS\d+/g) ?? []
-    ).length,
+    "guard.violations": counted(guard, grab(guard, /(\d+) violations/), "guard"),
+    "docs.missingLinks": counted(docs, grab(docs, /(\d+) missing/), "docs:check"),
+    "types.errors": counted(tsc, (tsc.out.match(/error TS\d+/g) ?? []).length, "tsc"),
     "lint.suppressions": countSuppressions(root),
   };
 }
 
+const VALUE_FLAGS = ["--out", "--coverage", "--bundle", "--lighthouse", "--base"];
+/** Every flag takes a value; a missing value, one starting with `--` or an unknown flag throws. */
+export function parseFlags(args: string[]): Record<string, string> {
+  const flags: Record<string, string> = {};
+  for (let i = 0; i < args.length; i += 2) {
+    const name = args[i] ?? "";
+    const value = args[i + 1];
+    if (!VALUE_FLAGS.includes(name)) throw new Error(`unknown argument ${name}`);
+    if (value === undefined || value.startsWith("--")) throw new Error(`${name} needs a value`);
+    flags[name] = value;
+  }
+  return flags;
+}
+
+/** Ratchets that got looser than at the base revision; a file new at the base is not compared. */
+export function loosening(name: string, base: Json, current: Json): string[] {
+  const out: string[] = [];
+  const walk = (b: unknown, c: unknown, at: string, key: string, better: Better) => {
+    if (typeof b === "number") {
+      const dir = name === "lighthouse" ? lighthouseBetter(key) : better;
+      const w = typeof c === "number" ? (dir === "lower" ? c > b : c < b) : true;
+      if (w) out.push(`${name}.${at}: ${String(c)} is looser than ${b} at the base revision`);
+    } else if (isObject(b))
+      for (const [k, v] of Object.entries(b))
+        walk(v, isObject(c) ? c[k] : undefined, `${at}.${k}`, k, better);
+  };
+  const keys = LOCAL.filter(([, , f]) => f === name).map(([, , , k]) => k);
+  if (name === "coverage")
+    for (const k of Object.keys(base)) walk(base[k], current[k], k, k, "higher");
+  else if (name === "bundle" || name === "lighthouse")
+    for (const [k, v] of Object.entries(isObject(base.baseline) ? base.baseline : {}))
+      walk(
+        v,
+        isObject(current.baseline) ? current.baseline[k] : undefined,
+        `baseline.${k}`,
+        k,
+        "lower",
+      );
+  else for (const k of keys) walk(base[k], current[k], k, k, "lower");
+  return out;
+}
+
 if (import.meta.main) {
-  const args = process.argv.slice(2);
-  const flag = (name: string) => {
-    const i = args.indexOf(name);
-    return i < 0 ? undefined : args[i + 1];
-  };
-  const read = (name: string): Json | undefined => {
-    const file = flag(name);
-    return file ? (JSON.parse(readFileSync(file, "utf8")) as Json) : undefined;
-  };
   try {
+    const flags = parseFlags(process.argv.slice(2));
     const root = process.cwd();
+    const read = (name: string): Json | undefined => {
+      const file = flags[name];
+      return file ? (JSON.parse(readFileSync(file, "utf8")) as Json) : undefined;
+    };
     const input: Inputs = {
       ratchets: loadRatchets(path.join(root, "quality/ratchets")),
       local: measureLocal(root),
@@ -356,7 +461,7 @@ if (import.meta.main) {
     const problems = validate(schema, card);
     if (problems.length)
       throw new Error(`scorecard does not match its schema: ${problems.join("; ")}`);
-    writeFileSync(flag("--out") ?? "scorecard.json", `${JSON.stringify(card, null, 2)}\n`);
+    writeFileSync(flags["--out"] ?? "scorecard.json", `${JSON.stringify(card, null, 2)}\n`);
     for (const [id, axis] of Object.entries(card.axes as Record<string, { status: string }>))
       console.log(`${id} ${axis.status}`);
     const s = card.summary;
@@ -364,6 +469,17 @@ if (import.meta.main) {
       `Scorecard: ${s.measured} measured, ${s.gaps} named gaps, ${s.warnings} warnings, ${s.regressions} regressions.`,
     );
     if (s.regressions) process.exitCode = 1;
+    if (flags["--base"]) {
+      const rev = resolveBase(flags["--base"]);
+      for (const [name, current] of Object.entries(input.ratchets)) {
+        const base = readBaseRatchet(rev, `quality/ratchets/${name}.json`);
+        if (isObject(base))
+          for (const line of loosening(name, base, current)) {
+            console.error(`Scorecard: ratchet loosened: ${line}`);
+            process.exitCode = 1;
+          }
+      }
+    }
   } catch (error) {
     console.error(`Scorecard: ${error instanceof Error ? error.message : String(error)}`);
     process.exitCode = 2;
