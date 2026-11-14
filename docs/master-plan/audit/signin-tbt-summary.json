@@ -1,0 +1,126 @@
+{
+  "note": "Local WSL2 under load average 43-91: absolute values INVALID; use only for attribution shares. Reference baseline is audit/lighthouse-summary.json signin_mobile (TBT 1024.8 ms).",
+  "lighthouse": "13.6.0",
+  "url": "/ingresar",
+  "validRuns": 7,
+  "runs": [
+    {
+      "run": 1,
+      "loadavg": 43.43,
+      "performance": 0.6,
+      "tbtMs": 29260,
+      "lcpMs": 1210,
+      "fcpMs": 1210,
+      "cls": 0,
+      "benchmarkIndex": 29
+    },
+    {
+      "run": 2,
+      "loadavg": 63.24,
+      "performance": 0.57,
+      "tbtMs": 24088,
+      "lcpMs": 2362,
+      "fcpMs": 2362,
+      "cls": 0,
+      "benchmarkIndex": 49
+    },
+    {
+      "run": 3,
+      "loadavg": 68.32,
+      "performance": 0.67,
+      "tbtMs": 18341,
+      "lcpMs": 1217,
+      "fcpMs": 1217,
+      "cls": 0,
+      "benchmarkIndex": 96
+    },
+    {
+      "run": 4,
+      "loadavg": 59.04,
+      "performance": 0.58,
+      "tbtMs": 22325,
+      "lcpMs": 1941,
+      "fcpMs": 1941,
+      "cls": 0,
+      "benchmarkIndex": 53
+    },
+    {
+      "run": 5,
+      "loadavg": 64.88,
+      "performance": 0.62,
+      "tbtMs": 20289,
+      "lcpMs": 1293,
+      "fcpMs": 1293,
+      "cls": 0,
+      "benchmarkIndex": 85
+    },
+    {
+      "run": 9,
+      "loadavg": 91.6,
+      "performance": 0.37,
+      "tbtMs": 62221,
+      "lcpMs": 6248,
+      "fcpMs": 1548,
+      "cls": 0,
+      "benchmarkIndex": 35
+    },
+    {
+      "run": 10,
+      "loadavg": 76.07,
+      "performance": 0.6,
+      "tbtMs": 42634,
+      "lcpMs": 965,
+      "fcpMs": 965,
+      "cls": 0,
+      "benchmarkIndex": 12
+    }
+  ],
+  "median": {
+    "performance": 0.6,
+    "tbtMs": 24088,
+    "lcpMs": 1293,
+    "fcpMs": 1293,
+    "cls": 0
+  },
+  "range": {
+    "performance": [0.37, 0.67],
+    "tbtMs": [18341, 62221],
+    "lcpMs": [965, 6248]
+  },
+  "bootupShare": {
+    "chunks/794.js": 48.8,
+    "Unattributable": 23.4,
+    "ingresar": 16,
+    "chunks/4bd1b696.js": 7.3,
+    "chunks/87.js": 1.5,
+    "chunks/687.js": 0.9,
+    "chunks/webpack.js": 0.7,
+    "chunks/app/ingresar/page.js": 0.7
+  },
+  "longTaskShare": {
+    "chunks/794.js": {
+      "count": 58,
+      "sharePct": 46.7
+    },
+    "Unattributable": {
+      "count": 35,
+      "sharePct": 27.4
+    },
+    "ingresar": {
+      "count": 26,
+      "sharePct": 13.5
+    },
+    "chunks/4bd1b696.js": {
+      "count": 6,
+      "sharePct": 6.9
+    },
+    "chunks/87.js": {
+      "count": 6,
+      "sharePct": 2.6
+    },
+    "chunks/app/ingresar/page.js": {
+      "count": 3,
+      "sharePct": 1.1
+    }
+  }
+}

@@ -104,6 +104,24 @@ links and resources without executing procedures or contacting services. See
 [agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
 
+## Property and fuzz tests
+
+`npm test` includes the property and validator fuzz suites with 100 runs per property.
+`FC_NUM_RUNS` controls domain properties; `FC_FUZZ_RUNS` controls each validator mutation
+property. Set `FC_SEED` to replay a seed; otherwise fast-check chooses a random seed.
+Failures retain fast-check's seed, shrink path and shrunk counterexample in the test log.
+To replay a particular failure, use its seed and inputs (or fast-check's reported `path`
+in the failing assertion's options).
+
+Run `npm run test:property:nightly` for 1,000 domain runs and 5,000 fuzz runs per property:
+
+```sh
+FC_NUM_RUNS=1000 FC_FUZZ_RUNS=5000 node --test tests/unit/properties.test.ts tests/unit/validator-fuzz.test.ts
+```
+
+Nightly workflow wiring is deferred to M2.10. Tests use committed synthetic examples,
+bounded mutations and explicit invitation timestamps, with no network calls.
+
 ## Standards drift
 
 [drift](../.github/workflows/drift.yml) runs the pinned `engineering-standards` drift check on every
