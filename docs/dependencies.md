@@ -38,8 +38,9 @@ condition for an authorized maintainer to disable; a read-only job cannot disarm
 
 Since 2026-11-09 `.github/dependabot.yml` uses one `multi-ecosystem-groups` group (`weekly-all`: npm,
 github-actions, docker; Monday 09:00 America/Argentina/Buenos_Aires; target `develop`) so a single weekly
-PR carries every ecosystem. Deferred: `@biomejs/biome` 2.6.x (reformats about 45 files and flags a
-Playwright describe rule in `tests/integration/auth.test.ts`) and `@opentelemetry/exporter-trace-otlp-http`
+PR carries every ecosystem. `@biomejs/biome` 2.6 formats Markdown, so `biome.json` excludes `**/*.md`
+(byte-identical plan copies must not be reformatted; Markdown gets its own linter in the docs work).
+Deferred: `@opentelemetry/exporter-trace-otlp-http`
 0.300.x (needs `@opentelemetry/api` 1.10, while `@opentelemetry/resources` 2.12 peers `<1.10`; moves
 with the OpenTelemetry 3.x stack).
 
