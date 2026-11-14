@@ -2,7 +2,10 @@
 
 The backoffice belongs to Pequeverso, so it uses the store's identity — cream paper, navy ink,
 teal accents, Fraunces for headings, Nunito Sans for reading — tuned for dense operational
-reading. Coral stays reserved for commerce and is not used here (status uses teal, navy and gold). The portfolio assistant shares engineering principles with
+reading. Status uses teal, navy and gold. Coral appears in one role only: the `danger` text and
+icon colour (coral-hover in light, soft coral in dark) for failures and errors. Purchase and price
+coral stays a retained commerce token that the backoffice does not use. The M5 Atelier palette
+replaces this borrowed danger hue (audit A-P2-2). The portfolio assistant shares engineering principles with
 this repository, not its visual identity.
 
 **Single source of truth:** `src/app/globals.css`. Components use semantic Tailwind utilities
@@ -37,12 +40,12 @@ browser suite (axe and screenshots).
 | `link` | teal text `#005e5b` | turquoise | Inline links |
 | `icon` | teal `#007d79` | turquoise | Decorative icons |
 | `chip` / `on-chip` | mint / navy | white 9 % / white | Role and status badges |
-| `notice` / `danger-surface` / `danger` | lemon; rose / coral-hover | tinted | Notices; failures |
+| `notice` / `danger-surface` / `danger` | lemon; rose / coral-hover | tinted; coral 18 % / soft coral | Notices; failures |
 | `line`, `line-strong` | navy 14 % / 28 % | white 12 % / 26 % | Borders |
 | `ring` | navy | turquoise | Focus outline (3 px, offset 2 px) |
 
 Automated axe scans pass on the backoffice pages in both themes ([verification.md](verification.md));
-that is not a full contrast audit of every state. Chart series use `--chart-*` roles (never coral).
+that is not a full contrast audit of every state. Chart series use `--chart-*` roles and never use coral.
 
 ## Typography
 
