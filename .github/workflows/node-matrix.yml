@@ -1,0 +1,56 @@
+name: Node LTS trial
+
+# Two-week Node 24 / Node 26 dual run (docs/adr/008-node-26-trial.md), started 2026-11-14,
+# decision due 2026-11-28. No schedule (OD-75: no daily scheduled failure e-mails; a red PR or push
+# run still notifies per the Actions e-mail setting). Advisory only: not a required context and not
+# part of Required checks. The Node 24 leg equals .nvmrc (unit test).
+# Node 24 stays the runtime (.nvmrc, engines, Dockerfile) until the ADR records the flip.
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: node-trial-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  node:
+    name: Node ${{ matrix.node }} build and unit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["24.22.0", "26"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Record the runtime
+        run: node --version
+      # No locked dependency has an install script; skipping them also protects fork PRs.
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Type-check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
