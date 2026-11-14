@@ -10,7 +10,7 @@ Never commit secrets, private operations details or other repositories' internal
   [docs/GLOSSARY.md](docs/GLOSSARY.md)).
 - Node from `.nvmrc` (24.22.0). Next.js 16 App Router, React 19, strict TypeScript 7, Tailwind 4
   with owned primitives, Better Auth on PostgreSQL, Biome, knip.
-- Read [docs/architecture.md](docs/explanation/architecture.md) before changing behavior and
+- Read [docs/explanation/architecture.md](docs/explanation/architecture.md) before changing behavior and
   [docs/design-system.md](docs/design-system.md) before changing UI.
 
 ## Commands
