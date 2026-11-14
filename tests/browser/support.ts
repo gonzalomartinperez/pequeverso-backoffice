@@ -1,8 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type Browser, expect, type Page } from "@playwright/test";
 
-export const IDP = "http://127.0.0.1:8238";
-export const OPS = "http://127.0.0.1:8237";
+const IDP = "http://127.0.0.1:8238";
+const OPS = "http://127.0.0.1:8237";
 export const SHOTS = "docs/verification/backoffice";
 /** Session cookies saved by auth.setup.ts (gitignored; disposable test sessions only). */
 export const OWNER_STATE = "tests/browser/.auth/owner.json";
@@ -20,7 +20,7 @@ export async function variant(name: string) {
 }
 
 /** Records CSP violations so every test can assert the strict policy breaks nothing. */
-export async function watchCsp(page: Page) {
+async function watchCsp(page: Page) {
   await page.addInitScript(() => {
     const store: string[] = [];
     (window as unknown as { __csp: string[] }).__csp = store;

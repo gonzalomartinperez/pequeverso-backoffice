@@ -48,7 +48,7 @@ and admits a viewer, and stores both sessions under the gitignored `tests/browse
 engine projects chromium, firefox, webkit, mobile-webkit (iPhone 15) and mobile-chromium (Pixel 7),
 all depending on `setup`. Pull requests run `npm run test:browser:pr` (chromium and mobile-webkit)
 and install only those engines; push, merge queue and manual runs run every project, which is the
-nightly engine set until a scheduled run exists (GitHub schedules only fire from `main`, M7).
+nightly engine set; `browser-nightly.yml` (not a ci-gate prerequisite) runs every project on a schedule, with `failOnFlakyTests`, and on pull requests that touch it. GitHub schedules only fire from `main`, so the schedule activates at M7.
 `retries: 1` on CI; a pass on retry is flaky, reported as a warning, and `failOnFlakyTests` is on
 for `main` and pull requests into `main`. `backoffice.spec.ts` was split by area with every test
 kept (70 listed IDs before the split, the same 70 after, plus the new setup and viewer tests).

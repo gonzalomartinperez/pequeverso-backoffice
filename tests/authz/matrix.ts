@@ -22,7 +22,7 @@ export type Row = { id: string; guard: Guard; covers: Covers };
 
 const AUTHZ = "tests/integration/authz-matrix.test.ts";
 const AUTH = "tests/integration/auth.test.ts";
-const BROWSER = "tests/browser/backoffice.spec.ts";
+const browser = (area: string) => `tests/browser/${area}.spec.ts`;
 const SMOKE = "scripts/smoke-postgres.sh";
 const accesos = "action:src/app/panel/accesos/actions.ts#";
 
@@ -65,49 +65,49 @@ export const MATRIX: readonly Row[] = [
   {
     id: "route:src/app/invitacion/[token]/route.ts#GET",
     guard: "public",
-    covers: { file: BROWSER, needle: "/invitacion/" },
+    covers: { file: browser("invitation"), needle: "/invitacion/" },
   },
   {
     id: "route:src/app/internal/v1/ops/metrics/route.ts#GET",
     guard: "bearer-token",
-    covers: { file: BROWSER, needle: "/internal/v1/ops/metrics" },
+    covers: { file: browser("operations"), needle: "/internal/v1/ops/metrics" },
   },
   {
     id: "proxy:src/proxy.ts#proxy",
     guard: "public",
-    covers: { file: BROWSER, needle: "content-security-policy" },
+    covers: { file: browser("sign-in"), needle: "content-security-policy" },
   },
   { id: "page:src/app/layout.tsx#default", guard: "public", covers: "static-only" },
   { id: "page:src/app/page.tsx#default", guard: "public", covers: "static-only" },
   {
     id: "page:src/app/ingresar/page.tsx#default",
     guard: "public",
-    covers: { file: BROWSER, needle: '"/ingresar"' },
+    covers: { file: browser("sign-in"), needle: '"/ingresar"' },
   },
   {
     id: "page:src/app/panel/layout.tsx#default",
     guard: "read_operations",
-    covers: { file: BROWSER, needle: '"/panel"' },
+    covers: { file: browser("navigation"), needle: '"/panel"' },
   },
   {
     id: "page:src/app/panel/page.tsx#default",
     guard: "read_operations",
-    covers: { file: BROWSER, needle: '"/panel"' },
+    covers: { file: browser("navigation"), needle: '"/panel"' },
   },
   {
     id: "page:src/app/panel/analitica/page.tsx#default",
     guard: "read_operations",
-    covers: { file: BROWSER, needle: "/panel/analitica" },
+    covers: { file: browser("analytics"), needle: "/panel/analitica" },
   },
   {
     id: "page:src/app/panel/cuenta/page.tsx#default",
     guard: "read_operations",
-    covers: { file: BROWSER, needle: "/panel/cuenta" },
+    covers: { file: browser("navigation"), needle: "/panel/cuenta" },
   },
   {
     id: "page:src/app/panel/accesos/page.tsx#default",
     guard: "manage_access",
-    covers: { file: BROWSER, needle: "/panel/accesos" },
+    covers: { file: browser("invitation"), needle: "/panel/accesos" },
   },
 ];
 

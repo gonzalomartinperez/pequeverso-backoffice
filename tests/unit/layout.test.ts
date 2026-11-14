@@ -6,17 +6,24 @@ const read = (file: string) => readFileSync(file, "utf8");
 
 it("discovers the real browser specifications from the canonical directory", () => {
   assert.match(read("playwright.config.ts"), /testDir: "\.\/tests\/browser"/);
-  assert.deepEqual(readdirSync("tests/browser").sort(), [
-    "analytics.spec.ts",
-    "dashboard.spec.ts",
-    "errors.spec.ts",
-    "invitation.spec.ts",
-    "live-ops.spec.ts",
-    "navigation.spec.ts",
-    "operations.spec.ts",
-    "sign-in.spec.ts",
-    "support.ts",
-  ]);
+  assert.deepEqual(
+    readdirSync("tests/browser")
+      .filter((name) => !name.startsWith("."))
+      .sort(),
+    [
+      "analytics.spec.ts",
+      "auth.setup.ts",
+      "dashboard.spec.ts",
+      "errors.spec.ts",
+      "invitation.spec.ts",
+      "live-ops.spec.ts",
+      "navigation.spec.ts",
+      "operations.spec.ts",
+      "sign-in.spec.ts",
+      "support.ts",
+      "viewer.spec.ts",
+    ],
+  );
   assert.equal(existsSync("tests/backoffice"), false);
 });
 
