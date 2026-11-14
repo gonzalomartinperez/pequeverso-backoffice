@@ -5,6 +5,7 @@ import {
   AXES,
   buildScorecard,
   countSuppressions,
+  deletedRatchets,
   type Inputs,
   loadRatchets,
   loosening,
@@ -253,6 +254,40 @@ test("loosening a ratchet against the base revision is reported, tightening is n
     loosening("bundle", { baseline: { fontsBytes: 5 } }, { baseline: { fontsBytes: 6 } }).length,
     1,
   );
+});
+
+test("switching to warn, moving the warn window or raising a budget is loosening", () => {
+  assert.equal(loosening("lint", { suppressions: 5 }, { suppressions: 5, mode: "warn" }).length, 1);
+  assert.equal(loosening("lint", { suppressions: 5, mode: "warn" }, { suppressions: 5 }).length, 0);
+  const lh = {
+    mode: "warn",
+    warnSince: "2026-11-14",
+    enforceAfterDays: 14,
+    budgets: { tbtMs: 200, performance: 0.9 },
+  };
+  assert.equal(loosening("lighthouse", lh, { ...lh }).length, 0);
+  assert.equal(loosening("lighthouse", lh, { ...lh, warnSince: "2026-11-20" }).length, 1);
+  assert.equal(loosening("lighthouse", lh, { ...lh, enforceAfterDays: 30 }).length, 1);
+  assert.equal(
+    loosening("lighthouse", lh, { ...lh, budgets: { tbtMs: 300, performance: 0.9 } }).length,
+    1,
+  );
+  assert.equal(
+    loosening("lighthouse", lh, { ...lh, budgets: { tbtMs: 200, performance: 0.8 } }).length,
+    1,
+  );
+  assert.equal(
+    loosening("lighthouse", lh, { ...lh, budgets: { tbtMs: 150, performance: 0.95 } }).length,
+    0,
+  );
+  assert.equal(loosening("bundle", { budgets: { fontsBytes: 5 } }, { budgets: {} }).length, 1);
+});
+
+test("a ratchet file present at the base revision and gone at HEAD is reported", () => {
+  const ls =
+    "quality/ratchets/coverage.json\nquality/ratchets/lint.json\nquality/ratchets/README.md\n";
+  assert.deepEqual(deletedRatchets(ls, ["lint"]), ["quality/ratchets/coverage.json"]);
+  assert.deepEqual(deletedRatchets(ls, ["lint", "coverage", "bundle"]), []);
 });
 
 test("flags need a value that does not start with --", () => {

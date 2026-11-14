@@ -422,6 +422,31 @@ export function loosening(name: string, base: Json, current: Json): string[] {
         walk(v, isObject(c) ? c[k] : undefined, `${at}.${k}`, k, better);
   };
   const keys = LOCAL.filter(([, , f]) => f === name).map(([, , , k]) => k);
+  // Switching an enforced file to warn, restarting or lengthening the warn window, or raising a
+  // budget silences later regressions just as much as a looser number does.
+  if (modeOf(base) === "enforce" && modeOf(current) === "warn")
+    out.push(`${name}.mode: "warn" is looser than "enforce" at the base revision`);
+  if (typeof base.warnSince === "string" && current.warnSince !== base.warnSince)
+    out.push(`${name}.warnSince: ${String(current.warnSince)} differs from ${base.warnSince}`);
+  if (
+    typeof base.enforceAfterDays === "number" &&
+    !(
+      typeof current.enforceAfterDays === "number" &&
+      current.enforceAfterDays <= base.enforceAfterDays
+    )
+  )
+    out.push(
+      `${name}.enforceAfterDays: ${String(current.enforceAfterDays)} is looser than ${base.enforceAfterDays}`,
+    );
+  if (isObject(base.budgets))
+    for (const [k, v] of Object.entries(base.budgets))
+      walk(
+        v,
+        isObject(current.budgets) ? current.budgets[k] : undefined,
+        `budgets.${k}`,
+        k,
+        "lower",
+      );
   if (name === "coverage")
     for (const k of Object.keys(base)) walk(base[k], current[k], k, k, "higher");
   else if (name === "bundle" || name === "lighthouse")
@@ -435,6 +460,15 @@ export function loosening(name: string, base: Json, current: Json): string[] {
       );
   else for (const k of keys) walk(base[k], current[k], k, k, "lower");
   return out;
+}
+
+/** Ratchet files listed at the base revision (`git ls-tree --name-only`) that HEAD no longer has. */
+export function deletedRatchets(lsTree: string, current: string[]): string[] {
+  return lsTree
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.endsWith(".json"))
+    .filter((line) => !current.includes(path.basename(line, ".json")));
 }
 
 if (import.meta.main) {
@@ -471,6 +505,14 @@ if (import.meta.main) {
     if (s.regressions) process.exitCode = 1;
     if (flags["--base"]) {
       const rev = resolveBase(flags["--base"]);
+      const listed = spawnSync("git", ["ls-tree", "--name-only", rev, "quality/ratchets/"], {
+        encoding: "utf8",
+      });
+      if (listed.status !== 0) throw new Error(`cannot list quality/ratchets at ${rev}`);
+      for (const file of deletedRatchets(listed.stdout, Object.keys(input.ratchets))) {
+        console.error(`Scorecard: ratchet loosened: ${file} exists at the base revision only`);
+        process.exitCode = 1;
+      }
       for (const [name, current] of Object.entries(input.ratchets)) {
         const base = readBaseRatchet(rev, `quality/ratchets/${name}.json`);
         if (isObject(base))

@@ -1,6 +1,7 @@
 # Nightly quality scorecard and API contract drift watch. Neither job is a ci-gate prerequisite.
 # `schedule` runs only from the default branch (main, frozen until M7): the pull_request trigger,
-# limited to this workflow, its scripts and the ratchet files, lets the PR prove it until then.
+# limited to code, tests, contracts and ratchet files, catches a ratchet regression or loosening on
+# the PR itself until then.
 name: quality-nightly
 
 on:
@@ -10,8 +11,10 @@ on:
   pull_request:
     paths:
       - ".github/workflows/quality-nightly.yml"
-      - "scripts/scorecard.ts"
-      - "scripts/contract-drift.ts"
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "contracts/**"
       - "quality/**"
 
 permissions: {}
