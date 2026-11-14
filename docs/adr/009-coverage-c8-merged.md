@@ -27,3 +27,10 @@ interim floor is raised to 90 in the same PR. Only `src/**/*.ts` is measured; `.
 **Consequences.** One dev dependency, no install scripts, no runtime impact. The coverage gate runs
 only in the database job (the only one with PostgreSQL), on pull requests. Exit: remove `c8` and the
 two scripts if the runner decision (ADR-0018) brings an equivalent merged report.
+
+## Addendum (2026-11-14): transitive overrides
+
+`c8` 12.0.0 reaches `glob` 13 and `minimatch` 10 through `test-exclude` 8.0.0, both affected by
+moderate advisories (GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249) that fail `npm audit` in CI.
+`package.json` `overrides` pin the fixed `glob` 14.0.6 and `minimatch` 11.0.8; `c8 --all` was
+verified with them. Remove the overrides when `test-exclude` ships a fixed range.
