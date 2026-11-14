@@ -15,6 +15,7 @@
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write .",
     "test": "node --test \"tests/unit/**/*.test.ts\"",
+    "test:property:nightly": "FC_NUM_RUNS=1000 FC_FUZZ_RUNS=5000 node --test tests/unit/properties.test.ts tests/unit/validator-fuzz.test.ts",
     "test:browser": "playwright test",
     "security:check": "node scripts/check-public-files.ts",
     "docs:check": "node scripts/check-docs.ts",
@@ -57,6 +58,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@typescript/typescript6": "6.0.2",
+    "fast-check": "4.10.2",
     "knip": "6.45.1",
     "tailwindcss": "4.3.4",
     "typescript": "7.0.2"
