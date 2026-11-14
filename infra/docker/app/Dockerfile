@@ -3,7 +3,7 @@
 # One image, two commands: `node server.js` (default) and `node scripts/db-migrate.ts` (one-shot
 # migrations, run by the operator before starting a release that needs them).
 # Base pinned by digest (node 24.22.0, Debian trixie slim, linux/amd64 verified).
-FROM node:24.22.0-trixie-slim@sha256:a6155384446670e9719bdc4fd0ebe4d4b29fb32a8d6aa523da3547a6cfbcf22c AS build
+FROM node:24.22.2-trixie-slim@sha256:0820eaa85e07d0490446dd01d14707e17e6108a36988cf374899cd057eb3812d AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
