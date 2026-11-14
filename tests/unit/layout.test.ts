@@ -15,7 +15,7 @@ it("discovers the real browser specifications from the canonical directory", () 
 });
 
 it("builds both existing recipes from root with effective recipe-specific context filters", () => {
-  const workflow = read(".github/workflows/quality.yml");
+  const workflow = read(".github/workflows/ci.yml");
   assert.match(
     workflow,
     /uses: docker\/bake-action@[0-9a-f]{40} # v\S+\n(?: {8}.*\n)*? {8}with:\s+source: \.\s+files: docker-bake\.hcl/,

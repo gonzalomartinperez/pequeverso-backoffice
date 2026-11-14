@@ -70,9 +70,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## CI profile
 
-The seven-job paired backoffice profile and verification limits are documented in
-[docs/ci.md](docs/ci.md). Preserve the existing **Required checks** aggregate context and
-its explicit success requirement for every prerequisite; workflow names must not collide.
+The dynamic CI (classify profiles from `.github/ci-profile.json`, fail-closed `ci-gate`, and the
+**Required checks** alias until the owner's ruleset swap) is documented in [docs/ci.md](docs/ci.md).
+Keep every tracked file inside a profile and every job listed in `ci-gate`; workflow names must not
+collide.
 
 ## Master plan (2026-11)
 

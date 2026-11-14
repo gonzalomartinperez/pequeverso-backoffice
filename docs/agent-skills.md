@@ -56,7 +56,7 @@ filesystem fixtures for broken/absolute/escaping links, redundant editable copie
 and metadata mismatches, missing resources and unsafe content. They never execute a skill
 procedure, start a database or call a provider.
 
-The existing Quality static job runs these tests through `npm test` and the catalog check
+The CI static and docs jobs run these tests through `npm test` and the catalog check
 through `npm run skills:check`. Required checks retains every existing prerequisite. These
 checks establish repository structure and reference validity; they do not prove that a client
 has loaded a skill, that a procedure makes the right decision, or that a requested mutation
