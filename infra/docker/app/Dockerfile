@@ -7,20 +7,31 @@ FROM node:24.22.0-trixie-slim@sha256:a6155384446670e9719bdc4fd0ebe4d4b29fb32a8d6
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci --no-audit --no-fund
+# No dependency needs an install script (verified in package-lock.json); never run them.
+RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci --ignore-scripts --no-audit --no-fund
 COPY next.config.ts next-env.d.ts tsconfig.json postcss.config.json ./
 COPY src ./src
 COPY public ./public
+# Reproducible timestamps: docker-bake.hcl passes the commit time (BuildKit also rewrites layer times).
+ARG SOURCE_DATE_EPOCH
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 
 FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:cb606325b7ec4af55462cb0b424a53b452a5b4a894ffe841fcf1048d216fb9f8 AS runtime
-LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice"
-LABEL org.opencontainers.image.description="Pequeverso private backoffice (access and assistant operations)"
-LABEL org.opencontainers.image.licenses="MIT"
+# Not secret (provenance records build args). ARGs do not cross stages, so both are declared here.
+ARG SERVICE_REVISION=unknown
+ARG VERSION=0.0.0-dev
+LABEL org.opencontainers.image.title="pequeverso-backoffice" \
+      org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice" \
+      org.opencontainers.image.description="Pequeverso private backoffice (access and assistant operations)" \
+      org.opencontainers.image.documentation="https://github.com/gonzalomartinperez/pequeverso-backoffice/tree/main/docs" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${SERVICE_REVISION}"
 WORKDIR /app
 ENV PATH=/nodejs/bin:/usr/local/bin:/usr/bin:/bin
 ENV NODE_ENV=production BACKOFFICE_ENVIRONMENT=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
+ENV SERVICE_REVISION=${SERVICE_REVISION} VERSION=${VERSION}
 COPY --chown=65532:65532 LICENSE NOTICE.md THIRD_PARTY_NOTICES.md ./
 COPY --from=build --chown=65532:65532 /app/.next/standalone ./
 COPY --from=build --chown=65532:65532 /app/.next/static ./.next/static

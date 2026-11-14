@@ -110,11 +110,13 @@ least-privilege database, contract, image and browser checks.
 
 ## Container and browser-test locations
 
-Build application and IAM fixture recipes from the repository root with explicit paths:
+Build application and IAM fixture recipes from the repository root through `docker-bake.hcl`, the
+single local and CI entry point (it stamps the revision, version and commit time into both images):
 
 ```sh
-docker buildx build --load -f infra/docker/app/Dockerfile -t pequeverso-backoffice:reviewed .
-docker buildx build --load -f infra/docker/postgres/Dockerfile -t pequeverso-backoffice-postgres:reviewed .
+SERVICE_REVISION="$(git rev-parse HEAD)" SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
+  VERSION="$(node -p "require('./package.json').version")" docker buildx bake --load
+scripts/check-image-metadata.sh   # labels, runtime ENV and the PostgreSQL HEALTHCHECK
 ```
 
 Each recipe has an adjacent `Dockerfile.dockerignore`. The application filter retains only

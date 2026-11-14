@@ -173,18 +173,28 @@ jobs:
           printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
             "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      - name: Build metadata (revision, version, commit time)
+        run: |
+          {
+            echo "SERVICE_REVISION=$GITHUB_SHA"
+            echo "VERSION=$(jq -r .version package.json)"
+            echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)"
+          } >> "$GITHUB_ENV"
+      - name: Build the app and PostgreSQL IAM images (docker-bake.hcl)
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7.5.0
         with:
-          context: .
-          file: infra/docker/app/Dockerfile
+          source: .
+          files: docker-bake.hcl
           load: true
-          tags: pequeverso-backoffice:rc
-          cache-from: type=gha,scope=web-node24-amd64
-          cache-to: type=gha,mode=max,scope=web-node24-amd64
+          set: |
+            app.cache-from=type=gha,scope=web-node24-amd64
+            app.cache-to=type=gha,mode=max,scope=web-node24-amd64
+            postgres.cache-from=type=gha,scope=postgres-amd64
+            postgres.cache-to=type=gha,mode=max,scope=postgres-amd64
+      - name: Check image metadata and the PostgreSQL health check
+        run: scripts/check-image-metadata.sh pequeverso-backoffice:rc pequeverso-backoffice-postgres:rc
       - name: Smoke the exact image hardened (fail-closed, migrations, readiness, headers)
         run: scripts/smoke-image.sh pequeverso-backoffice:rc
-      - name: Build the pinned non-root PostgreSQL IAM artifact
-        run: docker build -f infra/docker/postgres/Dockerfile --build-arg SERVICE_REVISION="$GITHUB_SHA" -t pequeverso-backoffice-postgres:rc .
       - name: Compare bounded IAM settings and restore with the exact app image
         run: scripts/smoke-postgres.sh pequeverso-backoffice:rc /tmp/postgres-receipt pequeverso-backoffice-postgres:rc
 
