@@ -24,6 +24,8 @@ table equal to `package.json` and to the npm scripts that `.github/workflows/ci.
 | `npm run check:fast` | Inner loop (about 20 s): `npm run lint`, `npm run typecheck`, `npm test` |
 | `npm run check` | Full local gate: `check:fast` plus `npm run knip`, `npm run security:check`, `npm run docs:check`, `npm run skills:check`, `npm run build` |
 | `npm run test:db` | Migrations and IAM integration suite; needs a disposable PostgreSQL (`TEST_DATABASE_URL` or `DATABASE_URL`) |
+| `npm run coverage` | Unit plus integration suites merged by c8 into `coverage/` (lcov, summary); needs the same PostgreSQL as `test:db`; CI runs it in the database job instead of `test:db` ([docs/ci.md](docs/ci.md)) |
+| `npm run coverage:check` | Branch floors, ratchet and diff coverage against `coverage/` |
 | `npm run test:browser` | Playwright against the production build, fake IdP and synthetic ops mock (ports 3241, 8237, 8238) |
 | `npm audit --audit-level=moderate` | Locked dependency audit (CI static job) |
 
