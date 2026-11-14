@@ -1,4 +1,4 @@
-# Nightly quality scorecard. Neither job is a ci-gate prerequisite.
+# Nightly quality scorecard and API contract drift watch. Neither job is a ci-gate prerequisite.
 # `schedule` runs only from the default branch (main, frozen until M7): the pull_request trigger,
 # limited to this workflow, its scripts and the ratchet files, lets the PR prove it until then.
 name: quality-nightly
@@ -11,6 +11,7 @@ on:
     paths:
       - ".github/workflows/quality-nightly.yml"
       - "scripts/scorecard.ts"
+      - "scripts/contract-drift.ts"
       - "quality/**"
 
 permissions: {}
@@ -51,3 +52,22 @@ jobs:
           path: scorecard.json
           if-no-files-found: warn
           retention-days: 30
+
+  contract-drift:
+    name: Contract drift
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Compare the API develop contracts with the pins (read-only, token-free)
+        run: node scripts/contract-drift.ts --summary drift.md
+      - name: Summary
+        if: always()
+        run: '[ -f drift.md ] && cat drift.md >> "$GITHUB_STEP_SUMMARY" || true'

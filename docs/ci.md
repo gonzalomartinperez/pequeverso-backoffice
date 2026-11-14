@@ -180,6 +180,14 @@ measurement is worse than its ratchet (a file may set `"mode": "warn"` for the 1
 window). Coverage, bundle and Lighthouse readings are accepted through `--coverage`, `--bundle` and
 `--lighthouse` and are named gaps until a run supplies them.
 
+The `Contract drift` job runs `scripts/contract-drift.ts`: it fetches the pinned producer files
+from the API repository's `develop` branch over public raw GitHub URLs (no token), reports
+byte drift against `contracts/*/source.json` and runs this repository's own validators on the API's
+examples. Any drift or breakage fails the job and is written to the job summary; no issue is
+opened (that would need `issues: write`) and pins are never updated automatically: re-pin in a
+normal task PR. `schedule` runs only from `main` (M7); until then the pull-request trigger, limited
+to the workflow, the two scripts and `quality/**`, and `workflow_dispatch` run it.
+
 ## Expected-red tests
 
 Tests for features that do not exist yet are marked `{ todo: "M<k>.<n> ..." }` (reported, never
