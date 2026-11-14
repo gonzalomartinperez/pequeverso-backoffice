@@ -5,6 +5,7 @@ import {
   type AccessDeps,
   type AdmissionDeps,
   admitSignUp,
+  decide,
   inspectInvitation,
   inviteMember,
   removeMember,
@@ -366,5 +367,19 @@ describe("access use cases", () => {
     store.members[0] = { ...(store.members[0] as Member), role: "viewer" };
     assert.equal((await resolveActor(deps, session))?.role, "viewer");
     assert.equal(await resolveActor(deps, null), null);
+  });
+});
+
+describe("decide", () => {
+  it("no actor means sign in, a role without the permission is forbidden", () => {
+    const viewer = { id: "v", email: "v@example.test", role: "viewer" as const };
+    const owner = { ...viewer, role: "owner" as const };
+    assert.deepEqual(decide(null, "read_operations"), {
+      allowed: false,
+      reason: "unauthenticated",
+    });
+    assert.deepEqual(decide(viewer, "manage_access"), { allowed: false, reason: "forbidden" });
+    assert.deepEqual(decide(viewer, "read_operations"), { allowed: true, actor: viewer });
+    assert.deepEqual(decide(owner, "manage_access"), { allowed: true, actor: owner });
   });
 });
