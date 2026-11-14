@@ -31,12 +31,14 @@ jobs:
     permissions:
       contents: read
     env:
-      BASE_REF: ${{ github.event_name == 'pull_request' && github.base_ref || '' }}
+      # Empty outside pull requests, so the base comparison only runs on PRs.
+      BASE_REF: ${{ github.base_ref }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
+          # Full history: the PR base branch must resolve for the loosening check.
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -48,6 +50,7 @@ jobs:
       - name: Summary
         if: always()
         run: |
+          # shellcheck disable=SC2016 # the single-quoted JavaScript uses template literals on purpose
           if [ -s scorecard.json ] && node -e 'JSON.parse(require("fs").readFileSync("scorecard.json","utf8"))' 2>/dev/null; then
             node -e 'const c=require("./scorecard.json");console.log("### Scorecard\n");for(const [k,a] of Object.entries(c.axes))console.log(`- ${k} ${a.name}: ${a.status}`);console.log("\n"+JSON.stringify(c.summary))' >> "$GITHUB_STEP_SUMMARY"
           else
@@ -79,4 +82,5 @@ jobs:
         run: node scripts/contract-drift.ts --summary drift.md
       - name: Summary
         if: always()
-        run: '[ -f drift.md ] && cat drift.md >> "$GITHUB_STEP_SUMMARY" || true'
+        run: |
+          if [ -f drift.md ]; then cat drift.md >> "$GITHUB_STEP_SUMMARY"; fi
