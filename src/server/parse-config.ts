@@ -16,7 +16,7 @@ import {
  * strong auth secret, a database URL, an owner e-mail and at least one OAuth provider are required;
  * test-only switches are refused. No fixed secret is ever used outside `test`.
  */
-export type ProviderCredentials = { clientId: string; clientSecret: string };
+type ProviderCredentials = { clientId: string; clientSecret: string };
 
 export type BackofficeConfig = {
   environment: "development" | "test" | "production";

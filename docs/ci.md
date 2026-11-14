@@ -9,7 +9,7 @@ alter rulesets, approvals or branch settings. Changes follow task branch → `de
 | --- | --- | --- | --- |
 | `workflows` | Workflow validation | None | SHA-pinned actionlint and zizmor |
 | `secrets` | Secret scan | None | Redacted full-history secret scan |
-| `static` | Static checks | None | Locked dependency audit, Biome, type checking, unit/contract/architecture tests, public-file/docs/skill checks |
+| `static` | Static checks | None | Locked dependency audit, Biome (including import-cycle, undeclared-dependency, private-import and restricted-import rules), type checking, unit/contract/architecture tests, knip (unused files, exports, dependencies), public-file/docs/skill checks |
 | `database` | Database tests | `static` | Mandatory PostgreSQL migrations and IAM integration suite |
 | `container` | Container verification | `static` | Production app image smoke and PostgreSQL artifact/restore verification |
 | `browser` | Browser tests | `static` | Production build, disposable PostgreSQL, fake identity provider and synthetic private operations data |
@@ -64,6 +64,13 @@ through the existing `npm test` unit glob before that step. They check actual di
 links and resources without executing procedures or contacting services. See
 [agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
+
+## Node LTS trial
+
+[Node LTS trial](../.github/workflows/node-matrix.yml) runs type checking, unit tests and the
+production build on Node 24 and Node 26 for pull requests into and pushes to `develop` during the
+two-week trial of [ADR 008](adr/008-node-26-trial.md). It is advisory: not a required context and
+not part of **Required checks**.
 
 ## Dependencies and check-name maintenance
 
