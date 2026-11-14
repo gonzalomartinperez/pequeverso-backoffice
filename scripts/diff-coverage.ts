@@ -3,7 +3,8 @@
 // Usage: node scripts/diff-coverage.ts [coverage/lcov.info] [--base origin/develop]
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { isAuthPath } from "./check-coverage.ts";
+import { stripTypeScriptTypes } from "node:module";
+import { isAuthPath, parseCli, resolveBase } from "./check-coverage.ts";
 
 export const DIFF_FLOORS = { auth: 90, rest: 80 } as const;
 
@@ -25,24 +26,58 @@ export function parseLcov(text: string, root = ""): Map<string, Map<number, numb
   return files;
 }
 
-/** file -> added line numbers from a zero-context unified diff. */
+/**
+ * file -> added line numbers from a zero-context unified diff. Hunk bodies are consumed by their
+ * declared line counts, so an added line such as `++ x` is never read as a `+++ ` file header.
+ */
 export function parseChangedLines(diff: string): Map<string, Set<number>> {
   const changed = new Map<string, Set<number>>();
   let file: string | undefined;
+  let previous = "";
+  let remOld = 0;
+  let remNew = 0;
+  let next = 0;
   for (const line of diff.split("\n")) {
-    if (line.startsWith("+++ ")) {
-      file = line === "+++ /dev/null" ? undefined : line.slice(6);
-    } else if (file && line.startsWith("@@")) {
-      const m = /\+(\d+)(?:,(\d+))?/.exec(line);
-      if (!m) continue;
-      const start = Number(m[1]);
-      const count = m[2] === undefined ? 1 : Number(m[2]);
-      const set = changed.get(file) ?? new Set<number>();
-      for (let i = 0; i < count; i++) set.add(start + i);
-      changed.set(file, set);
+    if (remOld > 0 || remNew > 0) {
+      if (line.startsWith("-")) remOld--;
+      else if (line.startsWith("+")) {
+        remNew--;
+        if (file) (changed.get(file) ?? changed.set(file, new Set()).get(file))?.add(next);
+        next++;
+      }
+      previous = line;
+      continue;
     }
+    if (line.startsWith("+++ ") && previous.startsWith("--- ")) {
+      const target = line.slice(4).split("\t")[0] ?? "";
+      file = target === "/dev/null" || target.startsWith('"') ? undefined : target.slice(2);
+    } else if (line.startsWith("@@")) {
+      const m = /^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(line);
+      if (!m) continue;
+      remOld = m[1] === undefined ? 1 : Number(m[1]);
+      next = Number(m[2]);
+      remNew = m[3] === undefined ? 1 : Number(m[3]);
+    }
+    previous = line;
   }
   return changed;
+}
+
+/** True when the module has no runtime statements once types are stripped (types only). */
+export function isTypeOnlySource(source: string): boolean {
+  let js: string;
+  try {
+    js = stripTypeScriptTypes(source, { mode: "strip" });
+  } catch {
+    return false;
+  }
+  const rest = js
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/^\s*import\b[^;]*;?\s*$/gm, "")
+    .replace(/^\s*export\s*(?:\{[^}]*\}|\*[^;]*)[^;]*;?\s*$/gm, "")
+    .trim();
+  return rest === "";
 }
 
 export type DiffResult = {
@@ -55,11 +90,23 @@ export type DiffResult = {
 export function evaluateDiff(
   lcov: Map<string, Map<number, number>>,
   changed: Map<string, Set<number>>,
-): { results: DiffResult[]; errors: string[] } {
+  typeOnly: (file: string) => boolean = () => false,
+): { results: DiffResult[]; errors: string[]; unmeasuredTsxLines: number } {
   const tally = { auth: { covered: 0, total: 0 }, rest: { covered: 0, total: 0 } };
+  const errors: string[] = [];
+  let unmeasuredTsxLines = 0;
   for (const [file, lines] of changed) {
+    if (!file.startsWith("src/")) continue;
+    if (file.endsWith(".tsx")) {
+      unmeasuredTsxLines += lines.size;
+      continue;
+    }
+    if (!file.endsWith(".ts") || file.endsWith(".d.ts")) continue;
     const executable = lcov.get(file);
-    if (!executable || !file.startsWith("src/")) continue;
+    if (!executable) {
+      if (!typeOnly(file)) errors.push(`${file} changed but is not in lcov (unmeasured)`);
+      continue;
+    }
     const group = isAuthPath(file) ? tally.auth : tally.rest;
     for (const n of lines) {
       const hits = executable.get(n);
@@ -72,37 +119,49 @@ export function evaluateDiff(
     const { covered, total } = tally[group];
     return { group, covered, total, percent: total === 0 ? 100 : (covered / total) * 100 };
   });
-  const errors = results
-    .filter((r) => r.percent < DIFF_FLOORS[r.group])
-    .map(
-      (r) =>
+  for (const r of results)
+    if (!(r.percent >= DIFF_FLOORS[r.group]))
+      errors.push(
         `diff coverage ${r.group} ${r.percent.toFixed(1)}% (${r.covered}/${r.total}) is below ${DIFF_FLOORS[r.group]}%`,
-    );
-  return { results, errors };
+      );
+  return { results, errors, unmeasuredTsxLines };
 }
 
 if (import.meta.main) {
-  const args = process.argv.slice(2);
-  const baseIndex = args.indexOf("--base");
-  const base = baseIndex >= 0 ? args[baseIndex + 1] : "origin/develop";
-  const lcovPath =
-    args.find((a, i) => !a.startsWith("--") && i !== baseIndex + 1) ?? "coverage/lcov.info";
-  const diff = execFileSync(
-    "git",
-    ["diff", "-U0", "--no-color", "--no-ext-diff", `${base}...HEAD`, "--", "src"],
-    {
-      encoding: "utf8",
-      maxBuffer: 64 * 1024 * 1024,
-    },
-  );
-  const { results, errors } = evaluateDiff(
-    parseLcov(readFileSync(lcovPath, "utf8"), `${process.cwd()}/`),
-    parseChangedLines(diff),
-  );
-  for (const r of results)
-    console.log(
-      `Diff coverage ${r.group}: ${r.percent.toFixed(1)}% (${r.covered}/${r.total} changed executable lines)`,
+  const { positional, flags } = parseCli(process.argv.slice(2), ["--base"]);
+  try {
+    const base = resolveBase(flags["--base"] ?? "origin/develop");
+    const diff = execFileSync(
+      "git",
+      [
+        "-c",
+        "core.quotepath=false",
+        "diff",
+        "-U0",
+        "--no-color",
+        "--no-ext-diff",
+        "--no-renames",
+        base,
+        "HEAD",
+        "--",
+        "src",
+      ],
+      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
     );
-  for (const e of errors) console.error(`Diff coverage gate: ${e}`);
-  if (errors.length) process.exitCode = 1;
+    const { results, errors, unmeasuredTsxLines } = evaluateDiff(
+      parseLcov(readFileSync(positional ?? "coverage/lcov.info", "utf8"), `${process.cwd()}/`),
+      parseChangedLines(diff),
+      (file) => isTypeOnlySource(readFileSync(file, "utf8")),
+    );
+    for (const r of results)
+      console.log(
+        `Diff coverage ${r.group}: ${r.percent.toFixed(1)}% (${r.covered}/${r.total} changed executable lines)`,
+      );
+    console.log(`Diff coverage: ${unmeasuredTsxLines} changed .tsx lines are not measured`);
+    for (const e of errors) console.error(`Diff coverage gate: ${e}`);
+    if (errors.length) process.exitCode = 1;
+  } catch (error) {
+    console.error(`Diff coverage gate: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  }
 }

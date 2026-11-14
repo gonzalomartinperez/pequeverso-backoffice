@@ -52,7 +52,7 @@
         ".claude/settings.json",
         ".claude/agents/**"
       ],
-      "adds": ["docs", "static", "build", "browser"],
+      "adds": ["docs", "static", "build", "browser", "database"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },

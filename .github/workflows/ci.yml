@@ -212,6 +212,9 @@ jobs:
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node scripts/check-coverage.ts coverage/coverage-summary.json --base-ref "$PR_BASE_SHA"
+      - name: Coverage floors (push and merge queue, no base)
+        if: github.event_name != 'pull_request'
+        run: node scripts/check-coverage.ts coverage/coverage-summary.json
       - name: Diff coverage
         if: github.event_name == 'pull_request'
         env:

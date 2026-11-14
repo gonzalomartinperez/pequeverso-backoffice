@@ -178,6 +178,24 @@ describe("dynamic CI profile", () => {
     assert.deepEqual(profilesOf("unknown/file.bin"), []);
   });
 
+  it("runs the coverage gate (database job) for every code change", () => {
+    const jobsFor = (file: string) => [
+      ...new Set([
+        ...profileMap.base,
+        ...profilesOf(file).flatMap((name) => profileMap.profiles[name]?.adds ?? []),
+      ]),
+    ];
+    for (const file of [
+      "src/shared/lib/format.ts",
+      "tests/unit/access.test.ts",
+      "scripts/check-coverage.ts",
+      "quality/ratchets/coverage.json",
+    ])
+      assert.ok(jobsFor(file).includes("database"), `${file} must trigger the database job`);
+    assert.equal(jobsFor("docs/ci.md").includes("database"), false);
+    assert.match(jobBlocks(ci).get("database") ?? "", /node scripts\/diff-coverage\.ts/);
+  });
+
   it("keeps the docs fast path free of build, browser, database and container jobs", () => {
     const docs = profileMap.profiles.docs?.adds ?? [];
     for (const heavy of ["static", "build", "browser", "database", "container"])
