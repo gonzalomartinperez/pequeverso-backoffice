@@ -1,4 +1,5 @@
 import {
+  type Action,
   can,
   INVITATION_TTL_HOURS,
   type InvitationRecord,
@@ -152,4 +153,28 @@ export async function resolveActor(
   if (!session?.emailVerified) return null;
   const role = await deps.store.memberRole(session.userId);
   return role ? { id: session.userId, email: session.email, role } : null;
+}
+
+export type Decision =
+  | { allowed: true; actor: Actor }
+  | { allowed: false; reason: "unauthenticated" | "forbidden" };
+
+/** Where a denied page or action sends the browser; shared by `requireActor` and the tests. */
+export const DENIAL_REDIRECT = { unauthenticated: "/ingresar", forbidden: "/panel" } as const;
+
+/** The authorization decision of pages and server actions, pure: no session means sign in. */
+export function decide(actor: Actor | null, action: Action): Decision {
+  if (!actor) return { allowed: false, reason: "unauthenticated" };
+  return can(actor.role, action)
+    ? { allowed: true, actor }
+    : { allowed: false, reason: "forbidden" };
+}
+
+/** `decide` over a session, with the role read from storage. */
+export async function authorize(
+  deps: AccessDeps,
+  session: { userId: string; email: string; emailVerified: boolean } | null,
+  action: Action,
+): Promise<Decision> {
+  return decide(await resolveActor(deps, session), action);
 }
