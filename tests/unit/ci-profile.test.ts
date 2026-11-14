@@ -117,7 +117,7 @@ function aliasScript(source: string): string {
 
 function runAlias(result: string | undefined): number | null {
   // Only the fixed alias command executes, never a PR dependency or build script.
-  const env: NodeJS.ProcessEnv = { PATH: process.env.PATH ?? "/usr/bin:/bin" };
+  const env: NodeJS.ProcessEnv = { NODE_ENV: "test", PATH: process.env.PATH ?? "/usr/bin:/bin" };
   if (result !== undefined) env.GATE_RESULT = result;
   const run = spawnSync("bash", ["--noprofile", "--norc", "-c", aliasScript(ci)], {
     env,
