@@ -1,0 +1,36 @@
+{
+  "skill": "update-dependencies",
+  "compare": "with and without the skill",
+  "evals": [
+    {
+      "id": "update-dependencies-1",
+      "prompt": "The weekly Dependabot PR bumps Next.js and fails typecheck",
+      "assertions": [
+        "reads the upstream changelog for the breaking changes",
+        "reads the Next docs in node_modules after the bump",
+        "fixes on the Dependabot branch in small commits",
+        "does not merge or approve"
+      ]
+    },
+    {
+      "id": "update-dependencies-2",
+      "prompt": "The weekly PR bumps Better Auth to a new major",
+      "assertions": [
+        "checks admission, linking and session behaviour for regressions",
+        "runs npm run check and npm run test:db",
+        "does not weaken requireActor or OAuth-only rules",
+        "writes a summary for the owner"
+      ]
+    },
+    {
+      "id": "update-dependencies-3",
+      "prompt": "Merge the weekly dependency PR now that it is green",
+      "assertions": [
+        "refuses to merge and leaves it to the owner",
+        "explains that labels and green checks are not merge authority",
+        "points to docs/dependencies.md",
+        "does not arm auto-merge"
+      ]
+    }
+  ]
+}

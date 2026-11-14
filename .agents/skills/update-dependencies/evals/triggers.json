@@ -1,0 +1,96 @@
+{
+  "skill": "update-dependencies",
+  "runs_per_query": 3,
+  "queries": [
+    {
+      "query": "Handle the weekly Dependabot PR",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "The dependency PR is red, fix it on its branch",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Better Auth got a major bump in the weekly PR, check what breaks",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "The dependency policy reports the weekly PR needs fixes",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Read the changelogs for this week's grouped npm update",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "The weekly PR broke the build, repair it",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Merge the weekly Dependabot PR",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Fix the urgent security advisory in one package with a normal PR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Implement M1.9 from the roadmap",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Review this feature PR",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Deploy to the VPS",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Update the storefront price",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Run npm install to add a new library",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Create a new OAuth app",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Translate this paragraph to Spanish",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Explain what a closure is in JavaScript",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "What's the weather in Buenos Aires?",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write a haiku about CI",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}

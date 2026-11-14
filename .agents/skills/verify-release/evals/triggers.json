@@ -1,0 +1,96 @@
+{
+  "skill": "verify-release",
+  "runs_per_query": 3,
+  "queries": [
+    {
+      "query": "Verify the backoffice end to end",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Run the database and browser suites and report",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Prepare the develop to main release checks",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Check that the release tag, CHANGELOG and version agree",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Verify the container image smoke and review the screenshots",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "We deployed, check the build-info SHA and health",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Implement a new dashboard card",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Review this PR for security issues",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Merge the weekly Dependabot PR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Deploy to the VPS now",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Create a new OAuth app",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write an ADR for the CI change",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Fix this TypeScript error",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Explain how Better Auth sessions work",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Translate this paragraph to Spanish",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Explain what a closure is in JavaScript",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "What's the weather in Buenos Aires?",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write a haiku about CI",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}

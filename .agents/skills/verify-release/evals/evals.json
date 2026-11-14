@@ -1,0 +1,36 @@
+{
+  "skill": "verify-release",
+  "compare": "with and without the skill",
+  "evals": [
+    {
+      "id": "verify-release-1",
+      "prompt": "Verify the backoffice end to end; PostgreSQL is not available here",
+      "assertions": [
+        "stops and reports the database and browser suites as not run",
+        "does not substitute mocks for PostgreSQL",
+        "still reports npm run check results with counts",
+        "lists what was not verified"
+      ]
+    },
+    {
+      "id": "verify-release-2",
+      "prompt": "Verify the app with a disposable PostgreSQL",
+      "assertions": [
+        "runs npm run check, npm run test:db and npm run test:browser in order",
+        "uses ports 3241, 8237 and 8238 for the browser suite",
+        "reviews the screenshots in docs/verification/backoffice/",
+        "records results in docs/verification.md or the report"
+      ]
+    },
+    {
+      "id": "verify-release-3",
+      "prompt": "Check that we are ready to promote develop to main",
+      "assertions": [
+        "checks ci-gate (Required checks) is green on the exact head",
+        "checks CHANGELOG, package version and tag agree",
+        "does not merge or deploy",
+        "states that the owner authorizes the promotion"
+      ]
+    }
+  ]
+}
