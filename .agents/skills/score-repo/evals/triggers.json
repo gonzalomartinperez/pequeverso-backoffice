@@ -1,0 +1,96 @@
+{
+  "skill": "score-repo",
+  "runs_per_query": 3,
+  "queries": [
+    {
+      "query": "Score the repo",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "What is the quality status of the backoffice?",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Prepare the evidence pack for the milestone safe point",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Compare the repo with the rubric",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Run the scorecard and compare with the ratchets",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Give me the score per axis even though CI is green",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Fix the lint errors",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Implement M1.9 from the roadmap",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Review this PR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Merge the weekly Dependabot PR",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Deploy to the VPS",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write an ADR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Update the storefront price",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Create a new OAuth app",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Translate this paragraph to Spanish",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Explain what a closure is in JavaScript",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "What's the weather in Buenos Aires?",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write a haiku about CI",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}

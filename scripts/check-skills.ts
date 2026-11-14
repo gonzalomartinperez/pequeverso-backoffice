@@ -10,44 +10,135 @@ import {
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const catalog = ["web-change-backoffice", "web-review-delivery", "web-verify-backoffice"];
+const catalog = [
+  "implement-task",
+  "resume-refactor",
+  "review-change",
+  "score-repo",
+  "update-dependencies",
+  "verify-release",
+  "write-adr",
+];
 const secret =
   /\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[A-Z0-9]{16})\b|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/;
 
 type Metadata = { name: string; description: string };
 
+function scalar(value: string): string {
+  if (value.startsWith('"')) {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (typeof parsed === "string") return parsed;
+    } catch {
+      // Falls through to the shared error below.
+    }
+    throw new Error("Invalid quoted metadata");
+  }
+  if (value.startsWith("'")) {
+    if (!/^'(?:[^']|'')*'$/.test(value)) throw new Error("Invalid quoted metadata");
+    return value.slice(1, -1).replaceAll("''", "'");
+  }
+  if (/^[[\]{}>&*!|%@`]|:\s|\s#/.test(value))
+    throw new Error("Only portable string metadata is supported");
+  return value;
+}
+
+/** Plain tool names only: no parameterised Bash patterns and no network tools in a skill. */
+const ALLOWED_TOOLS = new Set(["Read", "Grep", "Glob", "Bash", "Edit", "Write"]);
+
+// Strict subset: single-line name, description and allowed-tools plus one `metadata:` block
+// holding single-line owner, last-reviewed and version strings.
 function metadata(source: string): { meta: Metadata; body: string } {
   const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]+)$/.exec(source);
   if (!match) throw new Error("Missing frontmatter or procedure body");
   const fields = new Map<string, string>();
+  const nested = new Map<string, string>();
+  let inBlock = false;
   for (const line of (match[1] ?? "").split(/\r?\n/)) {
-    const field = /^(name|description):[ \t]+(.+)$/.exec(line);
-    if (!field?.[1] || !field[2] || fields.has(field[1]))
-      throw new Error("Frontmatter requires unique single-line name and description only");
-    const value = field[2];
-    let parsed: unknown = value;
-    if (value.startsWith('"')) {
-      try {
-        parsed = JSON.parse(value);
-      } catch {
-        throw new Error("Invalid quoted metadata");
-      }
-    } else if (value.startsWith("'")) {
-      if (!/^'(?:[^']|'')*'$/.test(value)) throw new Error("Invalid quoted metadata");
-      parsed = value.slice(1, -1).replaceAll("''", "'");
-    } else if (/^[[\]{}>&*!|%@`]|:\s|\s#/.test(value)) {
-      throw new Error("Only portable string metadata is supported");
+    const child = /^ {2}(owner|last-reviewed|version):[ \t]+(.+)$/.exec(line);
+    if (inBlock && child?.[1] && child[2]) {
+      if (nested.has(child[1])) throw new Error("Duplicate metadata field");
+      nested.set(child[1], scalar(child[2]));
+      continue;
     }
-    if (typeof parsed !== "string") throw new Error("Metadata must be strings");
-    fields.set(field[1], parsed);
+    if (line === "metadata:" && !inBlock && !fields.has("metadata")) {
+      inBlock = true;
+      fields.set("metadata", "");
+      continue;
+    }
+    inBlock = false;
+    const field = /^(name|description|allowed-tools):[ \t]+(.+)$/.exec(line);
+    if (!field?.[1] || !field[2] || fields.has(field[1]))
+      throw new Error("Frontmatter allows unique single-line fields and one metadata block only");
+    fields.set(field[1], scalar(field[2]));
   }
   const name = fields.get("name") ?? "";
   const description = fields.get("description") ?? "";
-  if (!/^web-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || name.length > 64)
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || name.length > 64)
     throw new Error("Invalid skill name");
   if (description.trim().length < 40 || description.length > 1024)
     throw new Error("Description must contain 40–1024 characters");
-  return { meta: { name, description }, body: match[2] ?? "" };
+  if (!description.includes("Use when") || !description.includes("Not for"))
+    throw new Error('Description must contain "Use when" and "Not for"');
+  const tools = (fields.get("allowed-tools") ?? "").split(",").map((tool) => tool.trim());
+  if (fields.has("allowed-tools") && tools.some((tool) => !ALLOWED_TOOLS.has(tool)))
+    throw new Error(`allowed-tools may only list ${[...ALLOWED_TOOLS].join(", ")}`);
+  const reviewed = nested.get("last-reviewed") ?? "";
+  const date = new Date(`${reviewed}T00:00:00Z`);
+  if (
+    !nested.get("owner") ||
+    !nested.get("version") ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(reviewed) ||
+    Number.isNaN(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== reviewed
+  )
+    throw new Error("Metadata requires owner, version and last-reviewed (YYYY-MM-DD)");
+  const body = match[2] ?? "";
+  if (body.split("\n").length - 1 > 120) throw new Error("Procedure body exceeds 120 lines");
+  return { meta: { name, description }, body };
+}
+
+function evaluations(directory: string): void {
+  const read = (file: string): Record<string, unknown> => {
+    const data: unknown = JSON.parse(readFileSync(path.join(directory, "evals", file), "utf8"));
+    if (typeof data !== "object" || data === null || Array.isArray(data))
+      throw new Error(`evals/${file} must be a JSON object`);
+    return data as Record<string, unknown>;
+  };
+  const list = (value: unknown, what: string, minimum: number): Record<string, unknown>[] => {
+    if (!Array.isArray(value) || value.length < minimum)
+      throw new Error(`${what} needs at least ${minimum} entries`);
+    return value.map((entry): Record<string, unknown> => {
+      if (typeof entry !== "object" || entry === null) throw new Error(`${what} entry invalid`);
+      return entry as Record<string, unknown>;
+    });
+  };
+  const queries = list(read("triggers.json").queries, "evals/triggers.json queries", 10);
+  for (const query of queries) {
+    if (
+      typeof query.query !== "string" ||
+      !query.query ||
+      typeof query.should_trigger !== "boolean" ||
+      (query.split !== "train" && query.split !== "validation")
+    )
+      throw new Error("Each trigger query needs query, should_trigger and split");
+  }
+  const positive = queries.filter((query) => query.should_trigger).length;
+  const validation = queries.filter((query) => query.split === "validation").length;
+  if (positive < 3 || queries.length - positive < 3)
+    throw new Error("Triggers need at least 3 positive and 3 negative queries");
+  if (validation / queries.length < 0.3 || validation / queries.length > 0.5)
+    throw new Error("Validation share of trigger queries must be 30–50%");
+  for (const item of list(read("evals.json").evals, "evals/evals.json evals", 3)) {
+    if (
+      typeof item.prompt !== "string" ||
+      !item.prompt ||
+      !Array.isArray(item.assertions) ||
+      item.assertions.length === 0 ||
+      item.assertions.some((assertion) => typeof assertion !== "string" || !assertion)
+    )
+      throw new Error("Each output eval needs a prompt and non-empty string assertions");
+  }
 }
 
 export function validateSkills(directoryRoot: string): { names: string[]; errors: string[] } {
@@ -84,7 +175,7 @@ export function validateSkills(directoryRoot: string): { names: string[]; errors
   const folders = entries(canonical);
   const links = entries(discovery);
   if (JSON.stringify(folders) !== JSON.stringify(catalog))
-    fail(canonical, "Canonical catalog must preserve the three backoffice skills");
+    fail(canonical, "Canonical catalog must preserve the standard seven-skill catalog");
   if (JSON.stringify(folders) !== JSON.stringify(links)) fail(discovery, "Client catalogs differ");
   attempt(path.join(root, "CLAUDE.md"), () => {
     if (readFileSync(path.join(root, "CLAUDE.md"), "utf8") !== "@AGENTS.md\n")
@@ -145,6 +236,7 @@ export function validateSkills(directoryRoot: string): { names: string[]; errors
       if (meta.name !== folder) throw new Error("Directory and skill name differ");
       names.push(meta.name);
       inspect(directory);
+      evaluations(directory);
     });
     const link = path.join(discovery, folder);
     attempt(link, () => {

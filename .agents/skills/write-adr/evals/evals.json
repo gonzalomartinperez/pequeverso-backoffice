@@ -1,0 +1,36 @@
+{
+  "skill": "write-adr",
+  "compare": "with and without the skill",
+  "evals": [
+    {
+      "id": "write-adr-1",
+      "prompt": "Write an ADR recording that the backoffice stays on Node 24",
+      "assertions": [
+        "uses the next free number in docs/adr/ with the NNN-title.md pattern",
+        "includes context, options, decision outcome, consequences and Confirmation",
+        "links related ADRs",
+        "runs npm run docs:check"
+      ]
+    },
+    {
+      "id": "write-adr-2",
+      "prompt": "Record the decision to refuse implicit account linking",
+      "assertions": [
+        "links the auth ADR 005 and the IAM ADR 006",
+        "states a Confirmation that names a test or check",
+        "contains no secrets or private operations details",
+        "is written in English"
+      ]
+    },
+    {
+      "id": "write-adr-3",
+      "prompt": "Supersede ADR 007 with a new ops data source decision",
+      "assertions": [
+        "links both ways and updates the old status",
+        "updates the docs map or README",
+        "does not edit unrelated ADRs",
+        "reports the docs:check result"
+      ]
+    }
+  ]
+}

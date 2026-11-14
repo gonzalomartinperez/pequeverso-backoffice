@@ -1,0 +1,96 @@
+{
+  "skill": "resume-refactor",
+  "runs_per_query": 3,
+  "queries": [
+    {
+      "query": "Where were we on the refactor?",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Continue the refactor",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "New session: pick up the master plan",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "What is the next roadmap item?",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Resume from RESUME.md",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Read progress.md and continue with the first todo item",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Implement M1.9 from the roadmap",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Start milestone M5 that the owner has not opened",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Review this PR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Merge the weekly Dependabot PR",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Deploy to the VPS",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write an ADR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Update the storefront price",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Create a new OAuth app",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Translate this paragraph to Spanish",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Explain what a closure is in JavaScript",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "What's the weather in Buenos Aires?",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write a haiku about CI",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "skill": "score-repo",
+  "compare": "with and without the skill",
+  "evals": [
+    {
+      "id": "score-repo-1",
+      "prompt": "Score the repo",
+      "assertions": [
+        "states that the scorecard script and ratchets arrive with M2.10 if absent",
+        "runs npm run check, npm run test:db and npm run test:browser or marks them not run",
+        "reports counts per axis",
+        "names gaps instead of padding"
+      ]
+    },
+    {
+      "id": "score-repo-2",
+      "prompt": "Prepare the safe-point evidence pack for the evaluator",
+      "assertions": [
+        "builds the engineering, product and operator lenses",
+        "links evidence per rubric criterion",
+        "treats a criterion without evidence as unmet",
+        "does not include the author's reasoning"
+      ]
+    },
+    {
+      "id": "score-repo-3",
+      "prompt": "Compare the current numbers with the ratchet baselines",
+      "assertions": [
+        "lists any loosening as a finding",
+        "does not edit baseline files",
+        "does not fix findings while scoring",
+        "ends with the output template"
+      ]
+    }
+  ]
+}
