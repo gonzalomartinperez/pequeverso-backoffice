@@ -1,0 +1,3 @@
+# Files copied into new worktrees besides tracked ones (gitignore syntax).
+# Nothing qualifies today: the only untracked local files are secrets (.env*), which must never
+# be copied, and node_modules, which each worktree links or restores with `npm ci` from the lockfile.

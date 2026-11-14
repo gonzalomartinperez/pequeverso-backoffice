@@ -30,7 +30,8 @@ browser suites as not run when PostgreSQL is missing.
 
 Automatic selection remains the default. Naming a skill explicitly is optional. There are
 no additional invocation flags, client policies or duplicated adapters. Read the selected
-procedure and only the references relevant to the task. `CLAUDE.md` imports `AGENTS.md`;
+procedure and only the references relevant to the task. `CLAUDE.md` imports `AGENTS.md`
+(harness files: [agent-harness.md](agent-harness.md));
 repository rules and the current request still determine scope and authorization.
 
 ## Maintenance
