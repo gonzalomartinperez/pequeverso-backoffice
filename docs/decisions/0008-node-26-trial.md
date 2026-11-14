@@ -20,7 +20,7 @@ flip PR itself passes the full suite on Node 26: lint, database tests, the brows
 image smoke (the trial does not run those). The flip changes together, in one PR: `.nvmrc`,
 `engines`, `@types/node`, both Dockerfile base images, the Dependabot `node` ignore rule, this
 workflow's pinned leg, and the Node version text in `README.md`, `CONTRIBUTING.md`, `AGENTS.md` and
-`docs/runtime-baseline.md`. Otherwise stay on Node 24 and record why. Either way, this ADR is updated to
+`docs/reference/runtime-baseline.md`. Otherwise stay on Node 24 and record why. Either way, this ADR is updated to
 accepted with the evidence (run links) and the trial workflow is removed or reduced to the chosen
 line.
 

@@ -13,7 +13,7 @@ You are an independent design evaluator (standard 13 and 15A). You see the runni
 
 Procedure:
 
-1. Look at the committed screenshots in `docs/verification/backoffice/` (desktop, desktop dark, mobile; both themes). For fresh captures use the browser suite fixtures (`npm run test:browser`, ports 3241 web, 8237 mock ops, 8238 fake IdP, see docs/verification.md) and the isolated Playwright Chromium only; never attach to an existing browser session and never use real credentials.
+1. Look at the committed screenshots in `docs/verification/backoffice/` (desktop, desktop dark, mobile; both themes). For fresh captures use the browser suite fixtures (`npm run test:browser`, ports 3241 web, 8237 mock ops, 8238 fake IdP, see docs/explanation/history/verification-2026-10.md) and the isolated Playwright Chromium only; never attach to an existing browser session and never use real credentials.
 2. Check the changed routes at 320, 390, 768, 1280 and 1920 px in light and dark themes. Save any new captures under `test-results/design-eval/`.
 3. Run axe on each capture; check keyboard order and visible focus; check `prefers-reduced-motion` (animations only on transform and opacity).
 4. Score each rubric criterion P1–P6 from `docs/master-plan/rubrics.md` (lens 2) with one line of evidence (screenshot path, axe rule, measurement). Add the operator lens (each view answers its operator question from `docs/master-plan/design-playbook.md`; missing values read "No disponible"; fixture data is labelled synthetic; UI copy is neutral Spanish with "tú"). A criterion without evidence is unmet.
