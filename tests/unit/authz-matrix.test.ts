@@ -74,7 +74,7 @@ describe("enumeration shapes", () => {
       "route:src/app/api/a/route.mjs#POST",
       "route:src/app/api/b/route.cjs#DELETE",
     ]);
-    has(run(files, []), "the pages router is not covered");
+    has(run(files, []), "the pages router and a root app/");
   });
 
   it("emits every name of a destructured export", () => {
@@ -115,6 +115,49 @@ describe("enumeration shapes", () => {
     );
     has(guarded, "src/app/b/page.tsx#default: guard cannot be verified through a re-export");
     has(guarded, "`export *` cannot be enumerated");
+  });
+
+  it("enumerates special files, metadata routes, the proxy and forbidden routers", () => {
+    const files: Files = {
+      "src/app/not-found.tsx": "export default function N() {}",
+      "src/app/error.tsx": "export default function E() {}",
+      "src/app/loading.tsx": "export default function L() {}",
+      "src/app/global-error.tsx": "export default function G() {}",
+      "src/app/sitemap.ts": "export default function s() {}",
+      "src/app/robots.ts": "export default function r() {}",
+      "src/app/manifest.ts": "export default function m() {}",
+      "src/app/opengraph-image.tsx": "export default function o() {}",
+      "src/app/icon.tsx": "export default function i() {}",
+      "src/proxy.ts": "export function proxy() {}",
+      "src/middleware.ts": "export function middleware() {}",
+      "proxy.ts": "export function proxy() {}",
+      "app/page.tsx": "export default function A() {}",
+      "pages/index.tsx": "export default function I() {}",
+    };
+    const entries = surfaceOf(files);
+    assert.deepEqual(
+      entries.map((e) => e.id),
+      [
+        "page:app/page.tsx#pages-router",
+        "page:pages/index.tsx#pages-router",
+        "page:src/app/error.tsx#default",
+        "page:src/app/global-error.tsx#default",
+        "page:src/app/icon.tsx#default",
+        "page:src/app/loading.tsx#default",
+        "page:src/app/manifest.ts#default",
+        "page:src/app/not-found.tsx#default",
+        "page:src/app/opengraph-image.tsx#default",
+        "page:src/app/robots.ts#default",
+        "page:src/app/sitemap.ts#default",
+        "proxy:proxy.ts#proxy",
+        "proxy:src/middleware.ts#proxy",
+        "proxy:src/proxy.ts#proxy",
+      ],
+    );
+    const problems = run(files, []);
+    has(problems, "pages router and a root app/");
+    has(problems, "proxy:proxy.ts#proxy: proxy/middleware must live in src/");
+    has(problems, "unlisted: proxy:src/proxy.ts#proxy");
   });
 
   it("makes inline ids scope-qualified and unique", () => {
@@ -165,9 +208,8 @@ describe("guard verification", () => {
       row("page:src/app/panel/layout.tsx#default", "read_operations"),
       row("page:src/app/panel/q/page.tsx#default", "read_operations"),
     ]);
-    assert.deepEqual(problems, [
-      "page:src/app/panel/q/page.tsx#default: no verified requireActor guard",
-    ]);
+    assert.equal(problems.length, 1);
+    has(problems, "page:src/app/panel/q/page.tsx#default: no verified requireActor guard: make");
   });
 
   it("rejects unreachable, conditional, unawaited and shadowed guards", () => {
@@ -190,6 +232,72 @@ describe("guard verification", () => {
       [row("page:src/app/panel/p/page.tsx#default", "manage_access")],
     );
     has(shadow, "no verified requireActor guard");
+  });
+
+  it("credits a guard only as the first executable statement", () => {
+    const actions = (body: string) =>
+      checkGuards(
+        surfaceOf({
+          "src/app/a/actions.ts": `"use server";\n${AUTH}import { removeMember } from "@/x";\nexport async function go(id: string) {\n${body}\n}`,
+        }),
+        [row("action:src/app/a/actions.ts#go", "manage_access")],
+      );
+    has(actions('await removeMember(id); await requireActor("manage_access");'), "first statement");
+    has(
+      actions('const r = removeMember(id); await requireActor("manage_access");'),
+      "first statement",
+    );
+    assert.deepEqual(
+      actions('const LIMIT = 3; "directive"; await requireActor("manage_access");'),
+      [],
+    );
+    has(
+      actions('const x = compute(); await requireActor("manage_access");'),
+      "no verified requireActor",
+    );
+    // The page shape is held to the same rule.
+    has(
+      verify('await sideEffect(); await requireActor("manage_access"); return null;'),
+      "first statement",
+    );
+  });
+
+  it("resolves requireActor to src/server/auth and rejects look-alikes and shadows", () => {
+    const withImport = (line: string, body = 'await requireActor("manage_access");') =>
+      checkGuards(
+        surfaceOf({
+          "src/app/panel/p/page.tsx": `${line}\nexport default async function P(${"{ requireActor }: { requireActor: (a: string) => void }"}) {\n${body}\n}`,
+        }),
+        [row("page:src/app/panel/p/page.tsx#default", "manage_access")],
+      );
+    const plain = (line: string, body: string) =>
+      checkGuards(
+        surfaceOf({
+          "src/app/panel/p/page.tsx": `${line}\nexport default async function P() {\n${body}\n}`,
+        }),
+        [row("page:src/app/panel/p/page.tsx#default", "manage_access")],
+      );
+    const body = 'await requireActor("manage_access");';
+    assert.deepEqual(plain('import { requireActor } from "@/server/auth";', body), []);
+    assert.deepEqual(plain('import { requireActor } from "../../../server/auth.ts";', body), []);
+    for (const spec of [
+      "@/lib/auth",
+      "@/server/other-auth",
+      "./auth",
+      "better-auth",
+      "@/server/auth/extra",
+    ])
+      has(plain(`import { requireActor } from "${spec}";`, body), "no verified requireActor");
+    const imp = 'import { requireActor } from "@/server/auth";';
+    has(
+      plain(imp, `const requireActor = async (a: string) => {}; ${body}`),
+      "no verified requireActor",
+    );
+    has(plain(imp, `var requireActor = noop; ${body}`), "no verified requireActor");
+    has(plain(imp, `function requireActor(a: string) {} ${body}`), "no verified requireActor");
+    has(withImport(imp), "no verified requireActor"); // a parameter named requireActor shadows the import
+    // A same-named declaration inside an unrelated nested function does not shadow.
+    assert.deepEqual(plain(imp, `function unrelated() { const requireActor = 1; } ${body}`), []);
   });
 
   it("rejects a wrong or non-literal action", () => {

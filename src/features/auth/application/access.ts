@@ -159,6 +159,9 @@ export type Decision =
   | { allowed: true; actor: Actor }
   | { allowed: false; reason: "unauthenticated" | "forbidden" };
 
+/** Where a denied page or action sends the browser; shared by `requireActor` and the tests. */
+export const DENIAL_REDIRECT = { unauthenticated: "/ingresar", forbidden: "/panel" } as const;
+
 /** The authorization decision of pages and server actions, pure: no session means sign in. */
 export function decide(actor: Actor | null, action: Action): Decision {
   if (!actor) return { allowed: false, reason: "unauthenticated" };

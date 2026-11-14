@@ -15,6 +15,7 @@ import {
   type AccessDeps,
   type Actor,
   authorize,
+  DENIAL_REDIRECT,
   inviteMember,
   removeMember,
   resolveActor,
@@ -100,7 +101,7 @@ describe("authorization matrix (PostgreSQL)", {
       guard,
     );
     if (decision.allowed) return "allowed";
-    return decision.reason === "unauthenticated" ? "redirect:/ingresar" : "redirect:/panel";
+    return `redirect:${DENIAL_REDIRECT[decision.reason]}`;
   }
 
   /** One driver per server action: creates a fresh target, then runs the use case behind it. */

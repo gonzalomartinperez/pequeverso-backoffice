@@ -3,11 +3,11 @@
 // verifies which guards each entry really runs. The authz matrix (tests/authz/matrix.ts) must list
 // exactly this set; tests/authz/check.ts compares them. Fail closed: shapes that cannot be
 // resolved (`export *`, the pages router) become entries or problems that no matrix row can match.
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import ts from "@typescript/typescript6";
 
-export type SurfaceKind = "action" | "route" | "page";
+export type SurfaceKind = "action" | "route" | "page" | "proxy";
 export type SurfaceEntry = {
   /** Stable key: `<kind>:<posix path from root>#<export>`; inline actions are scope-qualified. */
   id: string;
@@ -34,8 +34,13 @@ const HTTP_METHODS = new Set(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "
 const SOURCE = /\.[cm]?[jt]sx?$/;
 const DECLARATION = /\.d\.[cm]?ts$/;
 const ROUTE = /^src\/app\/(?:.*\/)?route\.[cm]?[jt]sx?$/;
-const PAGE = /^src\/app\/(?:.*\/)?(?:page|layout|template|default)\.[cm]?[jt]sx?$/;
-const AUTH_MODULE = /(?:^|\/)auth(?:\.[cm]?[jt]s)?$/;
+const PAGE =
+  /^src\/app\/(?:.*\/)?(?:page|layout|template|default|not-found|error|loading|global-error|sitemap|robots|manifest|(?:opengraph-image|twitter-image|icon|apple-icon)\d*)\.[cm]?[jt]sx?$/;
+/** Edge entry (`proxy`, formerly `middleware`): it must live in src/ next to app/. */
+const PROXY = /^(?:src\/)?(?:proxy|middleware)\.[cm]?[jt]sx?$/;
+/** Routers outside src/app: Next would pick them up, the matrix does not cover them. */
+const FORBIDDEN_ROUTER = /^(?:src\/pages|pages|app)\//;
+const AUTH_MODULE = "src/server/auth";
 const EXTENSIONS = ["", ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
 
 function walk(dir: string): string[] {
@@ -50,7 +55,11 @@ function walk(dir: string): string[] {
 
 export function readTree(root: string): Files {
   const files: Files = {};
-  for (const file of walk(path.join(root, "src")).sort()) {
+  const dirs = ["src", "app", "pages"].filter((dir) => existsSync(path.join(root, dir)));
+  const rootFiles = readdirSync(root, { withFileTypes: true })
+    .filter((item) => item.isFile() && PROXY.test(item.name))
+    .map((item) => path.join(root, item.name));
+  for (const file of [...dirs.flatMap((dir) => walk(path.join(root, dir))), ...rootFiles].sort()) {
     const rel = path.relative(root, file).split(path.sep).join("/");
     if (SOURCE.test(rel) && !DECLARATION.test(rel)) files[rel] = readFileSync(file, "utf8");
   }
@@ -176,12 +185,6 @@ function functionOf(node: ts.Node, parsed: Parsed, hops = 2): FunctionLike | nul
   return null;
 }
 
-function containsReturn(node: ts.Node): boolean {
-  if (ts.isReturnStatement(node)) return true;
-  if (ts.isFunctionLike(node)) return false;
-  return ts.forEachChild(node, (child) => (containsReturn(child) ? true : undefined)) === true;
-}
-
 /** `await f(...)` as the whole statement or as the initializer of its first declaration. */
 function awaitedCall(statement: ts.Statement): ts.CallExpression | null {
   let expression: ts.Node | undefined;
@@ -195,11 +198,45 @@ function awaitedCall(statement: ts.Statement): ts.CallExpression | null {
   return ts.isCallExpression(call) ? call : null;
 }
 
+/** Statements allowed before the guard: directives, hoisted functions, call-free declarations. */
+function isPureSetup(statement: ts.Statement): boolean {
+  if (ts.isFunctionDeclaration(statement) || ts.isEmptyStatement(statement)) return true;
+  if (ts.isExpressionStatement(statement)) return ts.isStringLiteral(statement.expression);
+  if (!ts.isVariableStatement(statement)) return false;
+  const impure = (node: ts.Node): boolean => {
+    if (ts.isFunctionLike(node) || ts.isClassLike(node)) return false;
+    if (
+      ts.isCallExpression(node) ||
+      ts.isNewExpression(node) ||
+      ts.isAwaitExpression(node) ||
+      ts.isTaggedTemplateExpression(node) ||
+      ts.isYieldExpression(node)
+    )
+      return true;
+    return ts.forEachChild(node, (child) => (impure(child) ? true : undefined)) === true;
+  };
+  return !statement.declarationList.declarations.some(
+    (d) => d.initializer && impure(d.initializer),
+  );
+}
+
+/** True when `name` is declared anywhere inside the function (a parameter, `var`, `const`, function). */
+function declaresName(fn: FunctionLike, name: string): boolean {
+  if (fn.parameters.some((parameter) => bindingNames(parameter.name).includes(name))) return true;
+  const visit = (node: ts.Node): boolean => {
+    if (ts.isVariableDeclaration(node) && bindingNames(node.name).includes(name)) return true;
+    if (ts.isFunctionDeclaration(node) && node.name?.text === name) return true;
+    if (ts.isFunctionLike(node) && node !== fn) return false; // an inner scope does not shadow ours
+    return ts.forEachChild(node, (child) => (visit(child) ? true : undefined)) === true;
+  };
+  return (
+    !!fn.body && ts.forEachChild(fn.body, (child) => (visit(child) ? true : undefined)) === true
+  );
+}
+
 function resolveModule(files: Files, from: string, spec: string): string | null {
-  let base: string;
-  if (spec.startsWith("@/")) base = `src/${spec.slice(2)}`;
-  else if (spec.startsWith(".")) base = path.posix.join(path.posix.dirname(from), spec);
-  else return null;
+  const base = moduleBase(from, spec);
+  if (base === null) return null;
   for (const ext of EXTENSIONS) {
     if (base + ext in files) return base + ext;
     if (`${base}/index${ext}` in files) return `${base}/index${ext}`;
@@ -207,11 +244,24 @@ function resolveModule(files: Files, from: string, spec: string): string | null 
   return null;
 }
 
+function moduleBase(from: string, spec: string): string | null {
+  if (spec.startsWith("@/")) return `src/${spec.slice(2)}`;
+  if (spec.startsWith(".")) return path.posix.join(path.posix.dirname(from), spec);
+  return null;
+}
+
+/** Does the import specifier resolve to src/server/auth (the only `requireActor`)? */
+function isAuthModule(from: string, spec: string): boolean {
+  const base = moduleBase(from, spec);
+  return base !== null && EXTENSIONS.some((ext) => base === AUTH_MODULE + ext);
+}
+
 type Verified = { guards: string[]; via: string[] };
 
 /**
- * Guards that run on every path through the function: awaited, top-level statements that precede
- * any statement able to `return` early. One import level of helper is resolved (`depth` 0 only).
+ * Guards that run before anything else can: the function body may start only with directives,
+ * hoisted functions and call-free declarations, then awaited guard calls. A guard that follows a
+ * mutation (or any other call) is not credited. One import level of helper is resolved (`depth` 0).
  */
 function verifiedGuards(
   fn: FunctionLike,
@@ -223,32 +273,29 @@ function verifiedGuards(
   const result: Verified = { guards: [], via: [] };
   if (!fn.body || !ts.isBlock(fn.body)) return result;
   for (const statement of fn.body.statements) {
+    if (isPureSetup(statement)) continue;
     const call = awaitedCall(statement);
     const callee = call && ts.isIdentifier(call.expression) ? call.expression.text : null;
-    if (call && callee) {
-      const binding = parsed.imports.get(callee);
-      if (callee === "requireActor" && binding && AUTH_MODULE.test(binding.spec)) {
-        const [arg] = call.arguments;
-        result.guards.push(arg && ts.isStringLiteralLike(arg) ? arg.text : "?");
-      } else if (binding && depth === 0) {
-        const target = resolveModule(files, parsed.file, binding.spec);
-        const text = target ? files[target] : undefined;
-        if (target && text !== undefined) {
-          const helper = cache.get(target) ?? parseFile(target, text);
-          cache.set(target, helper);
-          const item = helper.exported.find((e) => e.name === binding.imported && !e.reexport);
-          const helperFn = item ? functionOf(item.node, helper) : null;
-          if (helperFn) {
-            const inner = verifiedGuards(helperFn, helper, files, cache, 1);
-            if (inner.guards.length > 0) {
-              result.guards.push(...inner.guards);
-              result.via.push(callee);
-            }
-          }
-        }
-      }
+    if (!call || !callee) break;
+    const binding = parsed.imports.get(callee);
+    if (!binding || declaresName(fn, callee)) break;
+    if (callee === "requireActor" && isAuthModule(parsed.file, binding.spec)) {
+      const [arg] = call.arguments;
+      result.guards.push(arg && ts.isStringLiteralLike(arg) ? arg.text : "?");
+      continue;
     }
-    if (containsReturn(statement)) break;
+    if (depth !== 0) break;
+    const target = resolveModule(files, parsed.file, binding.spec);
+    const text = target ? files[target] : undefined;
+    if (!target || text === undefined) break;
+    const helper = cache.get(target) ?? parseFile(target, text);
+    cache.set(target, helper);
+    const item = helper.exported.find((e) => e.name === binding.imported && !e.reexport);
+    const helperFn = item ? functionOf(item.node, helper) : null;
+    const inner = helperFn ? verifiedGuards(helperFn, helper, files, cache, 1) : null;
+    if (!inner || inner.guards.length === 0) break;
+    result.guards.push(...inner.guards);
+    result.via.push(callee);
   }
   return result;
 }
@@ -302,7 +349,22 @@ export function surfaceOf(files: Files): SurfaceEntry[] {
   const cache = new Map<string, Parsed>();
   for (const rel of Object.keys(files).sort()) {
     const text = files[rel] ?? "";
-    if (rel.startsWith("src/pages/")) {
+    if (PROXY.test(rel)) {
+      entries.push({
+        id: `proxy:${rel}#proxy`,
+        kind: "proxy",
+        file: rel,
+        name: "proxy",
+        mutating: false,
+        guards: [],
+        via: [],
+        markers: [],
+        reexport: false,
+        problems: rel.startsWith("src/") ? [] : ["proxy/middleware must live in src/, beside app/"],
+      });
+      continue;
+    }
+    if (FORBIDDEN_ROUTER.test(rel)) {
       entries.push({
         id: `page:${rel}#pages-router`,
         kind: "page",
@@ -313,7 +375,7 @@ export function surfaceOf(files: Files): SurfaceEntry[] {
         via: [],
         markers: [],
         reexport: false,
-        problems: ["the pages router is not covered by the matrix; use src/app"],
+        problems: ["the pages router and a root app/ are not covered by the matrix; use src/app"],
       });
       continue;
     }

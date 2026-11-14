@@ -62,7 +62,10 @@ export function checkGuards(
         problems.push(`${at}: no recognizable ${row.guard} check in the source`);
     } else {
       if (entry.reexport) problems.push(`${at}: guard cannot be verified through a re-export`);
-      else if (entry.guards.length === 0) problems.push(`${at}: no verified requireActor guard`);
+      else if (entry.guards.length === 0)
+        problems.push(
+          `${at}: no verified requireActor guard: make \`await requireActor("<literal>")\` (imported from src/server/auth) the first statement of the function body; only directives and call-free const declarations may precede it`,
+        );
       else if (entry.guards.includes("?"))
         problems.push(`${at}: requireActor needs a literal action`);
       else {

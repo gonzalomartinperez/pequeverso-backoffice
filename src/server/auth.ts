@@ -16,6 +16,7 @@ import { PostgresAccessStore } from "../features/auth/adapters/postgres-access-s
 import {
   type AccessDeps,
   type Actor,
+  DENIAL_REDIRECT,
   decide,
   resolveActor,
 } from "../features/auth/application/access.ts";
@@ -108,7 +109,7 @@ export async function requireActor(action: Action): Promise<Actor> {
     redirect("/ingresar?error=unavailable");
   }
   const decision = decide(actor, action);
-  if (!decision.allowed) redirect(decision.reason === "unauthenticated" ? "/ingresar" : "/panel");
+  if (!decision.allowed) redirect(DENIAL_REDIRECT[decision.reason]);
   return decision.actor;
 }
 

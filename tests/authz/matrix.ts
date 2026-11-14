@@ -72,6 +72,11 @@ export const MATRIX: readonly Row[] = [
     guard: "bearer-token",
     covers: { file: BROWSER, needle: "/internal/v1/ops/metrics" },
   },
+  {
+    id: "proxy:src/proxy.ts#proxy",
+    guard: "public",
+    covers: { file: BROWSER, needle: "content-security-policy" },
+  },
   { id: "page:src/app/layout.tsx#default", guard: "public", covers: "static-only" },
   { id: "page:src/app/page.tsx#default", guard: "public", covers: "static-only" },
   {
