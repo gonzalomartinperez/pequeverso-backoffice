@@ -181,3 +181,15 @@ describe("paired backoffice CI profile", () => {
     assert.match(policy, /ref: \u0024{{ github.event.repository.default_branch }}/);
   });
 });
+
+describe("Node LTS trial", () => {
+  const trial = readWorkflow("node-matrix.yml");
+  it("stays advisory, read-only and pinned to the .nvmrc patch for Node 24", () => {
+    assert.match(trial, /^permissions: \{\}$/m);
+    assert.match(trial, /persist-credentials: false/);
+    assert.doesNotMatch(trial, /pull_request_target|schedule:|(?:contents|pull-requests): write/);
+    const nvmrc = readFileSync(new URL(".nvmrc", root), "utf8").trim();
+    assert.match(trial, new RegExp(`node: \\["${nvmrc.replaceAll(".", "\\.")}", "26"\\]`));
+    assert.doesNotMatch(checks, /\bnode\b/);
+  });
+});

@@ -1,8 +1,9 @@
 name: Node LTS trial
 
 # Two-week Node 24 / Node 26 dual run (docs/adr/008-node-26-trial.md), started 2026-11-14,
-# decision due 2026-11-28. No schedule (OD-75: no daily failure e-mails). Advisory only: not a
-# required context and not part of Required checks.
+# decision due 2026-11-28. No schedule (OD-75: no daily scheduled failure e-mails; a red PR or push
+# run still notifies per the Actions e-mail setting). Advisory only: not a required context and not
+# part of Required checks. The Node 24 leg equals .nvmrc (unit test).
 # Node 24 stays the runtime (.nvmrc, engines, Dockerfile) until the ADR records the flip.
 on:
   pull_request:
@@ -34,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["24", "26"]
+        node: ["24.22.0", "26"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -45,6 +46,7 @@ jobs:
           cache: npm
       - name: Record the runtime
         run: node --version
+      # No locked dependency has an install script; skipping them also protects fork PRs.
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Type-check
         run: npm run typecheck

@@ -8,15 +8,19 @@ The runtime today is Node 24 (`.nvmrc` 24.22.0, `engines` `>=24 <25`, `node:24` 
 
 **Decision (trial).** The advisory workflow [Node LTS trial](../../.github/workflows/node-matrix.yml)
 runs type checking, the unit suite and the production build on Node 24 and Node 26 for every pull
-request into `develop` and every push to `develop` (no schedule, so a red Node 26 run never sends
-daily failure e-mails, OD-75). It is not a required context and is
-not part of **Required checks**. Nothing else changes during the trial.
+request into `develop` and every push to `develop`. The Node 24 leg is the pinned `.nvmrc` patch.
+There is no schedule (OD-75: no daily scheduled failure e-mails; a red PR or push run still notifies
+per the Actions e-mail setting). It is not a required context and is not part of **Required checks**.
+Nothing else changes during the trial.
 
-**Decision rule (2026-11-28).** Flip only if every Node 26 run of the trial window is green (or each
-red run is explained by a non-runtime cause) and Next.js, Better Auth, `pg` and the Playwright
-suite support Node 26. The flip changes `.nvmrc`, `engines`, `@types/node`, both Dockerfile base
-images and the Dependabot `node` ignore rule together in one PR, verified by the full suite and the
-image smoke. Otherwise stay on Node 24 and record why. Either way, this ADR is updated to
+**Decision rule (2026-11-28).** The trial measures type checking, unit tests and the production
+build. Flip only if (1) at least one Node 26 run on a `develop` head after 2026-11-14 is green and
+every Node 26 run of the window is green or its failure has a recorded non-runtime cause, and (2) the
+flip PR itself passes the full suite on Node 26: lint, database tests, the browser suite and the
+image smoke (the trial does not run those). The flip changes together, in one PR: `.nvmrc`,
+`engines`, `@types/node`, both Dockerfile base images, the Dependabot `node` ignore rule, this
+workflow's pinned leg, and the Node version text in `README.md`, `CONTRIBUTING.md`, `AGENTS.md` and
+`docs/runtime-baseline.md`. Otherwise stay on Node 24 and record why. Either way, this ADR is updated to
 accepted with the evidence (run links) and the trial workflow is removed or reduced to the chosen
 line.
 
