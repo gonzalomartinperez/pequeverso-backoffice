@@ -144,4 +144,10 @@ of the pages. Consequences:
 - The M5.2-SIGNIN target (TBT at or below 600 ms) is already met on CI; the fix item should be
   justified by the chunk attribution and footprint, not by TBT.
 - The attribution (runtime chunk share of bootup) still stands: shares move little with load.
+The ratchet baseline was later re-recorded on Lighthouse 13.5.0 (run 43622298108, same runner and
+settings; 13.6.0 was dropped for a licence reason): sign-in mobile TBT 56 ms (LCP 1,757 ms), dashboard
+mobile TBT 359 ms (performance 0.90, LCP 2,374 ms). The conclusion holds: both stay far below the
+audit's local figures, and the 600 ms sign-in target is met. Dashboard mobile TBT and LCP exceed the
+200 ms and 2,000 ms budgets on 13.5.0, so the dashboard budget work stays a real item.
+
 - A-P1-3 should be re-scored at M3.5 against the CI baseline in `quality/ratchets/lighthouse.json`.
