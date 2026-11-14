@@ -21,6 +21,7 @@
     "security:check": "node scripts/check-public-files.ts",
     "docs:check": "node scripts/check-docs.ts",
     "skills:check": "node scripts/check-skills.ts",
+    "bundle:check": "node scripts/check-bundle.ts",
     "copy:check": "node scripts/copy-lint.ts",
     "knip": "knip --no-progress",
     "setup": "node scripts/setup.ts",

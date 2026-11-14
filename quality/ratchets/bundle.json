@@ -1,0 +1,25 @@
+{
+  "$comment": "Bundle ratchet (M2.8). baseline = measured by scripts/check-bundle.ts on the production build (next build --webpack, Next 16.4.4, gzip level 9); values may only go down. budgets = testing.md targets, warn-only until --enforce is switched on.",
+  "source": "scripts/check-bundle.ts local measurement, 2026-11-14, develop dd69764",
+  "mode": "warn",
+  "budgets": {
+    "routeFirstLoadGzBytes": 174080,
+    "fontsBytes": 163840
+  },
+  "baseline": {
+    "routes": {
+      "/_global-error": 133026,
+      "/_not-found": 133026,
+      "/ingresar": 156179,
+      "/": 133026,
+      "/panel/accesos": 277437,
+      "/panel/analitica": 275399,
+      "/panel/cuenta": 275991,
+      "/panel": 274402
+    },
+    "fontsBytes": 67696,
+    "rechartsGzBytes": 113894,
+    "rechartsRawBytes": 390967,
+    "rechartsChunks": ["static/chunks/29-da62a82a8f233d4c.js"]
+  }
+}

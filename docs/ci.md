@@ -126,6 +126,32 @@ FC_NUM_RUNS=1000 FC_FUZZ_RUNS=5000 node --test tests/unit/properties.test.ts tes
 Nightly workflow wiring is deferred to M2.10. Tests use committed synthetic examples,
 bounded mutations and explicit invitation timestamps, with no network calls.
 
+## Performance budgets (warn mode, M2.8)
+
+- **Bundle**: the `build` job runs `node scripts/check-bundle.ts` after the build. Next 16
+  (`--webpack`) has no `app-build-manifest.json` and no `route-bundle-stats.json`; first-load JS
+  per route is `rootMainFiles` (build-manifest.json) plus the JS paths in the route's
+  `server/app/<route>/page_client-reference-manifest.js`, gzipped (level 9). Fonts are the
+  `.woff2` files in `public/fonts`; the Recharts size is the chunk containing the `recharts-` class
+  prefix. Budgets (170 KiB gz per route, 160 KiB fonts) and measured baselines live in
+  `quality/ratchets/bundle.json`; warnings are printed and annotated, the exit code stays 0 until
+  `--enforce` is added to the step.
+- **Lighthouse**: [lighthouse.yml](../.github/workflows/lighthouse.yml) is its own workflow (pull
+  requests touching app code, pushes to `develop`, manual). It builds the app, starts
+  `scripts/backoffice-stack.ts` (synthetic data, fake identity provider) and runs
+  `scripts/lighthouse-ci.ts`: `/ingresar` and `/panel`, mobile and desktop, 5 runs each, median per
+  metric, printed in the job summary and uploaded as the `lighthouse-summary` artifact. The job is
+  not a `ci-gate` prerequisite. The pinned `lighthouse` is
+  installed with `npm ci --prefix quality/lighthouse` from its own lockfile (exact version, reviewed
+  by Dependabot in the weekly group); the application `package.json` is untouched. Playwright
+  Chromium is not stock Chrome, so numbers compare only with other runs of this harness, not with
+  PageSpeed Insights.
+- **Warn then fail**: set `warnSince` in `quality/ratchets/lighthouse.json` when the workflow first
+  merges; 14 days later add `--enforce` to the Lighthouse step and make the job a `ci-gate`
+  prerequisite (and a `.github/ci-profile.json` job). The baseline in that file is the audit's
+  single-run measurement until the first clean CI medians replace it. Runner timings are noisy:
+  trust the medians, not one run.
+
 ## Standards drift
 
 [drift](../.github/workflows/drift.yml) runs the pinned `engineering-standards` drift check on every
