@@ -20,6 +20,8 @@ metadataTest:
       value: MIT
     - key: org.opencontainers.image.source
       value: https://github.com/gonzalomartinperez/pequeverso-backoffice
+    - key: org.opencontainers.image.title
+      value: pequeverso-backoffice
 
 fileExistenceTests:
   - name: standalone server
@@ -56,6 +58,27 @@ fileExistenceTests:
     shouldExist: false
   - name: no local environment file
     path: /app/.env.local
+    shouldExist: false
+  - name: licence text
+    path: /app/LICENSE
+    shouldExist: true
+  - name: third-party notices
+    path: /app/THIRD_PARTY_NOTICES.md
+    shouldExist: true
+  - name: public assets
+    path: /app/public
+    shouldExist: true
+  - name: no fake identity provider (test only)
+    path: /app/scripts/fake-idp.ts
+    shouldExist: false
+  - name: no mock ops API (synthetic fixtures)
+    path: /app/scripts/mock-ops.ts
+    shouldExist: false
+  - name: no source tree in the image
+    path: /app/src
+    shouldExist: false
+  - name: no git metadata
+    path: /app/.git
     shouldExist: false
   - name: no tests in the image
     path: /app/tests
