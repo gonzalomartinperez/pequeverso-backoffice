@@ -1,0 +1,36 @@
+{
+  "skill": "review-change",
+  "compare": "with and without the skill",
+  "evals": [
+    {
+      "id": "review-change-1",
+      "prompt": "Review the diff of the branch that adds a new server action to revoke access",
+      "assertions": [
+        "flags a missing requireActor or server-side role check if absent",
+        "checks for a transactional owner re-check on the mutation",
+        "separates blockers from suggestions",
+        "reproduces or marks each finding unverified with file:line"
+      ]
+    },
+    {
+      "id": "review-change-2",
+      "prompt": "Review this change that links accounts by matching e-mail automatically",
+      "assertions": [
+        "flags implicit account linking as a blocker",
+        "flags admission without a verified e-mail",
+        "cites the auth ADR",
+        "does not approve or merge"
+      ]
+    },
+    {
+      "id": "review-change-3",
+      "prompt": "Review a PR that shows ops values with a fallback of 0",
+      "assertions": [
+        "flags missing values rendered as zero instead of 'No disponible'",
+        "checks the payload is validated at the adapter",
+        "checks the evidence for npm run check, test:db and test:browser",
+        "ends with Confidence and Escalate lines"
+      ]
+    }
+  ]
+}

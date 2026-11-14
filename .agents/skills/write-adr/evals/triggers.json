@@ -1,0 +1,96 @@
+{
+  "skill": "write-adr",
+  "runs_per_query": 3,
+  "queries": [
+    {
+      "query": "Write an ADR for this decision",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Record this decision about the session cookie policy",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "We chose to keep Node 24; document it as an ADR",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Create the ADR for the contract pinning approach",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Add an architecture decision record and link it from the docs",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Record why admission is OWNER_EMAIL or invitation only",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Implement M1.9 from the roadmap",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Add a changelog entry for this fix",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write meeting notes from today",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Review this PR",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Merge the weekly Dependabot PR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Deploy to the VPS",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Create a new OAuth app",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Update the storefront price",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Translate this paragraph to Spanish",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Explain what a closure is in JavaScript",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "What's the weather in Buenos Aires?",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write a haiku about CI",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}

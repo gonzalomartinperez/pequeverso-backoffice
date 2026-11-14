@@ -1,0 +1,36 @@
+{
+  "skill": "implement-task",
+  "compare": "with and without the skill",
+  "evals": [
+    {
+      "id": "implement-task-1",
+      "prompt": "Implement roadmap item M1.9 in the backoffice",
+      "assertions": [
+        "creates a worktree on a task branch from develop",
+        "writes or extends a failing test before the implementation",
+        "runs npm run check and reports the real result",
+        "opens the PR into develop, not main"
+      ]
+    },
+    {
+      "id": "implement-task-2",
+      "prompt": "Change the invitation flow so invitations expire after 7 days",
+      "assertions": [
+        "adds a new append-only file in migrations/ instead of editing an applied one",
+        "keeps requireActor on the server action and the verified e-mail binding",
+        "runs npm run test:db or reports it as not run",
+        "does not touch the API repository"
+      ]
+    },
+    {
+      "id": "implement-task-3",
+      "prompt": "Show the new latency value on the operations dashboard",
+      "assertions": [
+        "validates the payload at the adapter against the pinned contract",
+        "renders 'No disponible' for missing values, never zero",
+        "labels fixture data as synthetic",
+        "ends with the output template and lists what was not verified"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "skill": "resume-refactor",
+  "compare": "with and without the skill",
+  "evals": [
+    {
+      "id": "resume-refactor-1",
+      "prompt": "Where were we on the refactor?",
+      "assertions": [
+        "reads RESUME.md, progress.md and the roadmap in that order",
+        "runs git fetch --tags and checks the checkpoint and develop",
+        "names the first todo item of the lowest unfinished milestone",
+        "does not rely on memory or chat history"
+      ]
+    },
+    {
+      "id": "resume-refactor-2",
+      "prompt": "Continue the refactor",
+      "assertions": [
+        "hands the item to implement-task",
+        "preserves other worktrees' uncommitted work",
+        "stops and asks on owner-only items",
+        "records any git versus tracker discrepancy"
+      ]
+    },
+    {
+      "id": "resume-refactor-3",
+      "prompt": "progress.md says M1.8 is done but git does not show it",
+      "assertions": [
+        "trusts git over the tracker",
+        "records the discrepancy",
+        "does not start the next item blindly",
+        "reports blockers"
+      ]
+    }
+  ]
+}

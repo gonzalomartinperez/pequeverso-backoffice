@@ -1,0 +1,96 @@
+{
+  "skill": "implement-task",
+  "runs_per_query": 3,
+  "queries": [
+    {
+      "query": "Implement M1.9 from the roadmap",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Do the next task in the roadmap",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Ship roadmap item M2.1 with tests",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Add an invitation expiry rule to the access use cases and open the PR",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Change the operations dashboard to show the new spend metric",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Take this ready item through to a PR into develop",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Review the PR for M1.9",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Merge the weekly Dependabot PR",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write an ADR for the Node 26 decision",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Score the repo after M1.9",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Add a column to the members table in the API database",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Deploy the backoffice to the VPS",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Update the storefront price",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Create a new OAuth app for Google sign-in",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Translate this paragraph to Spanish",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "Explain what a closure is in JavaScript",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "What's the weather in Buenos Aires?",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "Write a haiku about CI",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}
