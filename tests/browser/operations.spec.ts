@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { axe, cspViolations, prepare, SHOTS, signIn, variant } from "./support.ts";
+import { axe, cspViolations, OWNER_STATE, openPanel, prepare, SHOTS, variant } from "./support.ts";
+
+// Signed in once by auth.setup.ts through the fake IdP; no per-test OAuth round trip.
+test.use({ storageState: OWNER_STATE });
 
 test.beforeEach(async ({ page }) => {
   await prepare(page);
@@ -8,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 test("technical observation stays honest, accessible and separate from provider availability @mobile", async ({
   page,
 }, info) => {
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await page.getByText("Diagnóstico técnico y configuración", { exact: true }).click();
   const technical = page.getByRole("region", { name: "Estado técnico" });
   const fixtureNotice = technical.getByTestId("telemetry-fixture-banner");
@@ -37,7 +40,7 @@ test("technical observation stays honest, accessible and separate from provider 
 test("disabled or invalid optional telemetry preserves valid legacy spend and runs", async ({
   page,
 }) => {
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   for (const name of ["telemetry-off", "telemetry-invalid"]) {
     await variant(name);
     await page.goto("/panel");

@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { axe, cspViolations, prepare, SHOTS, signIn, variant } from "./support.ts";
+import { axe, cspViolations, OWNER_STATE, openPanel, prepare, SHOTS, variant } from "./support.ts";
+
+// Signed in once by auth.setup.ts through the fake IdP; no per-test OAuth round trip.
+test.use({ storageState: OWNER_STATE });
 
 test.beforeEach(async ({ page }) => {
   await prepare(page);
@@ -8,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 test("owner dashboard shows labelled synthetic data, charts and accessible tables @mobile", async ({
   page,
 }, info) => {
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await expect(page).toHaveURL(/\/panel$/);
   await expect(page.getByRole("heading", { level: 1, name: "Estado del asistente" })).toBeVisible();
   await expect(page.getByTestId("synthetic-banner")).toContainText("Datos sintéticos (fixture)");
@@ -83,7 +86,7 @@ test("owner dashboard shows labelled synthetic data, charts and accessible table
 
 test("dark theme keeps the dashboard readable and accessible", async ({ page }, info) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await expect(page.getByTestId("synthetic-banner")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await axe(page);
@@ -93,13 +96,13 @@ test("dark theme keeps the dashboard readable and accessible", async ({ page }, 
 
 test("a single daily reading is a table without a trend chart", async ({ page }) => {
   await variant("single");
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await expect(page.getByText("Hay una sola lectura diaria")).toBeVisible();
   await expect(page.getByTestId("chart-runs")).toHaveCount(0);
 });
 
 test("analytics cards and disclosures reflow with 200 percent text @mobile", async ({ page }) => {
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "200%";
   });

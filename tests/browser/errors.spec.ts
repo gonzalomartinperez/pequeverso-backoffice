@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { axe, prepare, SHOTS, signIn, variant } from "./support.ts";
+import { axe, OWNER_STATE, openPanel, prepare, SHOTS, variant } from "./support.ts";
+
+// Signed in once by auth.setup.ts through the fake IdP; no per-test OAuth round trip.
+test.use({ storageState: OWNER_STATE });
 
 test.beforeEach(async ({ page }) => {
   await prepare(page);
@@ -7,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 
 test("missing data is shown as not available, never as zero", async ({ page }, info) => {
   await variant("missing");
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await expect(page.getByText("No acepta preguntas")).toBeVisible();
   await expect(page.getByText("Sin catálogo válido")).toBeVisible();
   await expect(
@@ -21,7 +24,7 @@ test("missing data is shown as not available, never as zero", async ({ page }, i
 
 test("an unreachable or rejecting API is reported without numbers", async ({ page }, info) => {
   await variant("down");
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   const alert = page.getByRole("alert").filter({ hasText: "Métricas no disponibles" });
   await expect(alert).toContainText("rechazó la lectura");
   await expect(page.getByTestId("synthetic-banner")).toHaveCount(0);

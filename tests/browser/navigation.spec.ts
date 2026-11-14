@@ -1,12 +1,15 @@
 import { expect, type Request, test } from "@playwright/test";
-import { cspViolations, prepare, signIn } from "./support.ts";
+import { cspViolations, OWNER_STATE, openPanel, prepare } from "./support.ts";
+
+// Signed in once by auth.setup.ts through the fake IdP; no per-test OAuth round trip.
+test.use({ storageState: OWNER_STATE });
 
 test.beforeEach(async ({ page }) => {
   await prepare(page);
 });
 
 test("keyboard: skip link, navigation and focus are reachable", async ({ page }) => {
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await page.keyboard.press("Tab");
   const skip = page.getByRole("link", { name: "Saltar al contenido" });
   await expect(skip).toBeFocused();
@@ -31,10 +34,10 @@ test("private navigation waits for explicit activation instead of prefetching @m
     if (headers["next-router-prefetch"] === "1" || headers.purpose === "prefetch")
       privatePrefetches++;
   };
-  // Observe before the OAuth round trip so initial viewport prefetch cannot escape the check.
+  // Observe before the first navigation so initial viewport prefetch cannot escape the check.
   page.on("request", observe);
   try {
-    await signIn(page, "owner@example.test", "owner");
+    await openPanel(page);
     const nav = page.getByRole("navigation", { name: "Backoffice" });
     await expect(nav).toBeVisible();
     await expect(nav.getByRole("link")).toHaveCount(4);

@@ -23,7 +23,7 @@ runs everything. A unit test keeps every tracked file inside some profile.
 | `build` | Production build | code, contract, workflow | `next build` once; the `.next` output is the browser job's artifact |
 | `database` | Database tests | database paths, contract, workflow | Mandatory PostgreSQL migrations and IAM integration suite |
 | `container` | Container verification | container paths, workflow | Bake build of both images, metadata, image gates, smoke and restore drill |
-| `browser` | Browser tests | code, contract, workflow | The build artifact, disposable PostgreSQL, fake identity provider, synthetic ops data, all engines |
+| `browser` | Browser tests | code, contract, workflow | The build artifact, disposable PostgreSQL, fake identity provider, synthetic ops data; pull requests run chromium and mobile-webkit (iPhone 15), push and merge queue run all projects |
 | `ci-gate` | ci-gate | always | Fails on a failed or cancelled job and on a skipped job the profile expected |
 | `checks` | Required checks | always | Compatibility alias: green only when `ci-gate` is green |
 
@@ -43,12 +43,16 @@ do not persist credentials.
 
 ## Coverage and local verification
 
-The existing browser configuration retains four projects across Chromium, Firefox and WebKit,
-including mobile Chromium. The recorded pre-change suite inventory is 54 browser IDs: 51 exercised
-and three explicitly gated real-API cases skipped. The owner reported 122 unit and 19 database tests
-before this CI change. Those are historical results, not results of a new workflow run; the added
-CI policy tests also change the unit-test count. No browser test, project, command or skip condition
-is removed by this profile alignment. Fake-provider tests do not verify real provider credentials.
+The browser configuration has a `setup` project (signs the owner in through the fake IdP, invites
+and admits a viewer, and stores both sessions under the gitignored `tests/browser/.auth/`) and the
+engine projects chromium, firefox, webkit, mobile-webkit (iPhone 15) and mobile-chromium (Pixel 7),
+all depending on `setup`. Pull requests run `npm run test:browser:pr` (chromium and mobile-webkit)
+and install only those engines; push, merge queue and manual runs run every project, which is the
+nightly engine set until a scheduled run exists (GitHub schedules only fire from `main`, M7).
+`retries: 1` on CI; a pass on retry is flaky, reported as a warning, and `failOnFlakyTests` is on
+for `main` and pull requests into `main`. `backoffice.spec.ts` was split by area with every test
+kept (70 listed IDs before the split, the same 70 after, plus the new setup and viewer tests).
+Fake-provider tests do not verify real provider credentials.
 
 Run `nvm use` and `npm ci`, then:
 

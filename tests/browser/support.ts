@@ -4,6 +4,9 @@ import { type Browser, expect, type Page } from "@playwright/test";
 export const IDP = "http://127.0.0.1:8238";
 export const OPS = "http://127.0.0.1:8237";
 export const SHOTS = "docs/verification/backoffice";
+/** Session cookies saved by auth.setup.ts (gitignored; disposable test sessions only). */
+export const OWNER_STATE = "tests/browser/.auth/owner.json";
+export const VIEWER_STATE = "tests/browser/.auth/viewer.json";
 
 export async function identity(email: string, sub: string, verified = true) {
   await fetch(`${IDP}/__identity`, {
@@ -39,6 +42,12 @@ export async function signIn(page: Page, email: string, sub: string) {
   await page.waitForURL(/\/panel$|\/ingresar\?error=/);
 }
 
+/** Opens the panel with the stored session of the project role; fails if it was not accepted. */
+export async function openPanel(page: Page) {
+  await page.goto("/panel");
+  await expect(page).toHaveURL(/\/panel$/);
+}
+
 export async function continueWithTestProvider(page: Page) {
   const button = page.getByRole("button", { name: "Continuar con Proveedor de prueba" });
   await expect(button).toBeEnabled();
@@ -59,7 +68,8 @@ export async function axe(page: Page) {
 }
 
 export async function newPage(browser: Browser) {
-  const context = await browser.newContext();
+  // Explicitly anonymous: manual contexts would otherwise inherit the stored role session.
+  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
   const page = await context.newPage();
   await watchCsp(page);
   return page;

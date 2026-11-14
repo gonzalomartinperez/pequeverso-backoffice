@@ -323,6 +323,14 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: read
+    env:
+      # Pull requests run chromium + mobile-webkit (npm run test:browser:pr) and install only those
+      # engines; push, merge queue and manual runs (the nightly stand-in until M7) run every project.
+      PR_ENGINES: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+      BROWSER_ENGINES: ${{ github.event_name == 'pull_request' && 'chromium webkit' || 'chromium firefox webkit' }}
+      BROWSER_SET: ${{ github.event_name == 'pull_request' && 'chromium-webkit' || 'all' }}
+      # failOnFlakyTests only on main and release (PRs into main); elsewhere flaky tests only warn.
+      PW_FAIL_ON_FLAKY: ${{ ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.base_ref == 'main')) && '1' || '0' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -354,16 +362,25 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-all
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-${{ env.BROWSER_SET }}
       - name: Install Playwright browsers
         if: steps.browsers.outputs.cache-hit != 'true'
-        run: npx playwright install chromium firefox webkit
+        # BROWSER_ENGINES is a space-separated list of fixed engine names, split on purpose.
+        run: npx playwright install $BROWSER_ENGINES
       - name: Install browser system dependencies
-        run: npx playwright install-deps chromium firefox webkit
-      - name: Backoffice suite, all engines
-        run: npm run test:browser
+        run: npx playwright install-deps $BROWSER_ENGINES
+      - name: Backoffice suite (pull request - chromium and mobile-webkit; otherwise all engines)
+        run: |
+          if [ "$PR_ENGINES" = "true" ]; then npm run test:browser:pr; else npm run test:browser; fi
         env:
           TEST_DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
+      - name: Report flaky tests (passed only on retry)
+        if: always()
+        run: |
+          flaky=$(jq -r '.stats.flaky // 0' playwright-json/results.json 2>/dev/null || echo 0)
+          if [ "$flaky" != "0" ]; then
+            echo "::warning title=Flaky browser tests::$flaky test(s) passed only on retry (policy: fix or quarantine within 7 days)"
+          fi
 
   ci-gate:
     name: ci-gate

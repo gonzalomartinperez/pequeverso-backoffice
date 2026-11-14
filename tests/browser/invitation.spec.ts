@@ -4,10 +4,14 @@ import {
   continueWithTestProvider,
   identity,
   newPage,
+  OWNER_STATE,
+  openPanel,
   prepare,
   SHOTS,
-  signIn,
 } from "./support.ts";
+
+// Signed in once by auth.setup.ts through the fake IdP; no per-test OAuth round trip.
+test.use({ storageState: OWNER_STATE });
 
 test.beforeEach(async ({ page }) => {
   await prepare(page);
@@ -20,7 +24,7 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   // Unique per attempt: a retry must not collide with the previous attempt's database rows.
   const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
   const email = `viewer-${attempt}@example.test`;
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await page.goto("/panel/accesos");
   await page.getByLabel("E-mail verificado de la persona").fill(email);
   await page.getByRole("button", { name: "Crear invitación" }).click();
@@ -107,7 +111,7 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
 test("newly created invitations are accessible", async ({ page }, info) => {
   const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
   const email = `audit-pending-${attempt}@example.test`;
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await page.goto("/panel/accesos");
   await page.getByLabel("E-mail verificado de la persona").fill(email);
   await page.getByRole("button", { name: "Crear invitación" }).click();
@@ -124,7 +128,7 @@ test("newly created invitations are accessible", async ({ page }, info) => {
 test("the owner's revocation dialog is accessible", async ({ page, browser }, info) => {
   const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
   const email = `audit-revoke-${attempt}@example.test`;
-  await signIn(page, "owner@example.test", "owner");
+  await openPanel(page);
   await page.goto("/panel/accesos");
   await page.getByLabel("E-mail verificado de la persona").fill(email);
   await page.getByRole("button", { name: "Crear invitación" }).click();
