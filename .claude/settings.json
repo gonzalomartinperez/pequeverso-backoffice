@@ -27,7 +27,7 @@
       "Bash(gh run view:*)",
       "Bash(gh run list:*)"
     ],
-    "ask": ["Bash(git push:*)", "Bash(gh pr merge:*)", "Bash(gh release:*)"],
+    "ask": ["Bash(gh release:*)"],
     "deny": [
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
