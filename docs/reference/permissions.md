@@ -16,6 +16,7 @@ source drift apart.
 | route | `src/app/readyz/route.ts#GET` | `public` | `allowed` | `allowed` | `allowed` |
 | route | `src/app/invitacion/[token]/route.ts#GET` | `public` | `allowed` | `allowed` | `allowed` |
 | route | `src/app/internal/v1/ops/metrics/route.ts#GET` | `bearer-token` | `token-required` | `token-required` | `token-required` |
+| proxy | `src/proxy.ts#proxy` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/layout.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/page.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/ingresar/page.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
