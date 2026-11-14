@@ -11,5 +11,7 @@ blob-report/
 .integration/
 *.log
 .DS_Store
+playwright-json/
+tests/browser/.auth/
 coverage/
 .coverage-tmp/

@@ -15,18 +15,58 @@ export default defineConfig({
   workers: 1,
   forbidOnly: ci,
   retries: ci ? 1 : 0,
-  reporter: ci ? [["list"], ["html", { open: "never" }]] : [["list"]],
+  // A pass on retry is flaky, not green (ecosystem 6.3). CI sets PW_FAIL_ON_FLAKY=1 on main and
+  // release pull requests; elsewhere the flaky count is only reported as a warning.
+  failOnFlakyTests: process.env.PW_FAIL_ON_FLAKY === "1",
+  reporter: ci
+    ? [
+        ["list"],
+        ["html", { open: "never" }],
+        ["json", { outputFile: "playwright-json/results.json" }],
+      ]
+    : [["list"]],
   use: {
     baseURL: "http://localhost:3241",
     // No traces in CI: they would capture the disposable test sessions' cookies.
     trace: ci ? "off" : "retain-on-failure",
     screenshot: "only-on-failure",
   },
+  // `npm run test:browser:pr` runs chromium + mobile-webkit; the default run (push, merge queue,
+  // nightly) runs every project. Each depends on `setup`, which stores the owner and viewer sessions.
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
-    { name: "mobile-chromium", use: { ...devices["Pixel 7"] }, grep: /@mobile/ },
+    { name: "setup", testMatch: /auth\.setup\.ts/, use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+      testIgnore: /auth\.setup\.ts/,
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+      dependencies: ["setup"],
+      testIgnore: /auth\.setup\.ts/,
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      dependencies: ["setup"],
+      testIgnore: /auth\.setup\.ts/,
+    },
+    {
+      name: "mobile-webkit",
+      use: { ...devices["iPhone 15"] },
+      grep: /@mobile/,
+      dependencies: ["setup"],
+      testIgnore: /auth\.setup\.ts/,
+    },
+    {
+      name: "mobile-chromium",
+      use: { ...devices["Pixel 7"] },
+      grep: /@mobile/,
+      dependencies: ["setup"],
+      testIgnore: /auth\.setup\.ts/,
+    },
   ],
   webServer: {
     command: "node scripts/backoffice-stack.ts",
