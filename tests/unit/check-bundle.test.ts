@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { describe, it } from "node:test";
+import { describe, it, mock } from "node:test";
 import { gzipSync } from "node:zlib";
 import {
   findViolations,
+  main,
   measureBundle,
   RECHARTS_MARKER,
   renderMarkdown,
@@ -18,6 +19,7 @@ const files: Record<string, string> = {
   "static/chunks/charts.js": `x${RECHARTS_MARKER}wrapper`.repeat(500),
   "static/chunks/app/a/page.js": "a".repeat(1000),
   "static/chunks/app/b/page.js": "b".repeat(1500),
+  "static/chunks/app/[id]/page.js": "i".repeat(700),
 };
 const gz = (key: string) => gzipSync(Buffer.from(files[key] ?? ""), { level: 9 }).length;
 
@@ -66,6 +68,7 @@ function fixture(): { dist: string; publicDir: string; cleanup: () => void } {
     clientManifest("/b/page", [
       ["1", "static/chunks/shared.js", "3", "static/chunks/charts.js"],
       ["4", "static/chunks/app/b/page.js"],
+      ["5", "static/chunks/app/%5Bid%5D/page.js"],
     ]),
   );
   put(join(dist, "server/app/page_client-reference-manifest.js"), clientManifest("/page", []));
@@ -91,12 +94,22 @@ describe("check-bundle", () => {
       assert.equal(byRoute["/a"]?.chunks, 3);
       assert.equal(
         byRoute["/b"]?.rawBytes,
-        2000 + 3000 + (files["static/chunks/charts.js"] ?? "").length + 1500,
+        2000 + 3000 + (files["static/chunks/charts.js"] ?? "").length + 1500 + 700,
       );
       assert.deepEqual(report.fonts, { files: report.fonts.files, bytes: 1000 });
       assert.equal(report.fonts.files.length, 1);
     } finally {
       cleanup();
+    }
+  });
+
+  it("fails safe in warn mode and fails only with --enforce", () => {
+    const quiet = mock.method(console, "log", () => {});
+    try {
+      assert.equal(main(["--dist", "/nonexistent-dist"]), 0);
+      assert.equal(main(["--dist", "/nonexistent-dist", "--enforce"]), 1);
+    } finally {
+      quiet.mock.restore();
     }
   });
 

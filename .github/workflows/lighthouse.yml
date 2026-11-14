@@ -16,6 +16,12 @@ on:
       - "public/**"
       - "package.json"
       - "package-lock.json"
+      - "quality/lighthouse/**"
+      - "migrations/**"
+      - "contracts/**"
+      - "tsconfig.json"
+      - "scripts/browser-database.ts"
+      - "scripts/ci-postgres.sh"
       - "next.config.ts"
       - "scripts/lighthouse-*.ts"
       - "scripts/backoffice-stack.ts"
@@ -39,7 +45,6 @@ concurrency:
 
 env:
   NEXT_TELEMETRY_DISABLED: "1"
-  LIGHTHOUSE_VERSION: "13.6.0"
 
 jobs:
   lighthouse:
@@ -59,8 +64,8 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Production build
         run: npm run build
-      - name: Install the pinned Lighthouse outside the repository
-        run: npm install --prefix "$RUNNER_TEMP/lh" --ignore-scripts --no-audit --no-fund "lighthouse@${LIGHTHOUSE_VERSION}"
+      - name: Install the pinned Lighthouse (quality/lighthouse/package-lock.json)
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix quality/lighthouse
       - name: Start a disposable PostgreSQL (test-only credentials)
         run: scripts/ci-postgres.sh
       - name: Resolve Playwright version
@@ -92,12 +97,18 @@ jobs:
       - name: Lighthouse, median of 5 (warn only)
         run: >
           node scripts/lighthouse-ci.ts
-          --lighthouse-bin "$RUNNER_TEMP/lh/node_modules/.bin/lighthouse"
-          --lighthouse-version "$LIGHTHOUSE_VERSION"
+          --lighthouse-bin quality/lighthouse/node_modules/.bin/lighthouse
           --runs 5 --out lighthouse-out
       - name: Stop the preview stack
         if: always()
         run: kill "$STACK_PID" 2>/dev/null || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: lighthouse-stack-log
+          path: stack.log
+          retention-days: 7
+          if-no-files-found: warn
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

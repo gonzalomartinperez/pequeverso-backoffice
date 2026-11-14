@@ -137,8 +137,11 @@ bounded mutations and explicit invitation timestamps, with no network calls.
   `scripts/backoffice-stack.ts` (synthetic data, fake identity provider) and runs
   `scripts/lighthouse-ci.ts`: `/ingresar` and `/panel`, mobile and desktop, 5 runs each, median per
   metric, printed in the job summary and uploaded as the `lighthouse-summary` artifact. The job is
-  not a `ci-gate` prerequisite. The pinned `lighthouse` is installed outside the repository, so
-  `package.json` is untouched.
+  not a `ci-gate` prerequisite. The pinned `lighthouse` is
+  installed with `npm ci --prefix quality/lighthouse` from its own lockfile (exact version, reviewed
+  by Dependabot in the weekly group); the application `package.json` is untouched. Playwright
+  Chromium is not stock Chrome, so numbers compare only with other runs of this harness, not with
+  PageSpeed Insights.
 - **Warn then fail**: set `warnSince` in `quality/ratchets/lighthouse.json` when the workflow first
   merges; 14 days later add `--enforce` to the Lighthouse step and make the job a `ci-gate`
   prerequisite (and a `.github/ci-profile.json` job). The baseline in that file is the audit's

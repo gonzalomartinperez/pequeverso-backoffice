@@ -1,0 +1,10 @@
+{
+  "name": "pequeverso-backoffice-lighthouse",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pinned Lighthouse CLI for .github/workflows/lighthouse.yml; not part of the application.",
+  "license": "MIT",
+  "dependencies": {
+    "lighthouse": "13.6.0"
+  }
+}

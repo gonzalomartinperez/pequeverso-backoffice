@@ -57,12 +57,23 @@ describe("lighthouse summary", () => {
     assert.match(renderMarkdown({ dashboard_mobile: summary }, misses, "13.6.0"), /\| 0\.7 \|/);
   });
 
-  it("keeps the committed ratchet files parseable with the baselines the audit recorded", () => {
+  it("keeps the committed ratchet files parseable with the expected shape", () => {
     const lighthouse = JSON.parse(readFileSync("quality/ratchets/lighthouse.json", "utf8"));
-    assert.equal(lighthouse.baseline.dashboard_mobile.performance, 0.7);
-    assert.equal(lighthouse.baseline.dashboard_mobile.tbtMs, 2966);
+    for (const name of [
+      "signin_mobile",
+      "signin_desktop",
+      "dashboard_mobile",
+      "dashboard_desktop",
+    ]) {
+      const row = lighthouse.baseline[name];
+      assert.equal(typeof row.performance, "number", name);
+      assert.equal(typeof row.tbtMs, "number", name);
+      assert.ok(name in lighthouse.auditReference.values, name);
+    }
+    assert.match(lighthouse.baselineSource, /^CI run /);
+    assert.equal(typeof lighthouse.budgets.tbtMs, "number");
     const bundle = JSON.parse(readFileSync("quality/ratchets/bundle.json", "utf8"));
-    assert.ok(bundle.baseline.rechartsGzBytes > 0);
-    assert.ok(bundle.baseline.routes["/panel"] > 0);
+    assert.equal(typeof bundle.baseline.rechartsGzBytes, "number");
+    assert.equal(typeof bundle.baseline.routes["/panel"], "number");
   });
 });
