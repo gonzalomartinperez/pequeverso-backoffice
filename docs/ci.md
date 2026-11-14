@@ -198,6 +198,27 @@ not attack; an active scan and spider-driven coverage of every panel route are f
 workflow and its helper scripts, and `workflow_dispatch` run it. The pinned digest moves in a
 normal task PR (resolve it from the registry without pulling).
 
+## Quality nightly (scorecard and contract drift)
+
+[quality-nightly](../.github/workflows/quality-nightly.yml) is not a `ci-gate` prerequisite. The
+`Scorecard` job runs `scripts/scorecard.ts`: it measures guard violations, type errors, lint
+suppressions and missing doc links, reads every `quality/ratchets/*.json`, and writes
+`scorecard.json` (artifact `scorecard-<sha>`, 30 days) validated against
+`quality/scorecard.schema.json`. Every axis of the master-plan scorecard has a measured value or a
+named gap with a reason and the milestone that closes it; a gap is never a number. It fails when a
+measurement is worse than its ratchet, when a command crashes or a ratchet or artifact is incomplete,
+and (on pull requests, `--base origin/<base>`) when a ratchet file is looser than at the base branch (a file may set `"mode": "warn"` for the 14-day maturity
+window). Coverage, bundle and Lighthouse readings are accepted through `--coverage`, `--bundle` and
+`--lighthouse` and are named gaps until a run supplies them.
+
+The `Contract drift` job runs `scripts/contract-drift.ts`: it fetches the pinned producer files
+from the API repository's `develop` branch over public raw GitHub URLs (no token), reports
+byte drift against `contracts/*/source.json` and runs this repository's own validators on the API's
+examples. Any drift or breakage fails the job and is written to the job summary; no issue is
+opened (that would need `issues: write`) and pins are never updated automatically: re-pin in a
+normal task PR. `schedule` runs only from `main` (M7); until then the pull-request trigger, limited
+to the workflow, the two scripts and `quality/**`, and `workflow_dispatch` run it.
+
 ## Expected-red tests
 
 Tests for features that do not exist yet are marked `{ todo: "M<k>.<n> ..." }` (reported, never
