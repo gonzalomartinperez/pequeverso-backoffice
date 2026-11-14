@@ -23,16 +23,16 @@ function fixture(): string {
   temporary.push(root);
   put(path.join(root, "package.json"), readFileSync(path.join(repository, "package.json"), "utf8"));
   put(path.join(root, "CLAUDE.md"), "@AGENTS.md\n");
-  mkdirSync(path.join(root, ".agents/skills"), { recursive: true });
+  mkdirSync(path.join(root, ".claude/skills"), { recursive: true });
   for (const name of names) {
-    const entry = path.join(root, ".claude/skills", name, "SKILL.md");
-    const content = readFileSync(path.join(repository, ".claude/skills", name, "SKILL.md"), "utf8");
+    const entry = path.join(root, ".agents/skills", name, "SKILL.md");
+    const content = readFileSync(path.join(repository, ".agents/skills", name, "SKILL.md"), "utf8");
     put(entry, content);
-    symlinkSync(`../../.claude/skills/${name}`, path.join(root, ".agents/skills", name), "dir");
+    symlinkSync(`../../.agents/skills/${name}`, path.join(root, ".claude/skills", name), "dir");
   }
   // Only reference existence matters here; these fixtures never execute a procedure.
   for (const name of names) {
-    const entry = path.join(root, ".claude/skills", name, "SKILL.md");
+    const entry = path.join(root, ".agents/skills", name, "SKILL.md");
     const content = readFileSync(entry, "utf8");
     for (const [, target = ""] of content.matchAll(/\]\(([^\s)]+)\)/g)) {
       if (!/^(?:https?:|mailto:|#)/.test(target) && !target.endsWith("SKILL.md"))
@@ -45,7 +45,7 @@ function fixture(): string {
 }
 
 function edit(root: string, transform: (source: string) => string): void {
-  const file = path.join(root, ".claude/skills/web-change-backoffice/SKILL.md");
+  const file = path.join(root, ".agents/skills/web-change-backoffice/SKILL.md");
   writeFileSync(file, transform(readFileSync(file, "utf8")));
 }
 
@@ -68,32 +68,48 @@ describe("canonical backoffice skill discovery", () => {
 
   it("rejects a broken discovery link and mismatched catalogs", () => {
     const root = fixture();
-    const link = path.join(root, ".agents/skills/web-change-backoffice");
+    const link = path.join(root, ".claude/skills/web-change-backoffice");
     rmSync(link);
-    symlinkSync("../../.claude/skills/missing", link, "dir");
+    symlinkSync("../../.agents/skills/missing", link, "dir");
     rejects(root, /ENOENT|exact canonical/);
     rmSync(link);
     rejects(root, /Client catalogs differ/);
-    rmSync(path.join(root, ".claude/skills/web-change-backoffice"), { recursive: true });
+    rmSync(path.join(root, ".agents/skills/web-change-backoffice"), { recursive: true });
     rejects(root, /preserve the three backoffice skills/);
+  });
+
+  it("rejects the previous layout direction with canonical files under .claude", () => {
+    const root = fixture();
+    for (const name of names) {
+      const canonical = path.join(root, ".agents/skills", name);
+      const discovery = path.join(root, ".claude/skills", name);
+      const source = readFileSync(path.join(canonical, "SKILL.md"), "utf8");
+      rmSync(discovery);
+      rmSync(canonical, { recursive: true });
+      put(path.join(discovery, "SKILL.md"), source);
+      symlinkSync(`../../.claude/skills/${name}`, canonical, "dir");
+    }
+    const errors = validateSkills(root).errors.join("\n");
+    assert.match(errors, /real directory\/file/);
+    assert.match(errors, /never an editable copy/);
   });
 
   it("rejects an editable discovery copy even with identical procedure bytes", () => {
     const root = fixture();
-    const discovery = path.join(root, ".agents/skills/web-change-backoffice");
+    const discovery = path.join(root, ".claude/skills/web-change-backoffice");
     rmSync(discovery);
     put(
       path.join(discovery, "SKILL.md"),
-      readFileSync(path.join(root, ".claude/skills/web-change-backoffice/SKILL.md"), "utf8"),
+      readFileSync(path.join(root, ".agents/skills/web-change-backoffice/SKILL.md"), "utf8"),
     );
     rejects(root, /never an editable copy/);
   });
 
   it("rejects absolute discovery links even when they reach the correct skill", () => {
     const root = fixture();
-    const discovery = path.join(root, ".agents/skills/web-change-backoffice");
+    const discovery = path.join(root, ".claude/skills/web-change-backoffice");
     rmSync(discovery);
-    symlinkSync(path.join(root, ".claude/skills/web-change-backoffice"), discovery, "dir");
+    symlinkSync(path.join(root, ".agents/skills/web-change-backoffice"), discovery, "dir");
     rejects(root, /relative link/);
   });
 
@@ -106,7 +122,7 @@ describe("canonical backoffice skill discovery", () => {
         put(path.join(outside, "reference.md"));
         symlinkSync(
           path.join(outside, "reference.md"),
-          path.join(root, ".claude/skills/web-change-backoffice/outside.md"),
+          path.join(root, ".agents/skills/web-change-backoffice/outside.md"),
         );
       }
       edit(root, (source) => `${source}\n[reference](${reference})\n`);
@@ -173,7 +189,7 @@ describe("canonical backoffice skill discovery", () => {
 
   it("rejects resource symlinks, empty scaffolds and explicit-only selection", () => {
     const root = fixture();
-    const skill = path.join(root, ".claude/skills/web-change-backoffice");
+    const skill = path.join(root, ".agents/skills/web-change-backoffice");
     mkdirSync(path.join(skill, "empty"));
     put(path.join(skill, "agents/openai.yaml"), "policy:\n  allow_implicit_invocation: false\n");
     symlinkSync("SKILL.md", path.join(skill, "copy.md"));

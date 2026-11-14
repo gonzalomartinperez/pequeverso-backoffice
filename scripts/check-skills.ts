@@ -1,4 +1,4 @@
-// Portable two-client discovery: one procedure, one relative directory link.
+// Portable two-client discovery: one canonical procedure in .agents, one relative link in .claude.
 import {
   existsSync,
   lstatSync,
@@ -69,8 +69,8 @@ export function validateSkills(directoryRoot: string): { names: string[]; errors
       scripts: Record<string, string>;
     }
   ).scripts;
-  const canonical = path.join(root, ".claude/skills");
-  const discovery = path.join(root, ".agents/skills");
+  const canonical = path.join(root, ".agents/skills");
+  const discovery = path.join(root, ".claude/skills");
   const entries = (directory: string): string[] => {
     try {
       if (!lstatSync(directory).isDirectory() || realpathSync(directory) !== directory)
@@ -151,7 +151,7 @@ export function validateSkills(directoryRoot: string): { names: string[]; errors
       if (!lstatSync(link).isSymbolicLink())
         throw new Error("Discovery must be a directory symlink, never an editable copy");
       if (
-        readlinkSync(link) !== `../../.claude/skills/${folder}` ||
+        readlinkSync(link) !== `../../.agents/skills/${folder}` ||
         realpathSync(link) !== directory
       )
         throw new Error("Discovery must resolve to its exact canonical folder by a relative link");

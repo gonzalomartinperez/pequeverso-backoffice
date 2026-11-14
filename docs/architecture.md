@@ -139,8 +139,8 @@ under `infra/docker/app`. The portfolio backoffice reference at committed revisi
 `a124139e1cfa1d0d496fcf76c518830491fc1679` informed this shared layout; Pequeverso keeps
 its own domain, contracts and access rules. There is no frontend business or identity change.
 
-Agent discovery now follows the paired convention: canonical `.claude/skills` folders and
-relative directory links from `.agents/skills`. See [agent skills](agent-skills.md) for the
+Agent discovery now follows the paired convention: canonical `.agents/skills` folders and
+relative directory links from `.claude/skills`. See [agent skills](agent-skills.md) for the
 portable checks and their limits. The local/CI IAM PostgreSQL recipe remains an intentional
 exception for isolated compatibility and restore drills. It does not introduce another
 production engine or replace the API-owned production artifact. The latest recorded local
