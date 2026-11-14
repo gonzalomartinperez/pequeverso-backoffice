@@ -1,0 +1,5 @@
+# ZAP baseline triage (docs/ci.md, ZAP baseline). One rule per line: id<TAB>IGNORE|WARN|FAIL<TAB>name.
+# Every rule line must be preceded by a comment line stating the reason and the review date.
+# The nightly gate fails on any remaining High alert; do not IGNORE a High alert without an owner decision.
+# Reason (2026-11-14): private pages intentionally send Cache-Control private, no-store; informational only.
+10049	IGNORE	Non-Storable Content
