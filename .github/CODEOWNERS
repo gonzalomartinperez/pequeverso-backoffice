@@ -1,0 +1,22 @@
+# CODEOWNERS pattern from engineering-standards (a map of ownership, single maintainer).
+# Later rules win; keep the catch-all first.
+
+*                         @gonzalomartinperez
+
+# Supply chain and automation: changes here are always reviewed by the owner's agents chain.
+/.github/                 @gonzalomartinperez
+/.github/workflows/       @gonzalomartinperez
+/.github/dependabot.yml   @gonzalomartinperez
+/standards.lock           @gonzalomartinperez
+
+# Agent harness
+/AGENTS.md                @gonzalomartinperez
+/CLAUDE.md                @gonzalomartinperez
+/.claude/                 @gonzalomartinperez
+/.codex/                  @gonzalomartinperez
+/.agents/                 @gonzalomartinperez
+
+# Contracts and deploy surface (where present)
+/contracts/               @gonzalomartinperez
+/infra/                   @gonzalomartinperez
+/migrations/              @gonzalomartinperez
