@@ -1,0 +1,113 @@
+{
+  "$comment": "CI profile map (ecosystem 6.0, docs/master-plan/ci-cd.md section 3) read by the engineering-standards classify workflow. Fail closed: a file outside every profile, a diff error or a push runs everything. Job names in `adds` are the job ids of .github/workflows/ci.yml.",
+  "version": 1,
+  "base": ["security", "secrets"],
+  "profiles": {
+    "docs": {
+      "paths": [
+        "**/*.md",
+        "docs/**",
+        "LICENSE",
+        ".agents/**",
+        ".claude/skills/**",
+        ".github/ISSUE_TEMPLATE/**",
+        ".github/pull_request_template.md",
+        ".github/CODEOWNERS"
+      ],
+      "adds": ["docs"],
+      "budgetP50Minutes": 2,
+      "budgetP95Minutes": 4
+    },
+    "code": {
+      "paths": [
+        "src/**",
+        "scripts/**",
+        "tests/**",
+        "public/**",
+        "observability/**",
+        "package.json",
+        "package-lock.json",
+        "next.config.ts",
+        "next-env.d.ts",
+        "tsconfig.json",
+        "biome.json",
+        "knip.json",
+        "postcss.config.json",
+        "playwright.config.ts",
+        ".nvmrc",
+        ".env.example",
+        ".gitignore",
+        ".devcontainer/**",
+        ".gitleaksignore"
+      ],
+      "adds": ["docs", "static", "build", "browser"],
+      "budgetP50Minutes": 6,
+      "budgetP95Minutes": 12
+    },
+    "database": {
+      "paths": [
+        "migrations/**",
+        "src/features/auth/**",
+        "src/server/**",
+        "scripts/db-*.ts",
+        "scripts/browser-database.ts",
+        "scripts/fake-idp.ts",
+        "tests/integration/**",
+        "package.json",
+        "package-lock.json",
+        "scripts/ci-postgres.sh"
+      ],
+      "adds": ["static", "database"],
+      "budgetP50Minutes": 6,
+      "budgetP95Minutes": 12
+    },
+    "container": {
+      "paths": [
+        "infra/docker/**",
+        "docker-bake.hcl",
+        "migrations/**",
+        "next.config.ts",
+        "package.json",
+        "package-lock.json",
+        "src/proxy.ts",
+        "src/server/**",
+        "src/app/healthz/**",
+        "src/app/readyz/**",
+        "scripts/db-migrate.ts",
+        "scripts/smoke-*.sh",
+        "scripts/check-image-metadata.sh"
+      ],
+      "adds": ["static", "container"],
+      "budgetP50Minutes": 8,
+      "budgetP95Minutes": 14
+    },
+    "contract": {
+      "paths": ["contracts/**"],
+      "adds": ["docs", "static", "build", "browser", "database"],
+      "budgetP50Minutes": 8,
+      "budgetP95Minutes": 14
+    },
+    "workflow": {
+      "paths": [".github/**"],
+      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "budgetP50Minutes": 8,
+      "budgetP95Minutes": 14
+    },
+    "deps-weekly": {
+      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "budgetP50Minutes": 9,
+      "budgetP95Minutes": 15
+    },
+    "release": {
+      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "budgetP50Minutes": 20,
+      "budgetP95Minutes": 30
+    },
+    "hotfix": {
+      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "budgetP50Minutes": 6,
+      "budgetP95Minutes": 12
+    }
+  },
+  "required": "ci-gate"
+}

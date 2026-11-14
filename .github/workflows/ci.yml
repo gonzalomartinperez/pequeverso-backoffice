@@ -1,12 +1,18 @@
-name: Quality
+name: CI
 
-# Every pull request into develop/main and every push to develop/main. Independent jobs run in
-# parallel; `Required checks` (the ruleset's required status) fails unless every job succeeded.
+# Dynamic CI (ecosystem 6.0 and 6.1, docs/ci.md). `classify` (engineering-standards, pinned by SHA)
+# reads the changed files, branch and labels against .github/ci-profile.json and emits the job list;
+# every job below runs only when listed. Fail closed: an unknown file, a diff error, a push to
+# develop or main, a Dependabot branch or a release PR runs everything. `ci-gate` is the single
+# required check (fails on a failed or cancelled job and on a skipped job the profile expected);
+# `Required checks` mirrors it until the owner swaps the ruleset (M1.3), never leaving a gap.
 on:
   pull_request:
     branches: [develop, main]
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
   push:
     branches: [develop, main]
+  merge_group:
   workflow_dispatch:
 
 permissions: {}
@@ -16,8 +22,7 @@ defaults:
     shell: bash
 
 concurrency:
-  group: quality-${{ github.ref }}
-  # Supersede older runs of the same pull request; never cancel a branch push.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -26,39 +31,26 @@ env:
   DOCKER_BUILD_RECORD_UPLOAD: "false"
 
 jobs:
-  workflows:
-    name: Workflow validation
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
+  classify:
+    uses: gonzalomartinperez/engineering-standards/.github/workflows/classify.yml@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Record checked source identity
-        env:
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
-            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
-      - name: actionlint
-        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
-        with:
-          version: 1.7.12
-          pyflakes: false
-      - name: zizmor
-        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
-        with:
-          version: 1.30.1
-          advanced-security: false
-          annotations: true
-          min-severity: low
+      pull-requests: read
+
+  security:
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'security')
+    uses: gonzalomartinperez/engineering-standards/.github/workflows/security.yml@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      zizmor-min-severity: low
 
   secrets:
     name: Secret scan
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'secrets')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -79,10 +71,39 @@ jobs:
       - name: gitleaks over the full history (redacted; fails on zero commits scanned)
         run: .github/scripts/secret-scan.sh
 
+  docs:
+    name: Docs checks
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'docs')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      # Node built-ins only: no dependency install on the docs fast path.
+      - name: Public-file scan, documentation links and skills
+        run: npm run security:check && npm run docs:check && npm run skills:check
+
   static:
     name: Static checks
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'static')
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
@@ -101,21 +122,61 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      # Fresh clone to green inner loop in one command: npm ci --ignore-scripts, then check:fast
-      # (Biome lint and format, TypeScript 7 with route types, unit/contract/architecture tests).
       - name: One-command setup (install and check:fast)
         run: npm run setup
       - name: Audit locked dependencies
         run: npm audit --audit-level=moderate
       - name: Unused files, exports and dependencies (knip)
         run: npm run knip
-      - name: Public-file scan, documentation links and skills
-        run: npm run security:check && npm run docs:check && npm run skills:check
+
+  build:
+    name: Production build
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'build')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Restore the Next.js build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'public/**', 'next.config.ts', 'tsconfig.json', 'postcss.config.json') }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - name: Production build (once; consumed by the browser job)
+        run: npm run build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: next-build
+          path: |
+            .next
+            !.next/cache
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
 
   database:
     # Mandatory database-backed migrations, IAM, invitations and revocation suite.
     name: Database tests
-    needs: [static]
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'database')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -136,17 +197,9 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Start a disposable PostgreSQL (test-only credentials)
-        run: |
-          docker run -d --name postgres -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD=ci-only \
-            -e POSTGRES_DB=backoffice_test -p 127.0.0.1:5432:5432 --tmpfs /var/lib/postgresql \
-            postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
-          for _ in $(seq 1 30); do
-            docker exec postgres pg_isready -U backoffice -d backoffice_test >/dev/null 2>&1 && exit 0
-            sleep 1
-          done
-          docker logs postgres; exit 1
+        run: scripts/ci-postgres.sh
       - name: Database tests
         env:
           DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
@@ -154,7 +207,8 @@ jobs:
 
   container:
     name: Container verification
-    needs: [static]
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'container')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -257,11 +311,12 @@ jobs:
         run: scripts/smoke-postgres.sh pequeverso-backoffice:rc /tmp/postgres-receipt pequeverso-backoffice-postgres:rc
 
   browser:
-    # Production build + real PostgreSQL + the real Better Auth callback against the local fake
-    # identity provider + SYNTHETIC ops data. Proves access rules, rendering and accessibility in
-    # all engines; it does not prove Google/GitHub OAuth.
+    # The production build from the build job + real PostgreSQL + the real Better Auth callback
+    # against the local fake identity provider + SYNTHETIC ops data. It does not prove Google or
+    # GitHub OAuth.
     name: Browser tests
-    needs: [static]
+    needs: [classify, build]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'browser')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -282,19 +337,13 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: next-build
+          path: .next
       - name: Start a disposable PostgreSQL (test-only credentials)
-        run: |
-          docker run -d --name postgres -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD=ci-only \
-            -e POSTGRES_DB=backoffice_test -p 127.0.0.1:5432:5432 --tmpfs /var/lib/postgresql \
-            postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
-          for _ in $(seq 1 30); do
-            docker exec postgres pg_isready -U backoffice -d backoffice_test >/dev/null 2>&1 && exit 0
-            sleep 1
-          done
-          docker logs postgres; exit 1
-      - name: Production build
-        run: npm run build
+        run: scripts/ci-postgres.sh
       - name: Resolve Playwright version
         id: playwright
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
@@ -313,27 +362,33 @@ jobs:
         run: npm run test:browser
         env:
           TEST_DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
-  checks:
-    name: Required checks
+
+  ci-gate:
+    name: ci-gate
     if: always()
-    needs: [workflows, secrets, static, database, container, browser]
+    needs: [classify, security, secrets, docs, static, build, database, container, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}
     steps:
-      - name: Fail unless every job succeeded
+      - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: gonzalomartinperez/engineering-standards/actions/ci-gate@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+        with:
+          needs: ${{ toJSON(needs) }}
+          expected: ${{ needs.classify.outputs.jobs }}
+
+  checks:
+    # Compatibility alias of ci-gate for the current ruleset (retired after the M1.3 swap).
+    name: Required checks
+    if: always()
+    needs: [ci-gate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Pass only when ci-gate passed
         env:
-          WORKFLOWS_RESULT: ${{ needs.workflows.result }}
-          SECRETS_RESULT: ${{ needs.secrets.result }}
-          STATIC_RESULT: ${{ needs.static.result }}
-          DATABASE_RESULT: ${{ needs.database.result }}
-          CONTAINER_RESULT: ${{ needs.container.result }}
-          BROWSER_RESULT: ${{ needs.browser.result }}
-        run: |
-          set -eu
-          test "$WORKFLOWS_RESULT" = success
-          test "$SECRETS_RESULT" = success
-          test "$STATIC_RESULT" = success
-          test "$DATABASE_RESULT" = success
-          test "$CONTAINER_RESULT" = success
-          test "$BROWSER_RESULT" = success
+          GATE_RESULT: ${{ needs.ci-gate.result }}
+        run: test "$GATE_RESULT" = success
