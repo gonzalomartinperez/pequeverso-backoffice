@@ -1,4 +1,5 @@
-# Secret scanning for CI (gitleaks; see the `secrets` job). Default rules plus one narrow
+# Secret scanning for CI (gitleaks; the `secrets` full-history job and the shared `security` job,
+# which auto-loads this root file). Default rules plus one narrow
 # exception: generated contract manifests list sha256 digests of artifact files and pinned git
 # commit ids, which the generic-api-key rule reports. The exception matches the whole line, so it
 # only covers `"<artifact>.json|.sse": "<64 hex>"` and `"<..._commit|..._sha256>": "<40/64 hex>"`

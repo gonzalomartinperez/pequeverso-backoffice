@@ -212,7 +212,7 @@ No real credentials or remote database are permitted. Stop only this own server 
 - [Deployment contract](docs/deployment-contract.md) — vps-ops handoff: image, PostgreSQL, secrets, routing
 - [Availability and observability](docs/observability.md) — safe signals, optional exporters, private scrape and BO-only Grafana/alert proposals
 - [Verification](docs/verification.md) — what ran, what it proves, screenshots, limits
-- [Design system](docs/design-system.md), [dependencies](docs/dependencies.md), [security](SECURITY.md)
+- [Design system](docs/design-system.md), [dependencies](docs/dependencies.md), [security policy](SECURITY.md), [security design](docs/security.md)
 
 ## Stack
 

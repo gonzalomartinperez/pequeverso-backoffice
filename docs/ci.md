@@ -1,33 +1,45 @@
 # Continuous integration
 
-The paired backoffice CI core is implemented in
-[quality.yml](../.github/workflows/quality.yml), named **Quality**. Its final **Required checks**
-context remains unchanged. Existing repository rules require that context; this change does not
-alter rulesets, approvals or branch settings. Changes follow task branch → `develop` → `main`.
+[ci.yml](../.github/workflows/ci.yml), named **CI**, is the single entry point for pull requests into
+`develop` or `main`, pushes to either branch, merge groups and manual dispatch. Changes follow task
+branch → `develop` → `main`.
 
-| Job ID | Check name | Prerequisites | Verification |
+## Profiles and the single required check
+
+The first job, `classify`, is the `engineering-standards` reusable workflow pinned by SHA (see
+[standards.lock](../standards.lock)). It reads the changed files, branch and labels against
+[.github/ci-profile.json](../.github/ci-profile.json) and emits the list of jobs to run; every other
+job runs only when listed. It fails closed: a file outside every profile, a diff error, a change to
+the profile map, a push, a Dependabot branch (`deps-weekly`) or a `develop` → `main` PR (`release`)
+runs everything. A unit test keeps every tracked file inside some profile.
+
+| Job ID | Check name | Runs for | Verification |
 | --- | --- | --- | --- |
-| `workflows` | Workflow validation | None | SHA-pinned actionlint and zizmor |
-| `secrets` | Secret scan | None | Redacted full-history secret scan |
-| `static` | Static checks | None | Locked dependency audit, Biome (including import-cycle, undeclared-dependency, private-import and restricted-import rules), type checking, unit/contract/architecture tests, knip (unused files, exports, dependencies), public-file/docs/skill checks |
-| `database` | Database tests | `static` | Mandatory PostgreSQL migrations and IAM integration suite |
-| `container` | Container verification | `static` | Production app image smoke and PostgreSQL artifact/restore verification |
-| `browser` | Browser tests | `static` | Production build, disposable PostgreSQL, fake identity provider and synthetic private operations data |
-| `checks` | Required checks | All six jobs above | Always runs; every explicit result must equal `success` |
+| `classify` | classify | always | Profile and job list |
+| `security` | security / … | every PR (base) | zizmor (low and above), actionlint, gitleaks on the PR commits, dependency review |
+| `secrets` | Secret scan | every PR (base) | Redacted full-history gitleaks scan |
+| `docs` | Docs checks | docs, code, contract, workflow | Public-file scan, local links, skills catalog (Node built-ins, no install) |
+| `static` | Static checks | code, database, container, contract, workflow | `npm run setup` (install and `check:fast`), dependency audit, knip |
+| `build` | Production build | code, contract, workflow | `next build` once; the `.next` output is the browser job's artifact |
+| `database` | Database tests | database paths, contract, workflow | Mandatory PostgreSQL migrations and IAM integration suite |
+| `container` | Container verification | container paths, workflow | Bake build of both images, metadata, image gates, smoke and restore drill |
+| `browser` | Browser tests | code, contract, workflow | The build artifact, disposable PostgreSQL, fake identity provider, synthetic ops data, all engines |
+| `ci-gate` | ci-gate | always | Fails on a failed or cancelled job and on a skipped job the profile expected |
+| `checks` | Required checks | always | Compatibility alias: green only when `ci-gate` is green |
 
-Workflow validation, secret scanning and static checks run independently. Database, container and
-browser jobs use independent fixtures and run after static checks; none consumes a different job's
-image or database. Each checkout verifies its source SHA against the event SHA and records that SHA, workflow
-revision, run ID and (for PR events) head/base SHAs. A synthetic PR merge SHA is distinct
-from its PR head and from the later main merge commit. Container smoke uses
-the image built within that same job, and browser tests use that job's own production build.
-There is no cross-job artifact transfer or claim that separate builds are the same image digest.
+A docs-only PR runs `classify`, `security`, `secrets`, `docs` and the gate. Budgets (ecosystem 6.2,
+backoffice): PR critical path p50 6 min, p95 12 min; docs-only p50 2 min.
 
-Pull requests targeting `develop` or `main`, pushes to either branch and manual dispatch run this
-profile. Only obsolete PR runs are cancelled. Production deployment, image publication, real OAuth,
-model calls and paid services are not part of this workflow. The default token has no permissions;
-checkout jobs receive only repository read access and do not persist credentials. Build records are
-not uploaded. Dependency/browser caches contain downloaded tooling, not session data or environments.
+**Required check swap (M1.3, owner).** The ruleset still requires **Required checks**, which now
+mirrors `ci-gate`, so there is no enforcement gap. The owner adds `ci-gate` as required, and only
+after both contexts are green on one PR retires **Required checks** and then removes the `checks`
+alias job in a follow-up PR.
+
+Each custom job verifies that its checkout equals the event SHA and records that SHA, the workflow
+revision, the run ID and (for PR events) the head and base SHAs. Only obsolete PR runs are
+cancelled. Production deployment, image publication, real OAuth, model calls and paid services are
+not part of this workflow. The default token has no permissions; jobs receive only read access and
+do not persist credentials.
 
 ## Coverage and local verification
 
@@ -52,11 +64,10 @@ source-only review or local policy-test pass does not establish database, browse
 success. Hosted checks must pass on the exact proposed head and again after integration before
 reporting the new workflow verified.
 
-The unit suite includes [ci-profile.test.ts](../tests/unit/ci-profile.test.ts). It checks exact job
-IDs/names/dependencies, rejects optional database coverage and cross-workflow status-name collisions,
-and executes the fixed aggregate shell gate against success, failure, cancellation, skip, pending,
-empty and missing results. Its bounded source-shape assertions supplement actionlint/zizmor; they
-are not a general YAML parser or a substitute for GitHub's actual required-check enforcement.
+The unit suite includes [ci-profile.test.ts](../tests/unit/ci-profile.test.ts): every tracked file
+is in a profile, every job is gated on `classify` and named in the map, `ci-gate` needs every job
+and pins the standards action, the alias passes only on a green gate, and workflow and required
+status names never collide. The fail-closed aggregation itself is tested in `engineering-standards`.
 
 The [skill catalog validator](../scripts/check-skills.ts) runs in the existing static
 file/docs/skills step. Its [filesystem negative cases](../tests/unit/skills.test.ts) run
@@ -64,6 +75,23 @@ through the existing `npm test` unit glob before that step. They check actual di
 links and resources without executing procedures or contacting services. See
 [agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
+
+## Standards drift
+
+[drift](../.github/workflows/drift.yml) runs the pinned `engineering-standards` drift check on every
+pull request, weekly and on demand: byte-matched files listed in [standards.lock](../standards.lock)
+must equal the release templates and the Dependabot file must follow the weekly-group policy. It is
+advisory today (not part of **Required checks**); `tests/unit/standards-lock.test.ts` keeps every
+standards pin equal to the lock. The shared PR template carries no repository commands: before a
+PR run `npm run check`, `npm run test:db` and `npm run test:browser` (see `AGENTS.md`).
+
+## Image gates
+
+Grype downloads its vulnerability database on every run, so a newly published fixable high or
+critical advisory can turn the container job red without a code change; the fix is a base-image
+digest move or a signed Debian security pin. The PostgreSQL artifact pins its security packages to
+exact Debian versions and is built without cache, so a superseded version fails the build loudly;
+refresh the pins from the Debian archive (or move the base digest) in a normal task PR.
 
 ## Scheduled supply-chain workflows
 
@@ -92,8 +120,8 @@ not part of **Required checks**.
 default. It checks trusted policy code from the default branch and does not approve or merge PRs.
 A matching title, label or successful CI run alone is not dependency-update authorization.
 
-Keep workflow names unique and reserve the seven core check names for this workflow. If a future
+Keep workflow names unique and reserve `ci-gate` and **Required checks** for the CI workflow. If a future
 required context changes, first produce a green new context, then have the authorized owner add it
 without an enforcement gap, and only then retire the old requirement or compatibility alias. Never
-bypass checks or weaken protections to rename a job. The stable **Required checks** aggregate
-continues to fail closed for every required prerequisite, including skipped or cancelled jobs.
+bypass checks or weaken protections to rename a job. `ci-gate` fails closed on any failed or
+cancelled job and on any skipped job its profile expected; **Required checks** mirrors it.

@@ -11,6 +11,8 @@ RUN apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update \
         perl-base=5.40.1-6+deb13u1 perl-modules-5.40=5.40.1-6+deb13u1 \
         libssl3t64=3.5.7-1~deb13u3 openssl=3.5.7-1~deb13u3 \
         tzdata=2026c-0+deb13u1 \
+        apt=3.0.4 libapt-pkg7.0=3.0.4 \
+        zlib1g=1:1.3.dfsg+really1.3.1-1+deb13u1 \
     && rm -rf /var/lib/apt/lists/* /usr/local/bin/gosu \
     && test "$(id -u postgres)" = 999 \
     && test "$(id -g postgres)" = 999
