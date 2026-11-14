@@ -16,6 +16,6 @@ drawn only with two or more days of records; the accessible table is always pres
 
 **Consequences.** History is limited to what the API retains (its run metrics keep 90 days; the
 dashboard shows the last 30 days). No metrics endpoint is exposed to browsers; the later optional private observability
-capability is described in [observability](../observability.md) and is off by default. No external
+capability is described in [observability](../reference/observability.md) and is off by default. No external
 observability service is enabled automatically, and the collector cannot affect answering: if the API cannot
 summarise, the backoffice says so and buyers are unaffected.

@@ -71,8 +71,8 @@ Official references: [OpenTelemetry JS](https://opentelemetry.io/docs/languages/
 [Next instrumentation](https://nextjs.org/docs/app/guides/open-telemetry),
 [Prometheus exposition](https://prometheus.io/docs/instrumenting/exposition_formats/).
 
-BO-only reference artifacts: [Grafana dashboard](../observability/backoffice-dashboard.json)
-and [Prometheus alert proposals](../observability/backoffice-alerts.yml). They reference the
+BO-only reference artifacts: [Grafana dashboard](../../observability/backoffice-dashboard.json)
+and [Prometheus alert proposals](../../observability/backoffice-alerts.yml). They reference the
 private job `pequeverso-backoffice`; configure its target and authorization file separately.
 Grafana receives only safe aggregate Prometheus series, not IAM/conversation data. A scrape
 failure can mean disabled telemetry, credential/network problems or a process outage; it is

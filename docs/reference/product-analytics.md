@@ -69,7 +69,7 @@ tests passed on the byte-identical analytics implementation at `ddf5fafe` on 202
 the canonical pin records their scope. The exact API850/BOee068 local paired fixture completed
 all nine criteria on 2026-10-19: native owner/viewer authorization, OFF no-read behavior,
 calendar/privacy/counts, three axe scans, strict response-body capture, clean Neo shutdown and
-proof-bound backup custody. See [native evidence](verification/native-runtime2026-10-19.md).
+proof-bound backup custody. See [native evidence](../explanation/history/native-runtime-2026-10-19.md).
 This is not a fresh006/Neo restore, live OAuth, deployed edge or production acceptance.
 No working-tree export is accepted as committed provenance.
 `generated_at` is a logical receipt watermark, not database read completion or complete

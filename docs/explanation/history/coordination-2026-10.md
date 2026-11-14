@@ -11,7 +11,7 @@ what was adopted. Inspections happen at milestones, not continuously.
 | `pequeverso-assistant-api` | `8428fce` (bootstrap) + uncommitted working tree | Domain, application, HTTP presentation and generated contracts present but **not committed** | Pinned snapshot of generated `contracts/` (see `api-contract.md` (removed; see git history)). Cookie name `__Host-pv_assistant`, CSRF in memory, single conversation per session, `page` context, product `url`/`purchase_url`/nullable `price`. |
 | `portfolio-assistant-web` | `develop` `f460fc4` + uncommitted `feat/embedded-assistant` | Closure external-store controller, fetch-SSE reader, node:test, harness | Adopted: controller pattern (lifetime AbortController, single-flight generation, bounded cancel, no auto-regeneration), SSE bounds, exact-key protocol validation, first-origin pinning, per-origin `assistant.ready`, host harness idea, contract manifest check, skills layout. **Not adopted:** plain CSS modules (this repo uses Tailwind), react-markdown (the API promises plain text), multi-conversation UI, the `typescript` JS-API boundary checker (TS 7 has no JS API). |
 | `portfolio` (site) | `main` `45d8a42` (clean) | Tailwind 4 + shadcn radix-nova, TS 7.0.2, `next typegen && tsc --noEmit` | `@theme inline` over semantic tokens, `cn()` + CVA primitives with `data-slot`, 44 px targets, canonical skills in `.agents/skills` with Claude adapters, Biome config shape. |
-| `vps-ops` | `feat/pequeverso-planning` `74d4fa5` | Planning only: no domain, routes or services for Pequeverso yet | Same-origin `/api/*` routing, no prefix stripping, digest-pinned images, read-only root + tmpfs, header conflict raised in [deployment-contract.md](deployment-contract.md). |
+| `vps-ops` | `feat/pequeverso-planning` `74d4fa5` | Planning only: no domain, routes or services for Pequeverso yet | Same-origin `/api/*` routing, no prefix stripping, digest-pinned images, read-only root + tmpfs, header conflict raised in [deployment-contract.md](../../deployment-contract.md). |
 
 ## Mid-milestone re-inspection (2026-09-27 17:08 UTC)
 
@@ -37,7 +37,7 @@ after it had been verified live).
 ## Historical requests to other owners (2026-09-27)
 
 These requests describe the former public chat shells. They are superseded by the backoffice
-milestone below and the current [deployment contract](deployment-contract.md); they are not
+milestone below and the current [deployment contract](../../deployment-contract.md); they are not
 activation instructions.
 
 - **API agent:** (done: contract committed.) Web revision verified together: this repository's
@@ -46,7 +46,7 @@ activation instructions.
   the idle heartbeat ≤ 15 s (the client treats 45 s of silence as a dead stream).
 - **Storefront owner (deferred integration):** see `embed-integration.md` (removed; see git history) —
   `frame-src` addition, launcher/panel port of `tests/fixtures/host/host.ts`, page context values.
-- **vps-ops:** see [deployment-contract.md](deployment-contract.md) — domain approval, Pequeverso
+- **vps-ops:** see [deployment-contract.md](../../deployment-contract.md) — domain approval, Pequeverso
   renderer without the `frame-ancestors 'none'` override for the web service.
 - **Portfolio web (FYI):** its `scripts/check-boundaries.ts` imports the TypeScript JS API, which
   TypeScript 7 no longer ships; an import scanner (as here) avoids that dependency.
@@ -94,7 +94,7 @@ is independently additive and does not change either private schema or its beare
 
 The dashboard reads private aggregate data and optional process observations; it performs no
 model requests. Local browser timeout failures and final-image acceptance remain documented
-in [verification](verification.md). No deployment, publication or assistant activation is
+in [verification](verification-2026-10.md). No deployment, publication or assistant activation is
 implied by this repin.
 
 
@@ -126,4 +126,4 @@ not edited. Adopted the canonical `.agents/skills` catalog and relative director
 from `.claude/skills`. The three existing Pequeverso web procedures, names, descriptions
 and limits retain their own content. The stdlib-only validator and filesystem negative
 tests follow this repository's Node/TypeScript toolchain without adding dependencies.
-See [agent skills](agent-skills.md) and the [architecture map](architecture.md#paired-repository-conventions).
+See [agent skills](../../reference/agent-skills.md) and the [architecture map](../architecture.md#paired-repository-conventions).

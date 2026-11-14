@@ -45,13 +45,13 @@ tests/browser/             real IAM with fake IdP and synthetic operations
 
 ## Access model
 
-See [ADR 005](adr/005-backoffice-auth-better-auth.md) and [ADR 006](adr/006-iam-in-postgresql.md):
+See [ADR 005](../decisions/0005-backoffice-auth-better-auth.md) and [ADR 006](../decisions/0006-iam-in-postgresql.md):
 OAuth only, owner by configuration, everyone else by single-use invitation bound to the verified
 e-mail, explicit linking only, revocation by deleting the account.
 
 ## Operations data
 
-See [ADR 007](adr/007-ops-data-source.md). The contract is pinned in `contracts/ops/` from a
+See [ADR 007](../decisions/0007-ops-data-source.md). The contract is pinned in `contracts/ops/` from a
 committed API revision (`contracts/ops/source.json`); a unit test checks the pinned hashes and
 that the example parses.
 
@@ -70,7 +70,7 @@ at process start, and null values never become zero.
 The BO's isolated manual OpenTelemetry provider never registers globally, so Next's
 automatic route/fetch spans cannot leak private URLs or invite tokens. An optional private
 metrics endpoint requires a distinct machine bearer; protected human pages still recheck
-Better Auth roles. See [observability](observability.md) for switches, bounds, privacy and
+Better Auth roles. See [observability](../reference/observability.md) for switches, bounds, privacy and
 BO-only Prometheus/Grafana proposals. Infrastructure deployment remains owned by vps-ops.
 
 ## Enforced dependency boundaries
@@ -143,7 +143,7 @@ under `infra/docker/app`. The portfolio backoffice reference at committed revisi
 its own domain, contracts and access rules. There is no frontend business or identity change.
 
 Agent discovery now follows the paired convention: canonical `.agents/skills` folders and
-relative directory links from `.claude/skills`. See [agent skills](agent-skills.md) for the
+relative directory links from `.claude/skills`. See [agent skills](../reference/agent-skills.md) for the
 portable checks and their limits. The local/CI IAM PostgreSQL recipe remains an intentional
 exception for isolated compatibility and restore drills. It does not introduce another
 production engine or replace the API-owned production artifact. The latest recorded local
@@ -159,4 +159,4 @@ before any selection/read, then composes its private bounded adapter. `/panel/an
 inherits the panel's headers. Its independent server flag defaults OFF; enabling a read in
 production does not activate collection or establish deployment or trusted-edge provenance. Domain/application purity and cross-feature restrictions apply;
 analytics does not import operations adapters or join IAM data. See
-[product analytics](product-analytics.md) for wire provenance and pending paired acceptance.
+[product analytics](../reference/product-analytics.md) for wire provenance and pending paired acceptance.

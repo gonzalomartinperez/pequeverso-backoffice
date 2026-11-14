@@ -31,7 +31,7 @@ contains sharp0.35.5, the documented image-processing workaround. No exploit was
 The earlier framework-only security increment retained Node24.21.0, Playwright1.64.0,
 PostgreSQL and the previous image bases; those measurements remain dated history. The separate
 fixed17:35UTC maintenance cohort now selects Node24.22.0, Playwright1.64.1 and Better Auth1.7.10.
-See [the cohort review](verification/runtime-cohort-2026-10-17.md) for scope and acceptance gates. The application image must be rebuilt from this lock and its
+See [the cohort review](../explanation/history/runtime-cohort-2026-10-17.md) for scope and acceptance gates. The application image must be rebuilt from this lock and its
 new exact artifact verified before deployment; earlier image IDs and measurements remain
 historical evidence. Current-head protected CI checks DB migrations, synthetic OAuth/browser
 flows and hardened exact-image smoke/restore. Real OAuth, VPS capacity and actual deployment
@@ -56,7 +56,7 @@ and their assistant activation remains deferred. No deployment trigger is enable
 
 Frozen installation, formatting/linting, strict typing, unit/contract and documentation/security/skills checks were run locally. Exact-image smoke verifies nonroot/read-only startup and migration closure. Hosted full quality and browser gates still determine integration acceptance; real OAuth and TLS/cookies through the actual VPS remain unverified.
 
-See [deployment contract](deployment-contract.md) for ports, health, secrets, data and shutdown.
+See [deployment contract](../deployment-contract.md) for ports, health, secrets, data and shutdown.
 The shared baseline does not promise zero downtime, production capacity or an advisory-free
 image. Current unfixed OS findings remain visible; no package is removed or scanner weakened
 merely to change a vulnerability count.

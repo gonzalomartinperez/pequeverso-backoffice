@@ -15,4 +15,4 @@ checker scans imports itself instead of using the TypeScript API.
 
 **Consequences.** The TypeScript language-service plugin `next` in `tsconfig.json` is ignored by the
 TS 7 language server (editor hints for Next-specific props are unavailable); command-line checking
-is unaffected. Measured before/after timings are in [verification.md](../verification.md).
+is unaffected. Measured before/after timings are in [verification.md](../explanation/history/verification-2026-10.md).

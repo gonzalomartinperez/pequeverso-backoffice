@@ -76,17 +76,17 @@ resources or inspection errors, and completion before the deadline. These are th
 resources only. Earlier failed-run custody and the retained builder are separate; no global
 Docker-empty claim is made. Earlier failures remain preserved and are not relabelled as passes.
 
-The [capture manifest](analytics-native-2026-10-19/capture-manifest.json) binds each original's
+The capture manifest (`docs/verification/analytics-native-2026-10-19/capture-manifest.json`, removed) binds each original's
 SHA256, byte size, dimensions, exact sources and agent visual approval. Root reviewed the actual
 desktop OFF/ON and mobile390 images: controls and cards were readable, mobile content wrapped
 naturally, and the wide table retained its own horizontal scroll region. Screenshot inspection
 is not an exhaustive device or accessibility certification. Native files:
 
-- [Disabled desktop](analytics-native-2026-10-19/off-desktop.png).
-- [Enabled desktop, nine synthetic events](analytics-native-2026-10-19/on-desktop-nine.png).
-- [Enabled mobile, nine synthetic events](analytics-native-2026-10-19/on-mobile-nine.png).
+- Disabled desktop (`docs/verification/analytics-native-2026-10-19/off-desktop.png`, removed).
+- Enabled desktop, nine synthetic events (`docs/verification/analytics-native-2026-10-19/on-desktop-nine.png`, removed).
+- Enabled mobile, nine synthetic events (`docs/verification/analytics-native-2026-10-19/on-mobile-nine.png`, removed).
 
-The historical [availability gallery](compact-availability-2026-10-13/README.md) and all its
+The historical availability gallery (`docs/verification/compact-availability-2026-10-13/README.md`, removed) and all its
 26 existing light/dark image links retain their original bytes and provenance. No new dark
 site-activity capture is claimed. These are agent-reviewed local fixtures, not human/holdout
 review, production activation, real OAuth, provider/model quality or deployed trusted-country

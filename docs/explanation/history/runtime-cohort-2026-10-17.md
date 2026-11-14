@@ -115,7 +115,7 @@ The Debian tracker still marks the installed Trixie package affected, with `no-d
 classification; the scanner's NVD severity is critical/CVSS 9.8. Neither classification makes
 the risk disappear. No Trixie fix is available in these sources. The finding remains open
 as a deployment gate: no suppression, implicit risk acceptance, XML removal or unstable
-Debian substitution was introduced. See [the database runtime review](../postgresql-runtime.md).
+Debian substitution was introduced. See [the database runtime review](../../how-to/postgres-runtime-and-restore.md).
 The local artifacts were not published; protected CI must independently build and verify
 its own exact artifacts before integration.
 

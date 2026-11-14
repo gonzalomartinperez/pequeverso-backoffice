@@ -2,11 +2,11 @@
 
 The repository is public; the application is private. Better Auth 1.7.10 handles OAuth and
 PostgreSQL sessions; this repository adds the admission rules, invitations, roles and audit.
-Decision record: [ADR 005](adr/005-backoffice-auth-better-auth.md). Storage: [ADR 006](adr/006-iam-in-postgresql.md).
+Decision record: [ADR 005](../decisions/0005-backoffice-auth-better-auth.md). Storage: [ADR 006](../decisions/0006-iam-in-postgresql.md).
 
 ## Configuration
 
-Server-only variables (see `.env.example` and [deployment-contract.md](deployment-contract.md)):
+Server-only variables (see `.env.example` and [deployment-contract.md](../deployment-contract.md)):
 `BACKOFFICE_ORIGIN` (exact https origin; http only on loopback outside production),
 `BETTER_AUTH_SECRET` (≥ 32 chars, required except in `test`; also encrypts stored OAuth tokens, so
 keep it stable and backed up), `DATABASE_URL`, `OWNER_EMAIL`, and the Google and/or GitHub client id + secret. Production

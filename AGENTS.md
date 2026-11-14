@@ -10,7 +10,7 @@ Never commit secrets, private operations details or other repositories' internal
   [docs/GLOSSARY.md](docs/GLOSSARY.md)).
 - Node from `.nvmrc` (24.22.0). Next.js 16 App Router, React 19, strict TypeScript 7, Tailwind 4
   with owned primitives, Better Auth on PostgreSQL, Biome, knip.
-- Read [docs/architecture.md](docs/architecture.md) before changing behavior and
+- Read [docs/architecture.md](docs/explanation/architecture.md) before changing behavior and
   [docs/design-system.md](docs/design-system.md) before changing UI.
 
 ## Commands
@@ -66,7 +66,7 @@ designer review.
   aggregates and display them behind live IAM checks with truthful classification. This read-only
   exception adds no collector, Store consent/Meta/CAPI/checkout change or production activation.
   Reads default OFF; production capability is not deployment or trusted-edge proof; see
-  [product analytics](docs/product-analytics.md).
+  [product analytics](docs/reference/product-analytics.md).
 - Consume only pinned, committed contracts (`contracts/ops/`, `contracts/telemetry/` and
   `contracts/analytics/`); do not invent endpoints, fields or auth behavior. Mocks and fixtures
   must say they are synthetic.
@@ -88,7 +88,7 @@ designer review.
 ## Deviations from the ecosystem standard
 
 Health endpoints `/healthz` and `/readyz`; tests in `tests/` rather than next to the code;
-`node:test` until the shared runner spike; ADRs in `docs/adr/` until the docs move; Spanish strings
+`node:test` until the shared runner spike; Spanish strings
 in product code. Reasons and confirmations: [docs/master-plan/standards.md](docs/master-plan/standards.md)
 section 2.
 
@@ -97,14 +97,14 @@ section 2.
 Canonical in `.agents/skills/<name>/SKILL.md`; `.claude/skills/<name>` is a relative symlink, never
 an editable copy. Read only the selected procedure and its references. A skill is a procedure, never
 an authorization. Catalog, evals and checks:
-[docs/agent-skills.md](docs/agent-skills.md); harness files: [docs/agent-harness.md](docs/agent-harness.md).
+[docs/reference/agent-skills.md](docs/reference/agent-skills.md); harness files: [docs/agent-harness.md](docs/agent-harness.md).
 
 ## Docs map
 
-[architecture](docs/architecture.md) · [authentication](docs/authentication.md) ·
+[architecture](docs/explanation/architecture.md) · [authentication](docs/explanation/authentication.md) ·
 [security design](docs/security.md) · [CI](docs/ci.md) · [dependencies](docs/dependencies.md) ·
-[deployment contract](docs/deployment-contract.md) · [verification](docs/verification.md) ·
-[design system](docs/design-system.md) · [decisions](docs/adr/) · [glossary](docs/GLOSSARY.md)
+[deployment contract](docs/deployment-contract.md) · [verification](docs/explanation/history/verification-2026-10.md) ·
+[design system](docs/design-system.md) · [decisions](docs/decisions/) · [glossary](docs/GLOSSARY.md)
 
 <!-- BEGIN:nextjs-agent-rules -->
 

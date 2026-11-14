@@ -29,8 +29,8 @@ app setup, real credentials, DNS or deployment.
 ## Procedure
 
 1. Read `docs/master-plan/roadmap.md` (item and acceptance) and `progress.md`; read
-   [architecture](../../../docs/architecture.md), the ADRs on [auth](../../../docs/adr/005-backoffice-auth-better-auth.md),
-   [IAM](../../../docs/adr/006-iam-in-postgresql.md) and [ops data](../../../docs/adr/007-ops-data-source.md),
+   [architecture](../../../docs/explanation/architecture.md), the ADRs on [auth](../../../docs/decisions/0005-backoffice-auth-better-auth.md),
+   [IAM](../../../docs/decisions/0006-iam-in-postgresql.md) and [ops data](../../../docs/decisions/0007-ops-data-source.md),
    and [design system](../../../docs/design-system.md) for UI. Next.js 16 differs from older
    versions: read the matching guide in `node_modules/next/dist/docs/` first.
 2. `git fetch` and `git worktree add ../wt/pequeverso-backoffice-<slug> -b <type>/<milestone>-<slug> origin/develop`

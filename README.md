@@ -26,7 +26,7 @@ merge authority. See [the dependency procedure](docs/dependencies.md).
 Next16.4.2, React/DOM19.3.1, Better Auth1.7.10 and Playwright1.64.1. The framework security
 patch is already released at `29b293f` through [PR60](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/60);
 this separate maintenance change keeps admission, roles, contracts and SQL migrations intact.
-Read [the cohort review and verification limits](docs/verification/runtime-cohort-2026-10-17.md)
+Read [the cohort review and verification limits](docs/explanation/history/runtime-cohort-2026-10-17.md)
 before choosing an image. Current-head protected CI determines acceptance; no deployment is implied.
 
 **Historical dashboard release — 2026-10-13:** the compact availability and telemetry dashboard and maintained
@@ -37,7 +37,7 @@ passed all seven jobs, including the exact CI image smoke and 51 browser tests a
 projects (three optional live-API tests skipped; no retries). Its runtime design uses Node24,
 Debian13 and UID/GID65532; the maintenance pins above are separate from that historical evidence.
 Earlier local failures and image drills remain dated history in
-[verification](docs/verification.md). CI fixture evidence does not prove deployment,
+[verification](docs/explanation/history/verification-2026-10.md). CI fixture evidence does not prove deployment,
 real OAuth, TLS cookies, VPS capacity or provider billing. This project has not deployed the
 backoffice, and the dashboard never enables the storefront.
 
@@ -59,7 +59,7 @@ withheld by the privacy threshold.
 | Nine synthetic events · desktop | ![Desktop report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-desktop-nine.png) |
 | Nine synthetic events · mobile | ![Mobile report with nine synthetic events](docs/verification/analytics-native-2026-10-19/on-mobile-nine.png) |
 
-[Exact source, capture manifest and verification limits](docs/verification/native-runtime2026-10-19.md).
+[Exact source, capture manifest and verification limits](docs/explanation/history/native-runtime-2026-10-19.md).
 This is a local fixture, not a VPS deployment, live production traffic, real Google/GitHub OAuth,
 provider availability or model-quality evidence. Production configuration capability does not
 activate collection or establish a trusted deployed edge. The historical availability gallery
@@ -112,28 +112,28 @@ docker buildx build --load -f infra/docker/postgres/Dockerfile -t pequeverso-bac
 The second recipe is an owned local/CI artifact, not a second production database service.
 Production targets one API-owned PostgreSQL 18.6 Alpine/pgvector engine and separate API/IAM databases.
 No production Compose or deployment controller is introduced. See the
-[architecture map](docs/architecture.md#container-and-browser-test-locations) and
+[architecture map](docs/explanation/architecture.md#container-and-browser-test-locations) and
 [deployment contract](docs/deployment-contract.md).
 
 Agent procedures use one canonical `.agents/skills` catalog and relative directory discovery
-links in `.claude/skills`. See [skill maintenance and validation](docs/agent-skills.md).
+links in `.claude/skills`. See [skill maintenance and validation](docs/reference/agent-skills.md).
 
 ## Architecture and data flow
 
 <p align="center">
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/system-dark.svg">
-  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: the owner or invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/explanation/diagrams/system-dark.svg">
+  <img src="docs/explanation/diagrams/system-light.svg" alt="Private Pequeverso backoffice: the owner or invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
 </picture>
 </p>
 
-[Full-size light diagram](docs/architecture/system-light.svg) ·
-[Full-size dark diagram](docs/architecture/system-dark.svg) ·
-[Editable light source](docs/architecture/system-light.mmd) ·
-[Editable dark source](docs/architecture/system-dark.mmd)
+[Full-size light diagram](docs/explanation/diagrams/system-light.svg) ·
+[Full-size dark diagram](docs/explanation/diagrams/system-dark.svg) ·
+[Editable light source](docs/explanation/diagrams/system-light.mmd) ·
+[Editable dark source](docs/explanation/diagrams/system-dark.mmd)
 
-[Diagram editing and provenance](docs/architecture/README.md) ·
-[Asset hashes](docs/architecture/manifest.json). Both themes are authored, self-contained SVGs;
+[Diagram editing and provenance](docs/explanation/architecture-diagrams.md) ·
+[Asset hashes](docs/explanation/diagrams/manifest.json). Both themes are authored, self-contained SVGs;
 Mermaid preserves their semantic relationships without generating the same pixel layout.
 No application dependency is added.
 
@@ -193,7 +193,7 @@ artifact or a deployment recipe. The initialized `postgres` database exists and 
 synthetic `test` administrator can create the disposable databases used by the suites.
 No real credentials or remote database are permitted. Stop only this own server after use:
 `docker stop bo-pg`. For the reviewed non-root/read-only artifact, use
-[PostgreSQL runtime](docs/postgresql-runtime.md) and its exact-image SQL backup/restore drill.
+[PostgreSQL runtime](docs/how-to/postgres-runtime-and-restore.md) and its exact-image SQL backup/restore drill.
 
 ## Commands
 
@@ -207,11 +207,11 @@ No real credentials or remote database are permitted. Stop only this own server 
 ## Documentation
 
 - [Engineering standards](docs/engineering-standards.md): review, boundaries, reproducibility and evidence.
-- [Architecture](docs/architecture.md) and decisions: [auth](docs/adr/005-backoffice-auth-better-auth.md),
-  [IAM in PostgreSQL](docs/adr/006-iam-in-postgresql.md), [ops data](docs/adr/007-ops-data-source.md)
+- [Architecture](docs/explanation/architecture.md) and decisions: [auth](docs/decisions/0005-backoffice-auth-better-auth.md),
+  [IAM in PostgreSQL](docs/decisions/0006-iam-in-postgresql.md), [ops data](docs/decisions/0007-ops-data-source.md)
 - [Deployment contract](docs/deployment-contract.md) — vps-ops handoff: image, PostgreSQL, secrets, routing
-- [Availability and observability](docs/observability.md) — safe signals, optional exporters, private scrape and BO-only Grafana/alert proposals
-- [Verification](docs/verification.md) — what ran, what it proves, screenshots, limits
+- [Availability and observability](docs/reference/observability.md) — safe signals, optional exporters, private scrape and BO-only Grafana/alert proposals
+- [Verification](docs/explanation/history/verification-2026-10.md) — what ran, what it proves, screenshots, limits
 - [Design system](docs/design-system.md), [dependencies](docs/dependencies.md), [security policy](SECURITY.md), [security design](docs/security.md)
 
 ## Stack
@@ -222,7 +222,7 @@ Biome 2.5, Playwright 1.64.1 + axe-core. Node 24.22.0. Support classifications a
 [the runtime inventory](docs/dependencies.md#runtime-support-inventory-2026-10-17);
 maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
 
-Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
+Shared runtime/version acceptance: [runtime baseline](docs/reference/runtime-baseline.md).
 
 ## Software license
 
@@ -233,7 +233,7 @@ material are excluded; see [NOTICE.md](NOTICE.md) and the preserved
 notices under `/app/`; the application's access controls and privacy obligations
 are unchanged.
 
-The independently disabled [site-activity report](docs/product-analytics.md) reads bounded
+The independently disabled [site-activity report](docs/reference/product-analytics.md) reads bounded
 site-event aggregates behind the existing IAM guard, distinguishing synthetic fixtures from
 production-class data. Country defaults to unknown; enabling configuration does not prove a
 trusted deployed edge. It adds no visitor collector or production activation and keeps the

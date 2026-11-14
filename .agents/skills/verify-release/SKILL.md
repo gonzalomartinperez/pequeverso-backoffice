@@ -46,7 +46,7 @@ stop and report the database and browser suites as not run; do not substitute mo
    redirect from `/panel`. The hosted container job is described in [CI](../../../docs/ci.md).
 6. Open the PNGs in `docs/verification/backoffice/` and judge them (layout, contrast, overflow,
    honest empty states, "No disponible" never zero). Record results and limits in
-   [verification.md](../../../docs/verification.md).
+   [verification.md](../../../docs/explanation/history/verification-2026-10.md).
 7. Release (develop → main, owner present): the promotion PR ran every CI job and `ci-gate`
    (**Required checks**) is green on the exact head; `CHANGELOG.md`, `package.json` version and
    the tag `vX.Y.Z` agree; after a deploy the owner authorizes, compare the build-info SHA with

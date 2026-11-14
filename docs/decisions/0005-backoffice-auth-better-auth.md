@@ -45,7 +45,7 @@ DB-backed suite.
 limits, disabled library logger, owner-only explicit linking, readiness-gated sign-in, native modal
 confirmation and fixture-safety guards were adopted after reviewing the owner's portfolio
 backoffice at `portfolio-assistant-backoffice` `f29b6cd` (read-only; see
-[coordination.md](../coordination.md)). Pequeverso keeps its own choices where they differ:
+[coordination.md](../explanation/history/coordination-2026-10.md)). Pequeverso keeps its own choices where they differ:
 committed SQL for Better Auth's tables plus a drift check (instead of applying the library's plan
 at deploy time) and browser tests that sign in through a fake OAuth provider (instead of minted
 sessions).
@@ -55,4 +55,4 @@ sessions).
 The fixed17:35UTC cohort advances Better Auth1.7.7 to1.7.10 while preserving this admission,
 linking, session and storage decision. Cookie/JWKS behavior and transitive dependencies require
 manual review and the real database/OAuth fixture gates; see the
-[runtime cohort review](../verification/runtime-cohort-2026-10-17.md). No new plugins are enabled.
+[runtime cohort review](../explanation/history/runtime-cohort-2026-10-17.md). No new plugins are enabled.

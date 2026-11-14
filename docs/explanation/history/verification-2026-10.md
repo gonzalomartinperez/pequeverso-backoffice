@@ -1,4 +1,11 @@
-# Verification
+# Verification history (October 2026)
+
+Frozen evidence log. The dated capture directories it mentions
+(`docs/verification/availability-2026-10-12/`, `compact-availability-2026-10-13/` and
+`analytics-native-2026-10-19/`) were deleted from the working tree; they remain available in git
+history at commit `77c8eb2` (`origin/develop` before the docs restructure). Deviation from the master
+plan: `docs/verification/backoffice/` is kept because the browser suite writes its screenshots there
+and `AGENTS.md` requires inspecting them until the visual baselines replace them (M5).
 
 ## Current reconciliation — 2026-10-18
 
@@ -295,7 +302,7 @@ but the run still failed; no CPU cause or flaky label is established. This does 
 external OAuth or real-provider behavior. Its private traces and original failed/publication-held
 captures are preserved outside the repository.
 
-The [current 26-image gallery](verification/availability-2026-10-12/README.md) was captured from
+The current 26-image gallery (`docs/verification/availability-2026-10-12/README.md`, removed) was captured from
 the actual local production build with MOCK data at DPR2. Both author and independent root
 agents inspected every final image. Four mobile framing/focus originals were held and replaced
 by actual complete-section/keyboard-focus captures; two right-scrolled table states were added.
@@ -384,7 +391,7 @@ was demonstrated by these traces, and no host-contention cause is asserted. Raw 
 preserved; a later CI run must be assessed independently and does not erase them.
 
 Continuous 200% text reflow at 320, 390, 768 and 1440 CSS px passed in Chromium, Firefox,
-WebKit and mobile Chromium. All final [26 compact screenshots](verification/compact-availability-2026-10-13/README.md)
+WebKit and mobile Chromium. All final 26 compact screenshots (`docs/verification/compact-availability-2026-10-13/README.md`, removed)
 were inspected by both capture and independent root agents. These static synthetic mock
 photos prove framing and visible states, not live telemetry, model quality or deployment.
 The existing 3c88447 Trixie PostgreSQL artifact and its restore/scan receipts keep their own
