@@ -1,0 +1,13 @@
+{
+  "$comment": "Security ratchets are named gaps until the inputs exist. A gap is never scored as a pass.",
+  "scorecardScore": {
+    "status": "gap",
+    "reason": "OpenSSF Scorecard publishes from main only and main is frozen until the M7 release",
+    "plannedIn": "M7.2"
+  },
+  "openHighCritical": {
+    "status": "gap",
+    "reason": "no CodeQL or image-scan alert feed is wired into the scorecard yet",
+    "plannedIn": "M1.7"
+  }
+}

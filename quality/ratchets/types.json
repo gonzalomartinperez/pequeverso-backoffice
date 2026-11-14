@@ -1,0 +1,4 @@
+{
+  "$comment": "TypeScript compiler errors (node node_modules/typescript/bin/tsc --noEmit, strict config). The baseline is zero.",
+  "errors": 0
+}

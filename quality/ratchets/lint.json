@@ -1,0 +1,4 @@
+{
+  "$comment": "Count of biome-ignore suppression comments in src, tests and scripts, measured by scripts/scorecard.ts on 2026-11-14. It may only go down; raising it needs an ADR and the owner.",
+  "suppressions": 5
+}

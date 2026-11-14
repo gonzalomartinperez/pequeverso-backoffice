@@ -1,0 +1,4 @@
+{
+  "$comment": "Architecture guard (scripts/check-boundaries.ts). Violations may never rise above the ratchet; the baseline is empty.",
+  "violations": 0
+}
