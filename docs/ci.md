@@ -65,6 +65,20 @@ links and resources without executing procedures or contacting services. See
 [agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
 
+## Scheduled supply-chain workflows
+
+All three call or copy the pinned `engineering-standards` v1.0.0 templates:
+
+| Workflow | When | What |
+| --- | --- | --- |
+| [deps-weekly-guard](../.github/workflows/deps-weekly-guard.yml) | Monday 10:30 ART and Dependabot PR events | At most one open Dependabot PR (older one superseded with a comment), branch kept up to date, `needs-fix` label and one tracking issue when CI is red |
+| [vuln-daily](../.github/workflows/vuln-daily.yml) | Daily 07:00 ART | Records findings silently in one pinned `vuln` tracking issue; only the Monday run posts the weekly summary that notifies (OD-75) |
+| [scorecard](../.github/workflows/scorecard.yml) | Weekly and on pushes to `main` | OpenSSF Scorecard with SARIF upload; the first run is the baseline |
+
+GitHub runs scheduled and manually dispatched workflows only from the default branch (`main`), so
+these start when `develop` is promoted (M7); the guard's pull-request trigger works on `develop`
+now. CodeQL uses the repository's default setup (no workflow file), an owner setting.
+
 ## Node LTS trial
 
 [Node LTS trial](../.github/workflows/node-matrix.yml) runs type checking, unit tests and the
