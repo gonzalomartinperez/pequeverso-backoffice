@@ -19,15 +19,15 @@
       "bestPractices": 1,
       "tbtMs": 31,
       "lcpMs": 621,
-      "cls": null
+      "cls": 0
     },
     "signin_desktop": {
       "performance": 1.0,
       "accessibility": 1,
       "bestPractices": 1,
       "tbtMs": 0,
-      "lcpMs": null,
-      "cls": null
+      "lcpMs": 164,
+      "cls": 0
     },
     "dashboard_mobile": {
       "performance": 0.98,
@@ -35,15 +35,15 @@
       "bestPractices": 1,
       "tbtMs": 178,
       "lcpMs": 773,
-      "cls": null
+      "cls": 0
     },
     "dashboard_desktop": {
       "performance": 1.0,
       "accessibility": 1,
       "bestPractices": 1,
       "tbtMs": 0,
-      "lcpMs": null,
-      "cls": null
+      "lcpMs": 212,
+      "cls": 0
     }
   },
   "auditReference": {
