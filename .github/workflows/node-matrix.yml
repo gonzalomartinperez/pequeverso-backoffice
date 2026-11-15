@@ -1,6 +1,6 @@
 name: Node LTS trial
 
-# Two-week Node 24 / Node 26 dual run (docs/adr/008-node-26-trial.md), started 2026-11-14,
+# Two-week Node 24 / Node 26 dual run (docs/decisions/0008-node-26-trial.md), started 2026-11-14,
 # decision due 2026-11-28. No schedule (OD-75: no daily scheduled failure e-mails; a red PR or push
 # run still notifies per the Actions e-mail setting). Advisory only: not a required context and not
 # part of Required checks. The Node 24 leg equals .nvmrc (unit test).

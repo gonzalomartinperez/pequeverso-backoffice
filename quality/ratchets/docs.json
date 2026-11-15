@@ -1,0 +1,4 @@
+{
+  "$comment": "Missing local documentation link targets (npm run docs:check). The baseline is zero.",
+  "missingLinks": 0
+}

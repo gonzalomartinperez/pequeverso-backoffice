@@ -11,7 +11,7 @@ This repository is public; the application it builds is a **private** backoffice
   domain-based access. Only `OWNER_EMAIL` and invited, provider-verified e-mails get an account;
   invitations are single-use, expire after 48 h and are stored as SHA-256 digests. Roles
   (`owner`, `viewer`) are re-read on every request; removing an account deletes its sessions.
-  See [authentication.md](authentication.md).
+  See [authentication.md](explanation/authentication.md).
 - **Sessions:** server-side in PostgreSQL; HttpOnly, SameSite=Lax, host-only cookies (`Secure` on
   https). Nothing about sessions or credentials is stored in `localStorage`. Origin checks protect
   state-changing auth requests; server actions are Origin-checked by Next.js and re-check the role.

@@ -1,0 +1,86 @@
+# Nightly quality scorecard and API contract drift watch. Neither job is a ci-gate prerequisite.
+# `schedule` runs only from the default branch (main, frozen until M7): the pull_request trigger,
+# limited to code, tests, contracts and ratchet files, catches a ratchet regression or loosening on
+# the PR itself until then.
+name: quality-nightly
+
+on:
+  schedule:
+    - cron: "15 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/quality-nightly.yml"
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "contracts/**"
+      - "quality/**"
+
+permissions: {}
+
+concurrency:
+  group: quality-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scorecard:
+    name: Scorecard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      # Empty outside pull requests, so the base comparison only runs on PRs.
+      BASE_REF: ${{ github.base_ref }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Full history: the PR base branch must resolve for the loosening check.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      # Coverage, bundle and Lighthouse stay named gaps here until their artifacts are wired in.
+      - name: Write scorecard.json (fails on a ratchet regression)
+        run: node scripts/scorecard.ts --out scorecard.json ${BASE_REF:+--base "origin/$BASE_REF"}
+      - name: Summary
+        if: always()
+        run: |
+          # shellcheck disable=SC2016 # the single-quoted JavaScript uses template literals on purpose
+          if [ -s scorecard.json ] && node -e 'JSON.parse(require("fs").readFileSync("scorecard.json","utf8"))' 2>/dev/null; then
+            node -e 'const c=require("./scorecard.json");console.log("### Scorecard\n");for(const [k,a] of Object.entries(c.axes))console.log(`- ${k} ${a.name}: ${a.status}`);console.log("\n"+JSON.stringify(c.summary))' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Scorecard" >> "$GITHUB_STEP_SUMMARY"
+            echo "scorecard.json is missing or invalid: the scorecard step failed before writing it." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: scorecard-${{ github.sha }}
+          path: scorecard.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  contract-drift:
+    name: Contract drift
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Compare the API develop contracts with the pins (read-only, token-free)
+        run: node scripts/contract-drift.ts --summary drift.md
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f drift.md ]; then cat drift.md >> "$GITHUB_STEP_SUMMARY"; fi

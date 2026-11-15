@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Schema of scorecard.json (scripts/scorecard.ts). Validated by the dependency-free subset validator in that script; every axis of docs/master-plan/scorecard.md must be present, each metric is measured or a named gap.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generatedAt", "commit", "axes", "summary"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T"
+    },
+    "commit": {
+      "type": ["string", "null"]
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6",
+        "D7",
+        "D8",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "O1",
+        "O2",
+        "O3",
+        "O4",
+        "O5"
+      ],
+      "properties": {
+        "D1": {
+          "$ref": "#/$defs/axis"
+        },
+        "D2": {
+          "$ref": "#/$defs/axis"
+        },
+        "D3": {
+          "$ref": "#/$defs/axis"
+        },
+        "D4": {
+          "$ref": "#/$defs/axis"
+        },
+        "D5": {
+          "$ref": "#/$defs/axis"
+        },
+        "D6": {
+          "$ref": "#/$defs/axis"
+        },
+        "D7": {
+          "$ref": "#/$defs/axis"
+        },
+        "D8": {
+          "$ref": "#/$defs/axis"
+        },
+        "P1": {
+          "$ref": "#/$defs/axis"
+        },
+        "P2": {
+          "$ref": "#/$defs/axis"
+        },
+        "P3": {
+          "$ref": "#/$defs/axis"
+        },
+        "P4": {
+          "$ref": "#/$defs/axis"
+        },
+        "P5": {
+          "$ref": "#/$defs/axis"
+        },
+        "P6": {
+          "$ref": "#/$defs/axis"
+        },
+        "O1": {
+          "$ref": "#/$defs/axis"
+        },
+        "O2": {
+          "$ref": "#/$defs/axis"
+        },
+        "O3": {
+          "$ref": "#/$defs/axis"
+        },
+        "O4": {
+          "$ref": "#/$defs/axis"
+        },
+        "O5": {
+          "$ref": "#/$defs/axis"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regressions", "warnings", "gaps", "measured"],
+      "properties": {
+        "regressions": {
+          "type": "integer"
+        },
+        "warnings": {
+          "type": "integer"
+        },
+        "gaps": {
+          "type": "integer"
+        },
+        "measured": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "axis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "metrics"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "enum": ["pass", "warn", "fail", "gap"]
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "status", "value", "ratchet", "better"],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "enum": ["measured", "pass", "warn", "fail"]
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "ratchet": {
+                    "type": ["number", "null"]
+                  },
+                  "better": {
+                    "enum": ["lower", "higher"]
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "status", "reason", "plannedIn"],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "const": "gap"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "plannedIn": {
+                    "type": "string",
+                    "pattern": "^M[0-9]+\\.[0-9]+$"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

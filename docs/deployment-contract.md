@@ -30,7 +30,7 @@ on both exact local fixtures. Production/containerd/registry size measures are d
 
 ## PostgreSQL (required)
 
-Use the [PostgreSQL runtime and recovery worksheet](postgresql-runtime.md) for historical
+Use the [PostgreSQL runtime and recovery worksheet](how-to/postgres-runtime-and-restore.md) for historical
 application-owned artifact tests, PostgreSQL18 persistence, bounded recipes and isolated restore
 drills. The owner-selected production topology target is one project engine and two logical databases below. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
 
@@ -159,7 +159,7 @@ rebuild, to change them). Secret names proposed for vps-ops: `pequeverso-backoff
 
 ## Optional operational observability
 
-See [observability](observability.md) for the full server-only variables and privacy/bounds.
+See [observability](reference/observability.md) for the full server-only variables and privacy/bounds.
 `OPS_TELEMETRY_ENABLED=false` preserves legacy summary-only operation. Private telemetry1.0
 is independent from unchanged summary1.2 and the public chat contract. `OBSERVABILITY_METRICS_ENABLED=false`
 keeps `/internal/v1/ops/metrics` absent; enabling it requires a new, distinct
@@ -248,12 +248,12 @@ do not attribute the old sample to a rebuilt artifact.
 
 Image built and run with `--read-only --tmpfs … --cap-drop ALL --security-opt no-new-privileges`
 as UID65532 for the current candidate (UID1000 was historical): migrations applied, health and headers checked. Browser suite against the production
-build with real PostgreSQL and a fake IdP: [verification.md](verification.md#backoffice).
+build with real PostgreSQL and a fake IdP: [verification.md](explanation/history/verification-2026-10.md#backoffice).
 Not verified: real Google/GitHub OAuth, TLS/cookie prefixes through the proxy, the real API ops
 endpoint over the private network.
 
 ## Shared runtime baseline
 
-See [runtime-baseline.md](runtime-baseline.md) for the2026-10-13 shared cohort and image
+See [runtime-baseline.md](reference/runtime-baseline.md) for the2026-10-13 shared cohort and image
 acceptance. Actual committed locks and Dockerfiles supersede historical version/size samples;
 no production publication, deployment or live OAuth/provider check is implied.

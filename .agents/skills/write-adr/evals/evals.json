@@ -6,7 +6,7 @@
       "id": "write-adr-1",
       "prompt": "Write an ADR recording that the backoffice stays on Node 24",
       "assertions": [
-        "uses the next free number in docs/adr/ with the NNN-title.md pattern",
+        "uses the next free number in docs/decisions/ with the NNNN-title.md pattern",
         "includes context, options, decision outcome, consequences and Confirmation",
         "links related ADRs",
         "runs npm run docs:check"
