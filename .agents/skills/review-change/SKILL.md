@@ -23,8 +23,8 @@ the author's behalf without the owner's explicit authorization for that action.
 ## Procedure
 
 1. Get the diff (`git diff origin/develop...HEAD` or `gh pr diff <n>`) and the PR description;
-   ignore the author's reasoning. Read the ADRs on [auth](../../../docs/adr/005-backoffice-auth-better-auth.md),
-   [IAM](../../../docs/adr/006-iam-in-postgresql.md) and [ops data](../../../docs/adr/007-ops-data-source.md).
+   ignore the author's reasoning. Read the ADRs on [auth](../../../docs/decisions/0005-backoffice-auth-better-auth.md),
+   [IAM](../../../docs/decisions/0006-iam-in-postgresql.md) and [ops data](../../../docs/decisions/0007-ops-data-source.md).
 2. Flag admission without a verified e-mail or presented invitation, implicit account linking,
    missing server-side role checks (`requireActor` on every page and server action), mutations
    without transactional owner re-checks, secrets or sessions exposed to the browser or logs,

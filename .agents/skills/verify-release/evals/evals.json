@@ -19,7 +19,7 @@
         "runs npm run check, npm run test:db and npm run test:browser in order",
         "uses ports 3241, 8237 and 8238 for the browser suite",
         "reviews the screenshots in docs/verification/backoffice/",
-        "records results in docs/verification.md or the report"
+        "records results in docs/explanation/history/verification-2026-10.md or the report"
       ]
     },
     {

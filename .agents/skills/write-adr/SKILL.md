@@ -19,11 +19,10 @@ metadata:
 
 ## Procedure
 
-1. Take the next free number in `docs/adr/` (files are `NNN-title.md`; the master plan lists
-   planned ADR topics in `docs/master-plan/target-state.md` section 6 and moves the folder to
-   `docs/decisions/` in a later task: use the location and numbering that exist on `develop`).
-   Read the ADRs the decision relates to: [auth](../../../docs/adr/005-backoffice-auth-better-auth.md),
-   [IAM](../../../docs/adr/006-iam-in-postgresql.md), [ops data](../../../docs/adr/007-ops-data-source.md).
+1. Take the next free number in `docs/decisions/` (files are `NNNN-title.md`; the master plan lists
+   planned ADR topics in `docs/master-plan/target-state.md` section 6).
+   Read the ADRs the decision relates to: [auth](../../../docs/decisions/0005-backoffice-auth-better-auth.md),
+   [IAM](../../../docs/decisions/0006-iam-in-postgresql.md), [ops data](../../../docs/decisions/0007-ops-data-source.md).
 2. Write the ADR in MADR 4: title, status and date, context and problem, decision drivers,
    considered options with pros and cons, decision outcome, consequences, and **Confirmation**
    (how compliance is checked: a test, a lint rule, `scripts/check-boundaries.ts`, a CI job).

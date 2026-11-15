@@ -1,7 +1,7 @@
 # Agent harness
 
 Committed configuration for Claude Code and Codex, from the engineering-standards harness
-v1.0.0 and tuned to this repository. Skills are described in [agent-skills.md](agent-skills.md).
+v1.0.0 and tuned to this repository. Skills are described in [agent-skills.md](reference/agent-skills.md).
 
 | File | Purpose |
 |---|---|

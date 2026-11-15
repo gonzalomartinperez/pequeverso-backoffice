@@ -63,7 +63,7 @@ npm run test:browser
 ```
 
 Database and browser verification require their documented isolated fixtures; see
-[verification.md](verification.md). Container smoke remains in the hosted container job. A
+[verification.md](explanation/history/verification-2026-10.md). Container smoke remains in the hosted container job. A
 source-only review or local policy-test pass does not establish database, browser or container
 success. Hosted checks must pass on the exact proposed head and again after integration before
 reporting the new workflow verified.
@@ -76,7 +76,7 @@ integration suites under one `NODE_V8_COVERAGE` directory, merged by `c8` into
 needs `DATABASE_URL`). `npm test` stays fast and unchanged. The `code` profile adds the `database`
 job, so every code PR (including `src/shared/**` and `tests/unit/**`) runs the gate. On push and
 merge-queue runs only the floors and the ratchet run (no base needed); on pull requests two
-dependency-free scripts then gate the result ([decision](adr/009-coverage-c8-merged.md)):
+dependency-free scripts then gate the result ([decision](decisions/0009-coverage-c8-merged.md)):
 
 - `scripts/check-coverage.ts`: branch floor 80% whole repo; branch coverage of
   `src/features/auth/**` and `src/server/auth.ts` has the plan target 90% (reported) and an interim
@@ -105,7 +105,7 @@ The [skill catalog validator](../scripts/check-skills.ts) runs in the existing s
 file/docs/skills step. Its [filesystem negative cases](../tests/unit/skills.test.ts) run
 through the existing `npm test` unit glob before that step. They check actual directory
 links and resources without executing procedures or contacting services. See
-[agent skills](agent-skills.md) for the canonical catalog and limits. No new job,
+[agent skills](reference/agent-skills.md) for the canonical catalog and limits. No new job,
 optional gate, permission or status context is introduced.
 
 ## Property and fuzz tests
@@ -239,7 +239,7 @@ redesign ships as 2.0.0 (`Release-As: 2.0.0`, PVB-D13) at M7.
 
 [Node LTS trial](../.github/workflows/node-matrix.yml) runs type checking, unit tests and the
 production build on Node 24 and Node 26 for pull requests into and pushes to `develop` during the
-two-week trial of [ADR 008](adr/008-node-26-trial.md). It is advisory: not a required context and
+two-week trial of [ADR 008](decisions/0008-node-26-trial.md). It is advisory: not a required context and
 not part of **Required checks**.
 
 ## Dependencies and check-name maintenance

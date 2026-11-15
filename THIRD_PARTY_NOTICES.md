@@ -29,7 +29,7 @@ Neither family declares a Reserved Font Name. Files are byte-identical to the st
 ## Adapted code (MIT, © 2026 Gonzalo Martin Perez)
 
 - Backoffice access design choices were reviewed against `portfolio-assistant-backoffice`
-  (`develop` `f29b6cd`, read-only); no code was copied (see `docs/coordination.md`).
+  (`develop` `f29b6cd`, read-only); no code was copied (see `docs/explanation/history/coordination-2026-10.md`).
 - UI primitives in `src/shared/ui/` are owned adaptations of shadcn/ui (MIT,
   https://github.com/shadcn-ui/ui); the `cn()` helper follows shadcn/ui.
 
