@@ -67,9 +67,9 @@
   --pv-navy-night: oklch(0.215 0.07 256); /* dark-theme ground, darker than the footer band */
   --pv-teal: oklch(0.5324 0.0917 190.84); /* #007d79 · icons */
   --pv-teal-text: oklch(0.4352 0.0749 190.98); /* #005e5b · links, 7.6:1 on white */
-  --pv-coral: oklch(0.5623 0.1722 28.49); /* #c64035 · purchase and price only */
-  --pv-coral-hover: oklch(0.4929 0.1566 28.11); /* #a83129 */
-  --pv-coral-soft: oklch(0.72 0.14 30); /* coral text on navy (dark theme price) */
+  --pv-coral: oklch(0.5623 0.1722 28.49); /* #c64035 · storefront purchase and price */
+  --pv-coral-hover: oklch(0.4929 0.1566 28.11); /* #a83129 · also backoffice danger text (light) */
+  --pv-coral-soft: oklch(0.72 0.14 30); /* coral text on navy; also danger text (dark) */
   --pv-gold: oklch(0.8908 0.1645 93.89); /* #ffd840 · accents, never text on light */
   --pv-turquoise: oklch(0.8521 0.0956 187.2); /* #7fe3d9 · accent on navy only */
   --pv-cream: oklch(0.9868 0.0118 79.79); /* #fffaf2 */
