@@ -1,6 +1,6 @@
 # Pequeverso IAM database artifact only; infrastructure is owned by vps-ops.
 # Official PostgreSQL 18.6 minor release, linux/amd64 manifest verified 2026-10-12.
-FROM postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+FROM postgres:18.6-trixie@sha256:e3d24f6906d0760bf4da0dae872415391ededefad23fd471c47dc53b0ddf3c42
 USER root
 # Signed Debian security packages; never disable repository/signature validation.
 RUN apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update \
@@ -10,7 +10,7 @@ RUN apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update \
         libperl5.40=5.40.1-6+deb13u1 perl=5.40.1-6+deb13u1 \
         perl-base=5.40.1-6+deb13u1 perl-modules-5.40=5.40.1-6+deb13u1 \
         libssl3t64=3.5.7-1~deb13u3 openssl=3.5.7-1~deb13u3 \
-        tzdata=2026c-0+deb13u1 \
+        tzdata=2026f-0+deb13u1 \
         apt=3.0.4 libapt-pkg7.0=3.0.4 \
         zlib1g=1:1.3.dfsg+really1.3.1-1+deb13u1 \
     && rm -rf /var/lib/apt/lists/* /usr/local/bin/gosu \

@@ -26,6 +26,16 @@ updates:
       # Node typings follow the Node LTS line in .nvmrc (24.x).
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
+      # OpenTelemetry JS 3.x (sdk-trace-base -> sdk-trace, exporter 0.300+, api 1.10) is a planned
+      # migration: sdk-trace-base 2.x only accepts api <1.10, so a weekly bump breaks npm ci.
+      - dependency-name: "@opentelemetry/api"
+        versions: [">=1.10.0"]
+      - dependency-name: "@opentelemetry/exporter-trace-otlp-http"
+        versions: [">=0.300.0"]
+      - dependency-name: "@opentelemetry/resources"
+        update-types: [version-update:semver-major]
+      - dependency-name: "@opentelemetry/sdk-trace-base"
+        update-types: [version-update:semver-major]
   - package-ecosystem: npm
     # Pinned Lighthouse CLI for .github/workflows/lighthouse.yml (not an application dependency).
     directory: /quality/lighthouse
@@ -35,6 +45,11 @@ updates:
       default-days: 7
       semver-major-days: 14
       semver-patch-days: 3
+    ignore:
+      # Lighthouse 13.6.0 pulls @sentry/bundler-plugins -> sentry (FSL-1.1), which dependency-review
+      # rejects; accepting that licence is an owner decision.
+      - dependency-name: lighthouse
+        versions: [">=13.6.0"]
   - package-ecosystem: github-actions
     directory: /
     multi-ecosystem-group: weekly
