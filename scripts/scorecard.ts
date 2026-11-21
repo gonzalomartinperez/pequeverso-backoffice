@@ -71,7 +71,12 @@ const g = (axis: AxisId, id: string, reason: string, plannedIn: string): Gap => 
 /** Named gaps: planned measurements with no producer yet. Each leaves this list when it lands. */
 export const GAPS: Gap[] = [
   g("D2", "complexity.max", "no complexity metric or ratchet yet", "M4.8"),
-  g("D3", "mutation.score", "Stryker mutation run not wired", "M2.2"),
+  g(
+    "D3",
+    "mutation.score",
+    "nightly mutation report is not fed to the scorecard yet (schedule active from main at M7)",
+    "M6.3",
+  ),
   g("D3", "flake.count", "no flake detector data", "M2.5"),
   g("D4", "ci-duration.p50", "no CI duration report", "M6.3"),
   g("D7", "observability.checks", "request-id propagation and SLO tests do not exist", "M4.7"),
@@ -449,7 +454,16 @@ export function loosening(name: string, base: Json, current: Json): string[] {
       );
   if (name === "coverage")
     for (const k of Object.keys(base)) walk(base[k], current[k], k, k, "higher");
-  else if (name === "bundle" || name === "lighthouse")
+  else if (name === "mutation") {
+    const scoreValue = (values: unknown) => {
+      const entry = Array.isArray(values)
+        ? values.find((value: unknown) => isObject(value) && value.key === "score")
+        : undefined;
+      return isObject(entry) ? entry.value : undefined;
+    };
+    walk(scoreValue(base.values), scoreValue(current.values), "values.score", "score", "higher");
+    walk(base.files, current.files, "files", "files", "higher");
+  } else if (name === "bundle" || name === "lighthouse")
     for (const [k, v] of Object.entries(isObject(base.baseline) ? base.baseline : {}))
       walk(
         v,

@@ -4,6 +4,7 @@
  *
  *   node scripts/mutation-gate.ts --files a.ts,b.ts [--report <json>] [--ratchet <json>]
  *       fails when a listed file scores below its per-file baseline in quality/ratchets/mutation.json;
+ *       a baselined file must have countable mutants;
  *       a file with no baseline must reach BREAK (70)
  *   node scripts/mutation-gate.ts --global
  *       fails when the whole report scores below the global `score` baseline
@@ -37,7 +38,8 @@ export function readBaselines(ratchet: unknown): Baselines {
     files?: Record<string, number>;
   };
   const global = data.values?.find((value) => value.key === "score")?.value;
-  if (typeof global !== "number") throw new Error('quality/ratchets/mutation.json has no "score" value');
+  if (typeof global !== "number")
+    throw new Error('quality/ratchets/mutation.json has no "score" value');
   return { score: global, files: data.files ?? {} };
 }
 
@@ -54,9 +56,13 @@ export function checkFiles(
       problems.push(`${file}: not in the mutation report`);
       continue;
     }
+    const baseline = Object.hasOwn(baselines.files, file) ? baselines.files[file] : undefined;
     const value = score(entry.mutants);
-    if (value === undefined) continue;
-    const baseline = baselines.files[file];
+    if (value === undefined) {
+      if (baseline !== undefined)
+        problems.push(`${file}: no countable mutants for its per-file baseline`);
+      continue;
+    }
     const floor = baseline ?? BREAK;
     if (value + TOLERANCE < floor) {
       const why =
@@ -77,21 +83,38 @@ export function checkGlobal(report: Report, baselines: Baselines): string[] {
 
 function option(args: readonly string[], name: string, fallback: string): string {
   const at = args.indexOf(name);
-  return at >= 0 ? (args[at + 1] ?? fallback) : fallback;
+  const value = at >= 0 ? args[at + 1] : undefined;
+  return value === undefined || value.startsWith("--") ? fallback : value;
+}
+
+export function gateTarget(
+  args: readonly string[],
+): { global: boolean; files: string[] } | undefined {
+  const global = args.includes("--global");
+  const files = option(args, "--files", "")
+    .split(",")
+    .map((file) => file.trim())
+    .filter(Boolean);
+  return global || files.length > 0 ? { global, files } : undefined;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const args = process.argv.slice(2);
+  const target = gateTarget(args);
+  if (target === undefined) {
+    console.error(
+      "usage: mutation-gate.ts (--global | --files a.ts,b.ts) [--report <json>] [--ratchet <json>]",
+    );
+    process.exit(2);
+  }
   const report = JSON.parse(
     readFileSync(option(args, "--report", "reports/mutation/mutation.json"), "utf8"),
   ) as Report;
   const baselines = readBaselines(
     JSON.parse(readFileSync(option(args, "--ratchet", "quality/ratchets/mutation.json"), "utf8")),
   );
-  const files = option(args, "--files", "").split(",").filter(Boolean);
-  const problems = args.includes("--global")
-    ? checkGlobal(report, baselines)
-    : checkFiles(report, baselines, files);
+  const { global, files } = target;
+  const problems = global ? checkGlobal(report, baselines) : checkFiles(report, baselines, files);
   for (const file of files) {
     const entry = report.files[file];
     const value = entry && score(entry.mutants);

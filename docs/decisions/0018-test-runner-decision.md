@@ -28,19 +28,23 @@ with `@stryker-mutator/tap-runner`. Both are exact-pinned dev dependencies.
 
 - Scope (`stryker.config.json`): auth domain and application, the adapter validators, operations
   domain, CSP, configuration parsing and fixture safety. These are pure policy and validation
-  modules, never UI glue. The server auth guard (`src/server/auth.ts`) is left out: no unit test
+  modules, never UI glue. The type-only modules `src/features/auth/application/ports.ts` and
+  `src/features/operations/domain/telemetry.ts` are excluded because they produce zero mutants.
+  The server auth guard (`src/server/auth.ts`) is left out: no unit test
   reaches it (0 of 89 mutants detected in the baseline run), and the authorization matrix and
   browser suites cover it instead. The tests are the unit suites that cover them,
   with fast-check fixed at `FC_NUM_RUNS=25` and seed `20261114` so runs are reproducible.
 - No checker plugin. `tsconfig.json` is ignored in the sandbox, and the `.claude`, `.agents` and
   `.codex` symlinked directories are ignored too.
-- Pull requests: the `mutation` job of `ci.yml` is selected by the `mutation` profile. It runs
-  only for the changed scoped files (at most 8; `scripts/mutation-scope.ts`), with Stryker
-  `break` 0. `scripts/mutation-gate.ts` then fails a file that scores below its per-file
-  baseline in `quality/ratchets/mutation.json`. A file with no baseline must reach 70.
+- Pull requests: the `mutation` job of `ci.yml` is selected by the `mutation` profile. Stryker
+  runs on the changed scoped files when up to eight change and runs the full scope when more
+  than eight change (`scripts/mutation-scope.ts`). With Stryker's `break` set to 0,
+  `scripts/mutation-gate.ts` checks every changed scoped file. A baselined file must have
+  countable mutants and meet its floor in `quality/ratchets/mutation.json`. A scored file
+  without a baseline must reach 70.
 - Nightly: `mutation-nightly.yml` runs the full scope and fails when the global score falls
   below the recorded baseline. GitHub runs `schedule` only from `main`, so the schedule
-  activates at M7. Until then, PRs that touch the tooling prove it.
+  activates at M7. PRs that change `mutation-nightly.yml` also run it.
 - Targets: break 70 and the permission module 85. The ratchet starts at the measured score,
   never lower, and is raised by hand until it reaches the targets.
 
@@ -50,7 +54,7 @@ standards lead records the divergence (`portfolio-backoffice` on Vitest).
 
 ## Consequences
 
-- No new runtime dependency. The 164 added lockfile packages carry only allow-listed licences
+- No new runtime dependency. The 162 added lockfile packages carry only allow-listed licences
   (`docs/dependencies.md`).
 - Type-invalid mutants are not filtered before running. Re-enable the checker when Stryker
   supports TypeScript 7, either through TypeScript 7.1's API or a TypeScript 6 alias given to
@@ -62,4 +66,5 @@ standards lead records the divergence (`portfolio-backoffice` on Vitest).
 ## Confirmation
 
 `tests/unit/mutation-scope.test.ts` covers the PR scope selection, the gate arithmetic and the
-ratchet file. The `mutation` CI job runs on every PR that touches a scoped module.
+ratchet file. The `mutation` CI job runs on PRs that touch a scoped module, except same-repository
+release PRs from `develop` to `main`.

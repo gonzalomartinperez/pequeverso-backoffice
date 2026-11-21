@@ -124,7 +124,7 @@ auth, database schemas, API contracts or browser versions.
 ## Development-only mutation testing (2026-11-14)
 
 `@stryker-mutator/core` and `@stryker-mutator/tap-runner` are pinned exactly at 10.1.1 as dev
-dependencies for `npm run test:mutation` ([ADR 0018](decisions/0018-test-runner-decision.md)). The 164
+dependencies for `npm run test:mutation` ([ADR 0018](decisions/0018-test-runner-decision.md)). The 162
 packages added to the lockfile carry MIT (136), Apache-2.0 (14), ISC (7), BSD-3-Clause (3) and
 BlueOak-1.0.0 (2) licences, all on the dependency-review allow-list; none has an install script
 (`--ignore-scripts` is used in CI) and none reaches the production image. Exit cost: delete the

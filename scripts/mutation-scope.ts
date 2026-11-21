@@ -1,12 +1,11 @@
 /**
- * Which files the pull-request mutation run covers (ADR-0018). Prints the files to mutate as one
- * comma-separated list (what `stryker run --mutate` takes) and the reason on stderr; prints nothing
- * when there is nothing to mutate, which the job treats as "skip".
+ * Which files the pull-request mutation gate checks (ADR-0018). Prints a comma-separated list of
+ * files and the reason on stderr. With --github-output, prints files= and full= output lines.
  *
  *   node scripts/mutation-scope.ts <base-ref>   changed files = git diff <base-ref>...HEAD
  *   node scripts/mutation-scope.ts --files a b  explicit file list (tests)
  *
- * Rules: scoped sources that changed; more than MAX_FILES of them are left to the weekly full run;
+ * Rules: scoped sources that changed; more than MAX_FILES of them trigger a full mutation run;
  * a change to the mutation tooling alone mutates the smallest scoped file as a smoke run.
  */
 
@@ -25,12 +24,17 @@ export const TOOLING_FILES: readonly string[] = [
   "quality/ratchets/mutation.json",
 ];
 
-export type Selection = { files: string[]; reason: string };
+export type Selection = { files: string[]; full: boolean; reason: string };
 
 /** Repository-relative files that fall inside the mutation scope; test files never do. */
 export function inScope(files: readonly string[], globs: readonly string[]): string[] {
+  const includes = globs.filter((glob) => !glob.startsWith("!"));
+  const excludes = globs.filter((glob) => glob.startsWith("!")).map((glob) => glob.slice(1));
   return files.filter(
-    (file) => !file.endsWith(".test.ts") && globs.some((glob) => matchesGlob(file, glob)),
+    (file) =>
+      !file.endsWith(".test.ts") &&
+      includes.some((glob) => matchesGlob(file, glob)) &&
+      !excludes.some((glob) => matchesGlob(file, glob)),
   );
 }
 
@@ -46,7 +50,7 @@ export function mutateGlobs(configPath = "stryker.config.json"): string[] {
 /** The smallest scoped source by size, the cheapest file for a smoke run. */
 export function smallestScoped(globs: readonly string[]): string {
   const sources = inScope(
-    globs.flatMap((glob) => globSync(glob)),
+    globs.filter((glob) => !glob.startsWith("!")).flatMap((glob) => globSync(glob)),
     globs,
   );
   const sized = sources.map((file) => ({ file, size: statSync(file).size }));
@@ -64,19 +68,21 @@ export function select(
   const scoped = inScope(changed, globs);
   if (scoped.length > MAX_FILES) {
     return {
-      files: [],
-      reason: `${scoped.length} scoped files changed (more than ${MAX_FILES}): left to the weekly full run`,
+      files: scoped,
+      full: true,
+      reason: `${scoped.length} scoped files changed (more than ${MAX_FILES}): running the full scope`,
     };
   }
   if (scoped.length > 0)
-    return { files: scoped, reason: `${scoped.length} scoped file(s) changed` };
+    return { files: scoped, full: false, reason: `${scoped.length} scoped file(s) changed` };
   if (changed.some((file) => TOOLING_FILES.includes(file))) {
     return {
       files: [smallest()],
+      full: false,
       reason: "mutation tooling changed: smoke run on the smallest scoped file",
     };
   }
-  return { files: [], reason: "no scoped module or mutation tooling changed" };
+  return { files: [], full: false, reason: "no scoped module or mutation tooling changed" };
 }
 
 function changedFiles(baseRef: string): string[] {
@@ -87,12 +93,15 @@ function changedFiles(baseRef: string): string[] {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  const [first, ...rest] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const githubOutput = args[0] === "--github-output";
+  const [first, ...rest] = githubOutput ? args.slice(1) : args;
   if (first === undefined) {
-    throw new Error("usage: mutation-scope.ts <base-ref> | --files <file>...");
+    throw new Error("usage: mutation-scope.ts [--github-output] (<base-ref> | --files <file>...)");
   }
   const files = first === "--files" ? rest : changedFiles(first);
   const selection = select(files, mutateGlobs());
   process.stderr.write(`${selection.reason}\n`);
-  process.stdout.write(selection.files.join(","));
+  const list = selection.files.join(",");
+  process.stdout.write(githubOutput ? `files=${list}\nfull=${selection.full}\n` : list);
 }

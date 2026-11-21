@@ -9,5 +9,5 @@
   ],
   "ignore": ["tests/authz/fixtures/**"],
   "project": ["src/**/*.{ts,tsx,css}", "scripts/**/*.ts", "tests/**/*.ts", "*.config.ts"],
-  "ignoreDependencies": ["c8", "@stryker-mutator/core", "@stryker-mutator/tap-runner"]
+  "ignoreDependencies": ["c8"]
 }

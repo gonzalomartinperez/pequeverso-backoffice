@@ -132,14 +132,14 @@ jobs:
         run: npm run knip
 
   mutation:
-    # Incremental mutation run on the changed scoped modules (ADR 0018). Stryker does not break
+    # Mutation run on changed scoped modules, or the full scope for larger PRs (ADR 0018). Stryker does not break
     # (thresholds.break 0 in a temporary config); scripts/mutation-gate.ts decides per file against
     # quality/ratchets/mutation.json. Release PRs and non-PR events skip: the nightly full run covers them.
     name: Mutation (incremental, changed scoped modules)
     needs: [classify]
     if: contains(fromJSON(needs.classify.outputs.jobs), 'mutation')
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 60
     permissions:
       contents: read
     steps:
@@ -147,6 +147,14 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 2
+      - name: Record checked source identity
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'source_sha=%s\nworkflow_sha=%s\nrun_id=%s\npr_head_sha=%s\npr_base_sha=%s\n' \
+            "$GITHUB_SHA" "$GITHUB_WORKFLOW_SHA" "$GITHUB_RUN_ID" "$PR_HEAD_SHA" "$PR_BASE_SHA"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -157,29 +165,34 @@ jobs:
           EVENT: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
         run: |-
           set -euo pipefail
-          files=""
           if [[ "$EVENT" != "pull_request" ]]; then
             echo "Not a pull request: the nightly full run covers it."
-          elif [[ "$BASE_REF" == "main" && "$HEAD_REF" == "develop" ]]; then
+          elif [[ "$BASE_REF" == "main" && "$HEAD_REF" == "develop" && "$HEAD_REPOSITORY" == "$GITHUB_REPOSITORY" ]]; then
             echo "Release PR: the nightly full run covers it."
           else
             # The checkout is the merge ref: HEAD^1 is the base, so the diff is this PR's change.
-            files=$(node scripts/mutation-scope.ts HEAD^1)
+            selection=$(node scripts/mutation-scope.ts --github-output HEAD^1)
+            printf '%s\n' "$selection" >> "$GITHUB_OUTPUT"
           fi
-          echo "files=$files" >> "$GITHUB_OUTPUT"
       - if: steps.scope.outputs.files != ''
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Mutation tests on the changed modules (the gate decides, not Stryker)
+      - name: Mutation tests (the per-file gate decides)
         if: steps.scope.outputs.files != ''
-        timeout-minutes: 8
+        timeout-minutes: ${{ steps.scope.outputs.full == 'true' && 50 || 8 }}
         env:
           FILES: ${{ steps.scope.outputs.files }}
+          FULL: ${{ steps.scope.outputs.full }}
         run: |-
           set -euo pipefail
           node -e 'const c = JSON.parse(fs.readFileSync("stryker.config.json", "utf8")); c.thresholds.break = 0; c.incremental = false; fs.writeFileSync("stryker.pr.config.json", JSON.stringify(c));'
-          npm run test:mutation -- stryker.pr.config.json --mutate "$FILES"
+          args=(stryker.pr.config.json)
+          if [[ "$FULL" != "true" ]]; then
+            args+=(--mutate "$FILES")
+          fi
+          npm run test:mutation -- "${args[@]}"
       - name: Per-file baseline gate (quality/ratchets/mutation.json)
         if: steps.scope.outputs.files != ''
         env:
@@ -470,7 +483,8 @@ jobs:
   ci-gate:
     name: ci-gate
     if: always()
-    needs: [classify, security, secrets, docs, static, mutation, build, database, container, browser]
+    needs:
+      [classify, security, secrets, docs, static, mutation, build, database, container, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}

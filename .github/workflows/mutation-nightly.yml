@@ -1,7 +1,7 @@
 # Nightly full mutation run on the scoped modules (ADR 0018, docs/master-plan/testing.md section 1).
 # NOT a ci-gate prerequisite: it publishes the report and fails when the global score drops below
 # quality/ratchets/mutation.json. `schedule` runs only from the default branch (main, frozen until
-# M7): the pull_request trigger, limited to this workflow and its tooling, lets the PR prove it
+# M7): the pull_request trigger, limited to this workflow file, lets the PR prove it
 # until the schedule activates. Budget: 60 minutes.
 name: mutation-nightly
 
@@ -12,9 +12,6 @@ on:
   pull_request:
     paths:
       - ".github/workflows/mutation-nightly.yml"
-      - "stryker.config.json"
-      - "scripts/mutation-*.ts"
-      - "quality/ratchets/mutation.json"
 
 permissions: {}
 

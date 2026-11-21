@@ -256,6 +256,35 @@ test("loosening a ratchet against the base revision is reported, tightening is n
   );
 });
 
+test("lowering or removing a mutation score or per-file floor is loosening", () => {
+  const base = {
+    values: [{ key: "score", value: 76.8 }],
+    files: { "a.ts": 82, "b.ts": 70 },
+  };
+  assert.deepEqual(
+    loosening("mutation", base, {
+      values: [
+        { key: "other", value: 100 },
+        { key: "score", value: 76 },
+      ],
+      files: { "a.ts": 81, "b.ts": 70 },
+    }),
+    [
+      "mutation.values.score: 76 is looser than 76.8 at the base revision",
+      "mutation.files.a.ts: 81 is looser than 82 at the base revision",
+    ],
+  );
+  assert.equal(loosening("mutation", base, { values: [], files: { "a.ts": 82 } }).length, 2);
+  assert.deepEqual(loosening("mutation", base, base), []);
+  assert.deepEqual(
+    loosening("mutation", base, {
+      values: [{ key: "score", value: 77 }],
+      files: { "a.ts": 83, "b.ts": 70, "new.ts": 70 },
+    }),
+    [],
+  );
+});
+
 test("switching to warn, moving the warn window or raising a budget is loosening", () => {
   assert.equal(loosening("lint", { suppressions: 5 }, { suppressions: 5, mode: "warn" }).length, 1);
   assert.equal(loosening("lint", { suppressions: 5, mode: "warn" }, { suppressions: 5 }).length, 0);
