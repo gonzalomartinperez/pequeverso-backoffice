@@ -128,4 +128,7 @@ dependencies for `npm run test:mutation` ([ADR 0018](decisions/0018-test-runner-
 packages added to the lockfile carry MIT (136), Apache-2.0 (14), ISC (7), BSD-3-Clause (3) and
 BlueOak-1.0.0 (2) licences, all on the dependency-review allow-list; none has an install script
 (`--ignore-scripts` is used in CI) and none reaches the production image. Exit cost: delete the
-config, two scripts and the ratchet; the tests stay on `node:test`.
+config, two scripts and the ratchet; the tests stay on `node:test`. The `qs` override (6.17.1)
+replaces the 6.15.1 that `typed-rest-client` (through `@stryker-mutator/core`) pins exactly, which
+npm audit flags (GHSA-q8mj-m7cp-5q26); dev-only, same major. Remove it when Stryker's dependency
+moves past the advisory.
