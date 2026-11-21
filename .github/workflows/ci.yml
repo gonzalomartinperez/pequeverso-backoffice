@@ -99,6 +99,18 @@ jobs:
         run: npm run security:check && npm run docs:check && npm run skills:check
       - name: Unit tests that read docs and root files (retired domain, licence, skills)
         run: node --test tests/unit/old-domain.test.ts tests/unit/license.test.ts tests/unit/skills.test.ts
+      # Same actions and pins as the engineering-standards v1.0.0 docs workflow (M3.3b).
+      - name: Markdown lint (.markdownlint-cli2.jsonc)
+        uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34 # v25.0.0
+        with:
+          globs: "**/*.md"
+      # Offline: local files and #fragments only; dated evidence records are kept as written.
+      - name: Link and anchor check (lychee, offline)
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: "--offline --no-progress --include-fragments --exclude-path docs/verification --exclude-path docs/master-plan --exclude-path docs/explanation/history --exclude-path node_modules './**/*.md'"
+          fail: true
+          jobSummary: true
 
   static:
     name: Static checks

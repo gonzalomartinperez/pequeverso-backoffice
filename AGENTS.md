@@ -106,6 +106,7 @@ an authorization. Catalog, evals and checks:
 [deployment contract](docs/deployment-contract.md) · [verification](docs/explanation/history/verification-2026-10.md) ·
 [design system](docs/design-system.md) · [decisions](docs/decisions/) · [glossary](docs/GLOSSARY.md)
 
+<!-- markdownlint-disable MD025 -- the generated Next.js block below keeps its own top-level heading -->
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

@@ -4,7 +4,7 @@
 (native assistant); this repository is now the private backoffice and serves no chat.
 
 **Context.** The API contract states that `content` is plain text that may contain `**bold**` and
-`- ` list lines, to be rendered as text and never as HTML. A Markdown library would accept far more
+list lines that start with `-`, to be rendered as text and never as HTML. A Markdown library would accept far more
 syntax than promised and would render only completed messages, causing a format jump at completion.
 
 **Decision.** `domain/rich-text.ts` parses paragraphs, bold and bullet/numbered lists into a small

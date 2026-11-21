@@ -15,7 +15,8 @@
         ".github/CODEOWNERS",
         ".codex/**",
         ".mcp.json",
-        ".worktreeinclude"
+        ".worktreeinclude",
+        ".markdownlint-cli2.jsonc"
       ],
       "adds": ["docs"],
       "budgetP50Minutes": 2,
