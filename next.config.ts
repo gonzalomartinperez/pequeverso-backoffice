@@ -15,8 +15,19 @@ const securityHeaders = [
   },
 ];
 
+/**
+ * `page.dev.tsx` files (the `/__kit` component kit) are routes only outside production builds:
+ * `next build` runs with NODE_ENV=production, so they never reach the build output or the route
+ * manifest (tests/browser/sign-in.spec.ts checks both).
+ */
+const pageExtensions =
+  process.env.NODE_ENV === "production"
+    ? ["tsx", "ts", "jsx", "js"]
+    : ["dev.tsx", "tsx", "ts", "jsx", "js"];
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  pageExtensions,
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

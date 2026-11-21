@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { axe, cspViolations, prepare, SHOTS, signIn } from "./support.ts";
 
@@ -43,4 +44,7 @@ test("the dev-only component kit does not exist in the production server", async
   const response = await page.goto("/__kit");
   expect(response?.status()).toBe(404);
   await expect(page.getByTestId("kit-marker")).toHaveCount(0);
+  // Not merely hidden: the production build has no such route at all.
+  const routes = readFileSync(".next/app-path-routes-manifest.json", "utf8");
+  expect(routes).not.toContain("__kit");
 });

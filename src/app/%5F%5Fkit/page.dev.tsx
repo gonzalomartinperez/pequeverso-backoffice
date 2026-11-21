@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * Development-only component kit (skeleton for M2: every shared component in every state).
- * The gate is the build mode, not an environment flag: `next build` and `next start` always run
- * with NODE_ENV=production, so there is no variable that could turn this page on in production.
+ * `page.dev.tsx` is a route only outside production builds (`pageExtensions` in next.config.ts),
+ * so production never contains it; the `notFound()` below is defence in depth.
  * The folder is `%5F%5Fkit` because a leading underscore would make it a private folder.
  * tests/browser/sign-in.spec.ts proves the production server answers 404.
  */

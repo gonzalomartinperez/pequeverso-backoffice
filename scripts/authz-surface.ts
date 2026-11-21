@@ -35,7 +35,7 @@ const SOURCE = /\.[cm]?[jt]sx?$/;
 const DECLARATION = /\.d\.[cm]?ts$/;
 const ROUTE = /^src\/app\/(?:.*\/)?route\.[cm]?[jt]sx?$/;
 const PAGE =
-  /^src\/app\/(?:.*\/)?(?:page|layout|template|default|not-found|error|loading|global-error|sitemap|robots|manifest|(?:opengraph-image|twitter-image|icon|apple-icon)\d*)\.[cm]?[jt]sx?$/;
+  /^src\/app\/(?:.*\/)?(?:page|layout|template|default|not-found|error|loading|global-error|sitemap|robots|manifest|(?:opengraph-image|twitter-image|icon|apple-icon)\d*)(?:\.dev)?\.[cm]?[jt]sx?$/;
 /** Edge entry (`proxy`, formerly `middleware`): it must live in src/ next to app/. */
 const PROXY = /^(?:src\/)?(?:proxy|middleware)\.[cm]?[jt]sx?$/;
 /** Routers outside src/app: Next would pick them up, the matrix does not cover them. */

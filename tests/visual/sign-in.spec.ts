@@ -9,6 +9,8 @@ async function settle(page: Page, path: string) {
   await page.clock.setFixedTime(new Date("2026-01-15T12:00:00Z"));
   await page.goto(path);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Hydrated: the provider buttons render dimmed until React enables them.
+  await expect(page.getByRole("button", { name: /^Continuar con/ }).first()).toBeEnabled();
   await page.evaluate(() => document.fonts.ready);
 }
 
