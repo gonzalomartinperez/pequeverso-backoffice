@@ -94,7 +94,13 @@ function validateCi(source: string, map: ProfileMap = profileMap): void {
   assert.equal(map.required, "ci-gate");
   assert.match(gate, /^ {4}name: ci-gate$/m);
   assert.match(gate, /^ {4}if: always\(\)$/m);
-  const needs = gate.match(/^ {4}needs:(?: |\n {6})\[([^\]]*)\]$/m)?.[1]?.split(", ") ?? [];
+  // Biome may wrap the list one job per line; compare the job names, not the layout.
+  const needs =
+    gate
+      .match(/^ {4}needs:\s*\[([^\]]*)\]$/m)?.[1]
+      ?.split(",")
+      .map((job) => job.trim())
+      .filter(Boolean) ?? [];
   assert.deepEqual(needs.sort(), ["classify", ...gated].sort(), "ci-gate must need every job");
   assert.match(
     gate,
@@ -231,7 +237,7 @@ describe("dynamic CI profile", () => {
 
   it("rejects ungated jobs, missing gate needs, renamed contexts and unpinned standards", () => {
     for (const candidate of [
-      ci.replace(/(^ {4}needs:(?: |\n {6})\[classify, )security, /m, "$1"),
+      ci.replace(/(^ {4}needs:\s*\[\s*classify,\s*)security,\s*/m, "$1"),
       ci.replace("if: contains(fromJSON(needs.classify.outputs.jobs), 'database')", "if: true"),
       ci.replace("    name: ci-gate", "    name: gate"),
       ci.replace("    name: Required checks", "    name: Checks"),
