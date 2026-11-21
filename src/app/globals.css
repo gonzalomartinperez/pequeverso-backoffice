@@ -281,6 +281,19 @@
   }
 }
 
+/* Edge cue for horizontal scroll regions (TableRegion): the "local" covers scroll with the content
+   and hide the "scroll" shadows at an edge only when nothing more lies past it. Static, no motion. */
+@utility scroll-cue {
+  background:
+    linear-gradient(to right, var(--surface-raised) 30%, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--surface-raised) 30%, transparent) right / 2.5rem 100% no-repeat local,
+    linear-gradient(to right, color-mix(in oklab, var(--ink) 16%, transparent), transparent) left / 0.75rem
+      100% no-repeat scroll,
+    linear-gradient(to left, color-mix(in oklab, var(--ink) 16%, transparent), transparent) right / 0.75rem
+      100% no-repeat scroll;
+  background-color: var(--surface-raised);
+}
+
 /* 5. Base */
 @layer base {
   html {

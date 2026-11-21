@@ -65,7 +65,7 @@ export default async function AccessPage() {
                 <tr key={member.id}>
                   <th
                     scope="row"
-                    className={`${td} text-left font-normal [overflow-wrap:anywhere]`}
+                    className={`${td} text-left font-normal [overflow-wrap:break-word]`}
                   >
                     {member.email}
                   </th>
@@ -128,7 +128,7 @@ export default async function AccessPage() {
                     <tr key={invitation.id}>
                       <th
                         scope="row"
-                        className={`${td} text-left font-normal [overflow-wrap:anywhere]`}
+                        className={`${td} text-left font-normal [overflow-wrap:break-word]`}
                       >
                         {invitation.email}
                       </th>

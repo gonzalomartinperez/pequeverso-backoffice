@@ -50,14 +50,18 @@ export function Facts({ items }: { items: { term: string; value: ReactNode; hint
   );
 }
 
-/** Horizontal scroll region for wide tables, reachable by keyboard. */
+/**
+ * Horizontal scroll region for wide tables, reachable by keyboard. `relative` keeps absolutely
+ * positioned descendants (the `sr-only` header text) inside the scroll clip; `scroll-cue` shades
+ * an edge while more columns are hidden behind it.
+ */
 export function TableRegion({ label, children }: { label: string; children: ReactNode }) {
   return (
     <section
       aria-label={label}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: a horizontally scrollable region must be keyboard-scrollable (WCAG 2.1.1, axe scrollable-region-focusable)
       tabIndex={0}
-      className="overflow-x-auto rounded-md border border-line"
+      className="scroll-cue relative overflow-x-auto rounded-md border border-line"
     >
       {children}
     </section>

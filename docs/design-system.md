@@ -101,10 +101,12 @@ Only state changes animate (150 ms colour/opacity transitions); charts render wi
 
 ## Layout rules
 
-- Content max width 72rem with 16px gutters (24 px from `sm`). Four current summary indicators lead the dashboard; daily analytics share a desktop grid with budget/catalog, while technical diagnostics use a native disclosure. Explicit zero-minimum base tracks keep enlarged text readable; wide tables scroll in their existing keyboard-focusable regions.
+- Content max width 72rem with 16px gutters (24 px from `sm`). Four current summary indicators lead the dashboard; daily analytics span the full width with budget/catalog in a two-column desktop grid below, while technical diagnostics use a native disclosure. Explicit zero-minimum base tracks keep enlarged text readable; wide tables scroll in their existing keyboard-focusable regions.
 - Header: brand/account/navigation share rows when space permits and wrap naturally with enlarged text. Long words in facts and native summaries can wrap; no content is hidden to mask page overflow.
-- Long values (e-mails, revisions, ids) wrap (`overflow-wrap: anywhere`); wide tables scroll
-  horizontally inside a focusable region.
+- Long values (e-mails, revisions, ids) wrap (`overflow-wrap: anywhere`); inside tables, e-mails
+  use `overflow-wrap: break-word`, so they break only when one alone is wider than the column. Wide
+  tables scroll horizontally inside a focusable, positioned region (`TableRegion`) whose
+  `scroll-cue` shades the edge that hides more columns.
 - Touch targets ≥ 44 px.
 
 ## Copy lint
