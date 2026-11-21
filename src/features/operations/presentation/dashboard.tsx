@@ -13,7 +13,7 @@ import {
   percent,
   type RunWindow,
 } from "../domain/summary";
-import { DailyCharts } from "./daily-charts";
+import { LazyDailyCharts } from "./daily-charts-lazy";
 import * as f from "./format";
 import { Telemetry } from "./telemetry";
 
@@ -469,7 +469,7 @@ function Daily({ summary }: { summary: OpsSummary }) {
       ) : (
         <div className="flex flex-col gap-5">
           {hasTrend(rows) ? (
-            <DailyCharts
+            <LazyDailyCharts
               rows={rows.map((row) => ({
                 day: f.day(row.day),
                 completed: row.completed,
