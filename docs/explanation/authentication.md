@@ -3,6 +3,7 @@
 The repository is public; the application is private. Better Auth 1.7.10 handles OAuth and
 PostgreSQL sessions; this repository adds the admission rules, invitations, roles and audit.
 Decision record: [ADR 005](../decisions/0005-backoffice-auth-better-auth.md). Storage: [ADR 006](../decisions/0006-iam-in-postgresql.md).
+See the [backoffice authentication threat model](threat-model.md) for test evidence and residual risks.
 
 ## Configuration
 

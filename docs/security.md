@@ -4,6 +4,7 @@ How the backoffice protects access, sessions and operations data. Reporting a vu
 [SECURITY.md](../SECURITY.md) (the shared policy, byte-matched from `engineering-standards`). If the
 repository's private vulnerability reporting is unavailable, write privately to the Pequeverso
 support address listed on the storefront; never open a public issue.
+See the [backoffice authentication threat model](explanation/threat-model.md) for test evidence and residual risks.
 
 This repository is public; the application it builds is a **private** backoffice. Design notes:
 
