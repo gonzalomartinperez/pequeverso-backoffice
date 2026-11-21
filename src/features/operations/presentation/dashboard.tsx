@@ -100,12 +100,10 @@ function Summary({
             </a>
           ))}
       </nav>
-      <div className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <Daily summary={summary} />
-        <div className="flex min-w-0 flex-col gap-5">
-          <Budget summary={summary} />
-          <Catalog summary={summary} now={now} />
-        </div>
+      <Daily summary={summary} />
+      <div className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-2">
+        <Budget summary={summary} />
+        <Catalog summary={summary} now={now} />
       </div>
       <div className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-2">
         {summary.windows.length ? (
