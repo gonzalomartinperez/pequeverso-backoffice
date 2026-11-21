@@ -18,6 +18,7 @@ it("discovers the real browser specifications from the canonical directory", () 
       "invitation.spec.ts",
       "live-ops.spec.ts",
       "navigation.spec.ts",
+      "no-overflow.spec.ts",
       "operations.spec.ts",
       "sign-in.spec.ts",
       "support.ts",

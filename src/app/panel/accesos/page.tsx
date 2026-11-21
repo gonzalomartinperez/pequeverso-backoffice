@@ -65,14 +65,14 @@ export default async function AccessPage() {
                 <tr key={member.id}>
                   <th
                     scope="row"
-                    className={`${td} text-left font-normal [overflow-wrap:anywhere]`}
+                    className={`${td} text-left font-normal [overflow-wrap:break-word]`}
                   >
                     {member.email}
                   </th>
                   <td className={td}>{member.role === "owner" ? "Propietario" : "Lectura"}</td>
                   <td className={td}>{member.providers.join(", ") || "—"}</td>
                   <td className={td}>{member.activeSessions}</td>
-                  <td className={td}>{when(member.createdAt)}</td>
+                  <td className={`${td} whitespace-nowrap`}>{when(member.createdAt)}</td>
                   <td className={td}>
                     {member.id === actor.id ? (
                       <span className="text-tiny text-muted">Tu cuenta</span>
@@ -128,7 +128,7 @@ export default async function AccessPage() {
                     <tr key={invitation.id}>
                       <th
                         scope="row"
-                        className={`${td} text-left font-normal [overflow-wrap:anywhere]`}
+                        className={`${td} text-left font-normal [overflow-wrap:break-word]`}
                       >
                         {invitation.email}
                       </th>
@@ -136,7 +136,7 @@ export default async function AccessPage() {
                         {invitation.role === "owner" ? "Propietario" : "Lectura"}
                       </td>
                       <td className={td}>{STATE_LABEL[state]}</td>
-                      <td className={td}>{when(invitation.expiresAt)}</td>
+                      <td className={`${td} whitespace-nowrap`}>{when(invitation.expiresAt)}</td>
                       <td className={td}>
                         {state === "pending" ? (
                           <ConfirmAction
