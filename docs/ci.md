@@ -20,6 +20,7 @@ runs everything. A unit test keeps every tracked file inside some profile.
 | `secrets` | Secret scan | every PR (base) | Redacted full-history gitleaks scan |
 | `docs` | Docs checks | docs, code, contract, workflow | Public-file scan, local links, skills catalog (Node built-ins, no install) |
 | `static` | Static checks | code, database, container, contract, workflow | `npm run setup` (install and `check:fast`), dependency audit, knip |
+| `mutation` | Mutation (incremental, changed scoped modules) | mutation paths (scoped modules, Stryker config, gate scripts, ratchet), workflow | `scripts/mutation-scope.ts` selects the changed scoped files (at most 8; skips release PRs); Stryker on them; `scripts/mutation-gate.ts` fails below the per-file floor in `quality/ratchets/mutation.json` ([decision](decisions/0018-test-runner-decision.md)) |
 | `build` | Production build | code, contract, workflow | `next build` once; the `.next` output is the browser job's artifact |
 | `database` | Database tests | code, database paths, contract, workflow | Mandatory PostgreSQL migrations and IAM integration suite, merged coverage and its gates |
 | `container` | Container verification | container paths, workflow | Bake build of both images, metadata, image gates, smoke and restore drill |
@@ -67,6 +68,15 @@ Database and browser verification require their documented isolated fixtures; se
 source-only review or local policy-test pass does not establish database, browser or container
 success. Hosted checks must pass on the exact proposed head and again after integration before
 reporting the new workflow verified.
+
+## Mutation testing
+
+The `mutation` job and the `mutation-nightly` workflow run StrykerJS on `node:test` through the
+tap-runner over the scope in `stryker.config.json` ([ADR 0018](decisions/0018-test-runner-decision.md)).
+`mutation-nightly` is not a `ci-gate` prerequisite: GitHub runs `schedule` only from `main`, which
+is frozen until M7, so the schedule activates at M7; until then its `pull_request` trigger (limited
+to the workflow, Stryker config, gate scripts and ratchet) proves it on the PR that changes them.
+Locally: `nice npm run test:mutation` (full) or `npm run test:mutation -- --mutate <file>`.
 
 ## Merged coverage gate
 

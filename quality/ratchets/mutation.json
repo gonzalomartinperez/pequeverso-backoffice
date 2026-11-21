@@ -1,0 +1,15 @@
+{
+  "$comment": "Mutation ratchet (M2.2, ADR 0018). Measured by the full `npm run test:mutation` run on develop 850723b (2026-11-14; StrykerJS 10.1.1, tap-runner, FC_SEED=20261114, FC_NUM_RUNS=25): 1,680 mutants in scope, 1,291 detected (Killed + Timeout), score 76.8. Per-file values are floors of the measured per-file scores. Values may only go up; raise them by hand toward the targets (break 70, permission module 85). RuntimeError, CompileError and Ignored mutants are excluded, as in scripts/mutation-gate.ts.",
+  "values": [{ "key": "score", "value": 76.8 }],
+  "files": {
+    "src/features/auth/application/access.ts": 87,
+    "src/features/auth/domain/access.ts": 87,
+    "src/features/analytics/adapters/validate.ts": 82,
+    "src/features/operations/adapters/telemetry-validate.ts": 77,
+    "src/features/operations/adapters/validate.ts": 63,
+    "src/features/operations/domain/summary.ts": 66,
+    "src/server/csp.ts": 37,
+    "src/server/fixture-safety.ts": 72,
+    "src/server/parse-config.ts": 83
+  }
+}

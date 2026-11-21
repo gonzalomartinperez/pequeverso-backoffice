@@ -131,6 +131,61 @@ jobs:
       - name: Unused files, exports and dependencies (knip)
         run: npm run knip
 
+  mutation:
+    # Incremental mutation run on the changed scoped modules (ADR 0018). Stryker does not break
+    # (thresholds.break 0 in a temporary config); scripts/mutation-gate.ts decides per file against
+    # quality/ratchets/mutation.json. Release PRs and non-PR events skip: the nightly full run covers them.
+    name: Mutation (incremental, changed scoped modules)
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'mutation')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Select the changed scoped modules
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |-
+          set -euo pipefail
+          files=""
+          if [[ "$EVENT" != "pull_request" ]]; then
+            echo "Not a pull request: the nightly full run covers it."
+          elif [[ "$BASE_REF" == "main" && "$HEAD_REF" == "develop" ]]; then
+            echo "Release PR: the nightly full run covers it."
+          else
+            # The checkout is the merge ref: HEAD^1 is the base, so the diff is this PR's change.
+            files=$(node scripts/mutation-scope.ts HEAD^1)
+          fi
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+      - if: steps.scope.outputs.files != ''
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Mutation tests on the changed modules (the gate decides, not Stryker)
+        if: steps.scope.outputs.files != ''
+        timeout-minutes: 8
+        env:
+          FILES: ${{ steps.scope.outputs.files }}
+        run: |-
+          set -euo pipefail
+          node -e 'const c = JSON.parse(fs.readFileSync("stryker.config.json", "utf8")); c.thresholds.break = 0; c.incremental = false; fs.writeFileSync("stryker.pr.config.json", JSON.stringify(c));'
+          npm run test:mutation -- stryker.pr.config.json --mutate "$FILES"
+      - name: Per-file baseline gate (quality/ratchets/mutation.json)
+        if: steps.scope.outputs.files != ''
+        env:
+          FILES: ${{ steps.scope.outputs.files }}
+        run: node scripts/mutation-gate.ts --files "$FILES"
+
   build:
     name: Production build
     needs: [classify]
@@ -415,7 +470,7 @@ jobs:
   ci-gate:
     name: ci-gate
     if: always()
-    needs: [classify, security, secrets, docs, static, build, database, container, browser]
+    needs: [classify, security, secrets, docs, static, mutation, build, database, container, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}
