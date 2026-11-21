@@ -39,6 +39,7 @@
         "knip.json",
         "postcss.config.json",
         "playwright.config.ts",
+        "playwright.visual.config.ts",
         ".nvmrc",
         ".env.example",
         ".gitignore",
@@ -53,7 +54,7 @@
         ".claude/settings.json",
         ".claude/agents/**"
       ],
-      "adds": ["docs", "static", "build", "browser", "database"],
+      "adds": ["docs", "static", "build", "browser", "visual", "database"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },
@@ -74,7 +75,7 @@
         "scripts/diff-coverage.ts",
         "quality/**"
       ],
-      "adds": ["docs", "static", "build", "browser", "database"],
+      "adds": ["docs", "static", "build", "browser", "visual", "database"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },
@@ -119,7 +120,7 @@
     },
     "contract": {
       "paths": ["contracts/**"],
-      "adds": ["docs", "static", "build", "browser", "database"],
+      "adds": ["docs", "static", "build", "browser", "visual", "database"],
       "budgetP50Minutes": 8,
       "budgetP95Minutes": 14
     },
@@ -131,22 +132,22 @@
         ".github/dependabot.yml",
         ".zap/**"
       ],
-      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
+      "adds": ["docs", "static", "build", "browser", "visual", "database", "container", "mutation"],
       "budgetP50Minutes": 8,
       "budgetP95Minutes": 14
     },
     "deps-weekly": {
-      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
+      "adds": ["docs", "static", "build", "browser", "visual", "database", "container", "mutation"],
       "budgetP50Minutes": 9,
       "budgetP95Minutes": 15
     },
     "release": {
-      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
+      "adds": ["docs", "static", "build", "browser", "visual", "database", "container", "mutation"],
       "budgetP50Minutes": 20,
       "budgetP95Minutes": 30
     },
     "hotfix": {
-      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
+      "adds": ["docs", "static", "build", "browser", "visual", "database", "container", "mutation"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     }

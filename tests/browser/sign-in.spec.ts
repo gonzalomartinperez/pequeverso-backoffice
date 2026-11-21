@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { axe, cspViolations, prepare, SHOTS, signIn } from "./support.ts";
 
@@ -37,4 +38,13 @@ test("an uninvited identity in the owner's domain is refused", async ({ page }, 
   await expect(page.getByTestId("sign-in-error")).toContainText("no tiene acceso");
   await page.goto("/panel");
   await expect(page).toHaveURL(/\/ingresar$/);
+});
+
+test("the dev-only component kit does not exist in the production server", async ({ page }) => {
+  const response = await page.goto("/__kit");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByTestId("kit-marker")).toHaveCount(0);
+  // Not merely hidden: the production build has no such route at all.
+  const routes = readFileSync(".next/app-path-routes-manifest.json", "utf8");
+  expect(routes).not.toContain("__kit");
 });

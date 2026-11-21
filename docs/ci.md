@@ -25,6 +25,7 @@ runs everything. A unit test keeps every tracked file inside some profile.
 | `database` | Database tests | code, database paths, contract, workflow | Mandatory PostgreSQL migrations and IAM integration suite, merged coverage and its gates |
 | `container` | Container verification | container paths, workflow | Bake build of both images, metadata, image gates, smoke and restore drill |
 | `browser` | Browser tests | code, contract, workflow | The build artifact, disposable PostgreSQL, fake identity provider, synthetic ops data; pull requests run chromium and mobile-webkit (iPhone 15), push and merge queue run all projects |
+| `visual` | Visual tests | code, contract, workflow | `scripts/visual.sh`: the production stack on the runner, Playwright inside the digest-pinned image matching `@playwright/test`, frozen clock, `maxDiffPixelRatio` 0.002. The sign-in baselines are throwaway infrastructure proof (M2.7), replaced by the approved M5 baselines; regenerate them only through `npm run test:visual -- --update-snapshots` |
 | `ci-gate` | ci-gate | always | Fails on a failed or cancelled job and on a skipped job the profile expected |
 | `checks` | Required checks | always | Compatibility alias: green only when `ci-gate` is green |
 

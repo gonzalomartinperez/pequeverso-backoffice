@@ -19,6 +19,7 @@ source drift apart.
 | proxy | `src/proxy.ts#proxy` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/layout.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/page.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
+| page | `src/app/%5F%5Fkit/page.dev.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/ingresar/page.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/panel/layout.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
 | page | `src/app/panel/page.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
