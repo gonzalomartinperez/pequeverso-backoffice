@@ -80,6 +80,12 @@ export const MATRIX: readonly Row[] = [
   { id: "page:src/app/layout.tsx#default", guard: "public", covers: "static-only" },
   { id: "page:src/app/page.tsx#default", guard: "public", covers: "static-only" },
   {
+    // Dev-only kit: `notFound()` in production, so it exposes nothing; the 404 is tested.
+    id: "page:src/app/%5F%5Fkit/page.tsx#default",
+    guard: "public",
+    covers: { file: browser("sign-in"), needle: "/__kit" },
+  },
+  {
     id: "page:src/app/ingresar/page.tsx#default",
     guard: "public",
     covers: { file: browser("sign-in"), needle: '"/ingresar"' },

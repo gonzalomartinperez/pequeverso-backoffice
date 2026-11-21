@@ -38,3 +38,9 @@ test("an uninvited identity in the owner's domain is refused", async ({ page }, 
   await page.goto("/panel");
   await expect(page).toHaveURL(/\/ingresar$/);
 });
+
+test("the dev-only component kit does not exist in the production server", async ({ page }) => {
+  const response = await page.goto("/__kit");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByTestId("kit-marker")).toHaveCount(0);
+});

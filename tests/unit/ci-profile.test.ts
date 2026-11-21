@@ -198,7 +198,7 @@ describe("dynamic CI profile", () => {
 
   it("keeps the docs fast path free of build, browser, database and container jobs", () => {
     const docs = profileMap.profiles.docs?.adds ?? [];
-    for (const heavy of ["static", "build", "browser", "database", "container"])
+    for (const heavy of ["static", "build", "browser", "visual", "database", "container"])
       assert.ok(!docs.includes(heavy), heavy);
     assert.ok(profileMap.base.includes("secrets"), "secret scan runs on every PR");
     assert.ok(
@@ -213,6 +213,20 @@ describe("dynamic CI profile", () => {
     assert.match(jobBlocks(ci).get("browser") ?? "", /npm run test:browser/);
     assert.match(jobBlocks(ci).get("browser") ?? "", /^ {4}needs: \[classify, build\]$/m);
     assert.match(jobBlocks(ci).get("container") ?? "", /scripts\/smoke-postgres\.sh/);
+    assert.match(jobBlocks(ci).get("visual") ?? "", /run: scripts\/visual\.sh/);
+    assert.match(jobBlocks(ci).get("visual") ?? "", /^ {4}needs: \[classify, build\]$/m);
+  });
+
+  it("renders visual baselines only in the Playwright image that matches the installed version", () => {
+    const version = JSON.parse(readFileSync("package.json", "utf8")).devDependencies[
+      "@playwright/test"
+    ];
+    const script = readFileSync("scripts/visual.sh", "utf8");
+    assert.match(
+      script,
+      new RegExp(`playwright:v${version.replaceAll(".", "\\.")}-noble@sha256:[0-9a-f]{64}"`),
+    );
+    assert.match(readFileSync("playwright.visual.config.ts", "utf8"), /maxDiffPixelRatio: 0\.002/);
   });
 
   it("rejects ungated jobs, missing gate needs, renamed contexts and unpinned standards", () => {

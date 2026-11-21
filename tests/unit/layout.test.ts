@@ -25,6 +25,13 @@ it("discovers the real browser specifications from the canonical directory", () 
       "viewer.spec.ts",
     ],
   );
+  assert.match(read("playwright.visual.config.ts"), /testDir: "\.\/tests\/visual"/);
+  assert.deepEqual(
+    readdirSync("tests/visual")
+      .filter((name) => !name.startsWith("."))
+      .sort(),
+    ["sign-in.spec.ts", "sign-in.spec.ts-snapshots"],
+  );
   assert.equal(existsSync("tests/backoffice"), false);
 });
 
