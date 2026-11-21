@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { axe, OWNER_STATE, prepare, SHOTS } from "./support.ts";
+import { axe, newPage, OWNER_STATE, prepare, SHOTS } from "./support.ts";
 
 // M2.6 and M3.1 (A-P1-1): no route may scroll sideways at the four reference widths (WCAG 1.4.10 reflow).
 // Signed in as the owner (auth.setup.ts), who can open every route including /panel/accesos.
@@ -24,23 +24,22 @@ for (const route of ROUTES)
     });
 
 test("no horizontal overflow on /ingresar at every reference width", async ({ browser }) => {
-  // Anonymous context: the sign-in page redirects signed-in users away.
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
-  const page = await context.newPage();
+  // Anonymous page: the sign-in page redirects signed-in users away.
+  const page = await newPage(browser);
   try {
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/ingresar");
       await expect(page.locator("main")).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
       const metrics = await page.evaluate(() => ({
-        width: window.innerWidth,
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
       }));
       expect(metrics.scrollWidth, JSON.stringify(metrics)).toBeLessThanOrEqual(metrics.clientWidth);
     }
   } finally {
-    await context.close();
+    await page.context().close();
   }
 });
 

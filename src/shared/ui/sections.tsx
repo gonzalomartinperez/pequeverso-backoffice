@@ -53,7 +53,8 @@ export function Facts({ items }: { items: { term: string; value: ReactNode; hint
 /**
  * Horizontal scroll region for wide tables, reachable by keyboard. `relative` keeps absolutely
  * positioned descendants (the `sr-only` header text) inside the scroll clip; `scroll-cue` shades
- * an edge while more columns are hidden behind it.
+ * an edge while more columns are hidden behind it. The cue's covers use `--surface-raised`, so place
+ * the region on a raised surface (every `Section` is one).
  */
 export function TableRegion({ label, children }: { label: string; children: ReactNode }) {
   return (
