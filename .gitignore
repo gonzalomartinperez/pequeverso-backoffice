@@ -15,3 +15,6 @@ playwright-json/
 tests/browser/.auth/
 coverage/
 .coverage-tmp/
+reports/
+.stryker-tmp/
+stryker.pr.config.json

@@ -20,6 +20,7 @@ runs everything. A unit test keeps every tracked file inside some profile.
 | `secrets` | Secret scan | every PR (base) | Redacted full-history gitleaks scan |
 | `docs` | Docs checks | docs, code, contract, workflow | Public-file scan, local links, skills catalog (Node built-ins, no install) |
 | `static` | Static checks | code, database, container, contract, workflow | `npm run setup` (install and `check:fast`), dependency audit, knip |
+| `mutation` | Mutation (incremental, changed scoped modules) | mutation paths (scoped modules, Stryker config, gate scripts, ratchet), workflow | Stryker runs on up to eight changed scoped files and runs the full scope when more than eight change. `scripts/mutation-gate.ts` checks every changed scoped file against `quality/ratchets/mutation.json`. Same-repository release PRs skip the run. [Decision](decisions/0018-test-runner-decision.md) |
 | `build` | Production build | code, contract, workflow | `next build` once; the `.next` output is the browser job's artifact |
 | `database` | Database tests | code, database paths, contract, workflow | Mandatory PostgreSQL migrations and IAM integration suite, merged coverage and its gates |
 | `container` | Container verification | container paths, workflow | Bake build of both images, metadata, image gates, smoke and restore drill |
@@ -67,6 +68,15 @@ Database and browser verification require their documented isolated fixtures; se
 source-only review or local policy-test pass does not establish database, browser or container
 success. Hosted checks must pass on the exact proposed head and again after integration before
 reporting the new workflow verified.
+
+## Mutation testing
+
+The `mutation` job and the `mutation-nightly` workflow run StrykerJS on `node:test` through the
+tap-runner over the scope in `stryker.config.json` ([ADR 0018](decisions/0018-test-runner-decision.md)).
+`mutation-nightly` is not a `ci-gate` prerequisite: GitHub runs `schedule` only from `main`, which
+is frozen until M7, so the schedule activates at M7. Its `pull_request` trigger runs when a PR
+changes `.github/workflows/mutation-nightly.yml`.
+Locally: `nice npm run test:mutation` (full) or `npm run test:mutation -- --mutate <file>`.
 
 ## Merged coverage gate
 

@@ -78,6 +78,25 @@
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },
+    "mutation": {
+      "paths": [
+        "src/features/auth/domain/**",
+        "src/features/auth/application/**",
+        "src/features/*/adapters/validate*.ts",
+        "src/features/operations/adapters/telemetry-validate.ts",
+        "src/features/operations/domain/**",
+        "src/server/csp.ts",
+        "src/server/parse-config.ts",
+        "src/server/fixture-safety.ts",
+        "stryker.config.json",
+        "scripts/mutation-scope.ts",
+        "scripts/mutation-gate.ts",
+        "quality/ratchets/mutation.json"
+      ],
+      "adds": ["mutation"],
+      "budgetP50Minutes": 4,
+      "budgetP95Minutes": 9
+    },
     "container": {
       "paths": [
         "infra/docker/**",
@@ -112,22 +131,22 @@
         ".github/dependabot.yml",
         ".zap/**"
       ],
-      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
       "budgetP50Minutes": 8,
       "budgetP95Minutes": 14
     },
     "deps-weekly": {
-      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
       "budgetP50Minutes": 9,
       "budgetP95Minutes": 15
     },
     "release": {
-      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
       "budgetP50Minutes": 20,
       "budgetP95Minutes": 30
     },
     "hotfix": {
-      "adds": ["docs", "static", "build", "browser", "database", "container"],
+      "adds": ["docs", "static", "build", "browser", "database", "container", "mutation"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     }
