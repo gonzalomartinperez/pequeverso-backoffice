@@ -87,11 +87,12 @@ Scores are tracked in the [scorecard](docs/master-plan/scorecard.md); the latest
 
 - Tutorials: none yet.
 - How-to: [PostgreSQL runtime and restore](docs/how-to/postgres-runtime-and-restore.md).
-- Reference: [permissions](docs/reference/permissions.md), [observability](docs/reference/observability.md),
+- Reference: [permissions](docs/reference/permissions.md), [routes](docs/reference/routes.md),
+  [environment variables](docs/reference/env.md), [observability](docs/reference/observability.md),
   [product analytics](docs/reference/product-analytics.md), [runtime baseline](docs/reference/runtime-baseline.md),
   [agent skills](docs/reference/agent-skills.md), [CI](docs/ci.md), [dependencies](docs/dependencies.md).
 - Explanation: [architecture](docs/explanation/architecture.md), [authentication](docs/explanation/authentication.md),
-  [security design](docs/security.md), [design system](docs/design-system.md), [decisions (ADRs)](docs/decisions/),
+  [security design](docs/security.md), [threat model](docs/explanation/threat-model.md), [design system](docs/design-system.md), [decisions (ADRs)](docs/decisions/),
   [history](docs/explanation/history/verification-2026-10.md).
 - Master plan: [docs/master-plan](docs/master-plan/README.md).
 
