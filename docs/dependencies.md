@@ -120,3 +120,15 @@ space; its mature AST/symbol support avoids another native binding and handwritt
 resolver. Unsupported new grammar fails closed and requires a reviewed parser update rather
 than silently skipping dependencies. This increment changes neither runtime dependencies nor
 auth, database schemas, API contracts or browser versions.
+
+## Development-only mutation testing (2026-11-14)
+
+`@stryker-mutator/core` and `@stryker-mutator/tap-runner` are pinned exactly at 10.1.1 as dev
+dependencies for `npm run test:mutation` ([ADR 0018](decisions/0018-test-runner-decision.md)). The 162
+packages added to the lockfile carry MIT (136), Apache-2.0 (14), ISC (7), BSD-3-Clause (3) and
+BlueOak-1.0.0 (2) licences, all on the dependency-review allow-list; none has an install script
+(`--ignore-scripts` is used in CI) and none reaches the production image. Exit cost: delete the
+config, two scripts and the ratchet; the tests stay on `node:test`. The `qs` override (6.17.1)
+replaces the 6.15.1 that `typed-rest-client` (through `@stryker-mutator/core`) pins exactly, which
+npm audit flags (GHSA-q8mj-m7cp-5q26); dev-only, same major. Remove it when Stryker's dependency
+moves past the advisory.

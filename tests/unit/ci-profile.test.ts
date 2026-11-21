@@ -94,7 +94,7 @@ function validateCi(source: string, map: ProfileMap = profileMap): void {
   assert.equal(map.required, "ci-gate");
   assert.match(gate, /^ {4}name: ci-gate$/m);
   assert.match(gate, /^ {4}if: always\(\)$/m);
-  const needs = gate.match(/^ {4}needs: \[([^\]]*)\]$/m)?.[1]?.split(", ") ?? [];
+  const needs = gate.match(/^ {4}needs:(?: |\n {6})\[([^\]]*)\]$/m)?.[1]?.split(", ") ?? [];
   assert.deepEqual(needs.sort(), ["classify", ...gated].sort(), "ci-gate must need every job");
   assert.match(
     gate,
@@ -217,12 +217,12 @@ describe("dynamic CI profile", () => {
 
   it("rejects ungated jobs, missing gate needs, renamed contexts and unpinned standards", () => {
     for (const candidate of [
-      ci.replace("    needs: [classify, security, ", "    needs: [classify, "),
+      ci.replace(/(^ {4}needs:(?: |\n {6})\[classify, )security, /m, "$1"),
       ci.replace("if: contains(fromJSON(needs.classify.outputs.jobs), 'database')", "if: true"),
       ci.replace("    name: ci-gate", "    name: gate"),
       ci.replace("    name: Required checks", "    name: Checks"),
       ci.replace(/classify\.yml@[0-9a-f]{40}/, "classify.yml@main"),
-      ci.replace("    if: always()\n    needs: [classify", "    needs: [classify"),
+      ci.replace("    if: always()\n    needs:", "    needs:"),
       ci.replace(
         "    needs: [classify]\n    if: contains(fromJSON(needs.classify.outputs.jobs), 'static')",
         "    needs: [classify]\n    if: contains(fromJSON(needs.classify.outputs.jobs), 'static')\n    continue-on-error: true",

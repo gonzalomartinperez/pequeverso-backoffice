@@ -27,6 +27,7 @@
     "setup": "node scripts/setup.ts",
     "check:fast": "npm run lint && npm run typecheck && npm test",
     "check": "npm run lint && npm run typecheck && npm test && npm run knip && npm run security:check && npm run docs:check && npm run skills:check && npm run copy:check && npm run build",
+    "test:mutation": "FC_SEED=20261114 FC_NUM_RUNS=25 stryker run --force",
     "test:integration": "node --test \"tests/integration/**/*.test.ts\"",
     "preview:backoffice": "node scripts/backoffice-stack.ts",
     "db:migrate": "node scripts/db-migrate.ts",
@@ -56,6 +57,8 @@
     "@axe-core/playwright": "4.14.0",
     "@biomejs/biome": "2.6.7",
     "@playwright/test": "1.64.1",
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/tap-runner": "10.1.1",
     "@tailwindcss/postcss": "4.3.4",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",
@@ -70,6 +73,7 @@
   },
   "overrides": {
     "glob": "14.0.6",
-    "minimatch": "11.0.8"
+    "minimatch": "11.0.8",
+    "qs": "6.17.1"
   }
 }

@@ -1,0 +1,55 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Mutation testing (ADR 0018, docs/master-plan/testing.md section 1). node:test via the tap-runner; no checker plugin (the TypeScript checker needs the JS compiler API, absent from TypeScript 7). Scoped to pure domain, application, validator and server-policy modules, never UI glue. The nightly run uses the full scope. The PR run narrows it with --mutate for up to eight changed scoped files (scripts/mutation-scope.ts).",
+  "testRunner": "tap",
+  "plugins": ["@stryker-mutator/tap-runner"],
+  "tap": {
+    "testFiles": [
+      "tests/unit/{access,analytics,analytics-http,config,fixture-safety,log-redaction,operations,properties,proxy-csp,telemetry,validator-fuzz}.test.ts"
+    ],
+    "nodeArgs": [
+      "--test-reporter=tap",
+      "--test-skip-pattern=database-creating tests refuse|browser stack refuses"
+    ]
+  },
+  "mutate": [
+    "src/features/auth/domain/**/*.ts",
+    "src/features/auth/application/**/*.ts",
+    "src/features/*/adapters/validate*.ts",
+    "src/features/operations/adapters/telemetry-validate.ts",
+    "src/features/operations/domain/**/*.ts",
+    "src/server/csp.ts",
+    "src/server/parse-config.ts",
+    "src/server/fixture-safety.ts",
+    "!src/features/auth/application/ports.ts",
+    "!src/features/operations/domain/telemetry.ts"
+  ],
+  "coverageAnalysis": "perTest",
+  "ignorePatterns": [
+    ".git",
+    ".claude",
+    ".agents",
+    ".codex",
+    ".next",
+    ".integration",
+    "coverage",
+    "node_modules/.cache",
+    "playwright-report",
+    "test-results",
+    "reports",
+    "docs/verification",
+    "tests/browser",
+    "tsconfig.json"
+  ],
+  "thresholds": { "high": 85, "low": 70, "break": 70 },
+  "incremental": true,
+  "incrementalFile": "reports/mutation/stryker-incremental.json",
+  "reporters": ["clear-text", "json", "html"],
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+  "htmlReporter": { "fileName": "reports/mutation/index.html" },
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": true,
+  "timeoutMS": 10000,
+  "timeoutFactor": 2,
+  "concurrency": 2
+}
