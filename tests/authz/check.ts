@@ -2,12 +2,14 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { SurfaceEntry } from "../../scripts/authz-surface.ts";
 import { type Action, can } from "../../src/features/auth/domain/access.ts";
-import type { Row } from "./matrix.ts";
+import { PUBLIC_MUTATIONS, type Row } from "./matrix.ts";
 
 const ROLES = ["owner", "viewer"] as const;
 const SESSION = new Set<string>(["manage_access", "read_operations"]);
 
 export type CheckOptions = {
+  /** Mutating ids allowed without a session guard or Better Auth. Default: `PUBLIC_MUTATIONS`. */
+  publicMutations?: Readonly<Record<string, string>>;
   /** Reads a project file for the coverage check; null when absent. Default: from `root`. */
   read?: (file: string) => string | null;
   root?: string;
@@ -78,6 +80,14 @@ export function checkGuards(
           );
       }
     }
+    if (
+      entry.mutating &&
+      (row.guard === "public" || row.guard === "bearer-token") &&
+      !Object.hasOwn(options.publicMutations ?? PUBLIC_MUTATIONS, at)
+    )
+      problems.push(
+        `${at}: mutating entry must call requireActor or delegate to Better Auth (listed ${row.guard}); allowlist it in PUBLIC_MUTATIONS with a reason only if it truly needs no session`,
+      );
     if (SESSION.has(row.guard) && entry.kind === "route" && entry.markers.length > 0)
       problems.push(`${at}: mixes session guard and ${entry.markers}`);
     if (row.covers !== "static-only") {

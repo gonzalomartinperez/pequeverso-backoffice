@@ -382,8 +382,13 @@ describe("route guards and coverage", () => {
       "no recognizable better-auth",
     );
     const bearer =
-      'export async function POST(r: Request) { const a = source.authorize(r.headers.get("authorization")); if (a !== "allowed") return new Response(null, { status: 401 }); return new Response(); }';
-    assert.deepEqual(route(bearer, "bearer-token"), []);
+      'export async function GET(r: Request) { const a = source.authorize(r.headers.get("authorization")); if (a !== "allowed") return new Response(null, { status: 401 }); return new Response(); }';
+    assert.deepEqual(
+      checkGuards(surfaceOf({ "src/app/r/route.ts": bearer }), [
+        row("route:src/app/r/route.ts#GET", "bearer-token"),
+      ]),
+      [],
+    );
     has(
       route("export async function POST() { return new Response(); }", "bearer-token"),
       "no recognizable bearer-token",
@@ -391,11 +396,11 @@ describe("route guards and coverage", () => {
   });
 
   it("requires the covering test to mention the row", () => {
-    const entry = surfaceOf({ "src/app/r/route.ts": "export function POST() {}" });
+    const entry = surfaceOf({ "src/app/r/route.ts": "export function GET() {}" });
     const covered = (text: string | null) =>
       checkGuards(
         entry,
-        [row("route:src/app/r/route.ts#POST", "public", { file: "t.ts", needle: "/r" })],
+        [row("route:src/app/r/route.ts#GET", "public", { file: "t.ts", needle: "/r" })],
         {
           read: () => text,
         },
@@ -403,6 +408,49 @@ describe("route guards and coverage", () => {
     assert.deepEqual(covered("hits /r here"), []);
     has(covered("unrelated"), "never mentions /r");
     has(covered(null), "does not exist");
+  });
+
+  it("negative fixture: a mutating handler or action listed public or bearer fails (M4.2)", () => {
+    const mutating = "must call requireActor or delegate to Better Auth";
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+      const file = {
+        "src/app/r/route.ts": `export async function ${method}() { return new Response(); }`,
+      };
+      has(run(file, [row(`route:src/app/r/route.ts#${method}`, "public")]), mutating);
+    }
+    const bearer =
+      'export async function POST(r: Request) { const a = source.authorize(r.headers.get("authorization")); if (a !== "allowed") return new Response(null, { status: 401 }); return new Response(); }';
+    has(route(bearer, "bearer-token"), mutating);
+    has(
+      run({ "src/app/a/actions.ts": '"use server";\nexport async function doIt() {}' }, [
+        row("action:src/app/a/actions.ts#doIt", "public"),
+      ]),
+      mutating,
+    );
+    const inline = {
+      "src/app/a/page.tsx":
+        'export default function P() { async function save() { "use server"; } return save; }',
+    };
+    const inlineSurface = surfaceOf(inline);
+    has(
+      checkGuards(
+        inlineSurface,
+        inlineSurface.map((entry) => row(entry.id, "public")),
+      ),
+      mutating,
+    );
+    // GET reads stay public; an explicit, reasoned allowlist entry admits a mutation.
+    const get = { "src/app/r/route.ts": "export async function GET() { return new Response(); }" };
+    assert.deepEqual(run(get, [row("route:src/app/r/route.ts#GET", "public")]), []);
+    const post = {
+      "src/app/r/route.ts": "export async function POST() { return new Response(); }",
+    };
+    assert.deepEqual(
+      checkGuards(surfaceOf(post), [row("route:src/app/r/route.ts#POST", "public")], {
+        publicMutations: { "route:src/app/r/route.ts#POST": "synthetic reason" },
+      }),
+      [],
+    );
   });
 
   it("flags duplicate ids", () => {
