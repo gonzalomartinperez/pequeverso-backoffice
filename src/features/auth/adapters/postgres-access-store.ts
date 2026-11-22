@@ -1,6 +1,15 @@
 import type { Pool, PoolClient } from "pg";
-import type { AccessStore, Member, NewInvitation } from "../application/ports.ts";
+import type {
+  AccessStore,
+  AuditEntry,
+  AuditStore,
+  Member,
+  NewInvitation,
+  SessionRecord,
+  SessionStore,
+} from "../application/ports.ts";
 import { type InvitationRecord, isRole, type Role } from "../domain/access.ts";
+import type { AuditCursor } from "../domain/sessions.ts";
 
 /**
  * PostgreSQL persistence for invitations, members (Better Auth's `auth_user` table plus its
@@ -60,7 +69,72 @@ const MEMBER_SELECT = `
 
 const INVITATION_COLUMNS = "id, email, role, created_at, expires_at, accepted_at, revoked_at";
 
-export class PostgresAccessStore implements AccessStore {
+// Never the session token: only what the account's own session list may show (ADR 0017).
+const SESSION_SELECT = `
+  SELECT id, "createdAt" AS created_at, "updatedAt" AS updated_at, "expiresAt" AS expires_at,
+         "ipAddress" AS ip_address, "userAgent" AS user_agent
+    FROM auth_session`;
+
+type SessionRow = {
+  id: string;
+  created_at: Date;
+  updated_at: Date;
+  expires_at: Date;
+  ip_address: string | null;
+  user_agent: string | null;
+};
+
+const AUDIT_ACTIONS = [
+  "invitation_created",
+  "invitation_revoked",
+  "invitation_accepted",
+  "member_removed",
+] as const;
+
+type AuditRow = {
+  id: string;
+  action: string;
+  at: Date;
+  actor_id: string | null;
+  actor_email: string | null;
+  subject_id: string;
+  subject_email: string | null;
+};
+
+/**
+ * Audit page with names resolved now (live join): the actor's current e-mail, the invitation's
+ * e-mail for invitation entries, the member's e-mail for member entries (null once removed).
+ * Ordered and compared at millisecond precision, the precision of the cursor.
+ */
+const AUDIT_SELECT = `
+  SELECT a.id, a.action, date_trunc('milliseconds', a.at) AS at, a.actor_id,
+         lower(actor.email) AS actor_email, a.subject_id,
+         CASE WHEN a.action = 'member_removed' THEN lower(member.email) ELSE invitation.email END
+           AS subject_email
+    FROM backoffice_access_audit a
+    LEFT JOIN auth_user actor ON actor.id = a.actor_id
+    LEFT JOIN auth_user member ON member.id = a.subject_id
+    LEFT JOIN backoffice_invitation invitation ON invitation.id = a.subject_id
+   WHERE $1::timestamptz IS NULL
+      OR (date_trunc('milliseconds', a.at), a.id) < ($1::timestamptz, $2::text)
+   ORDER BY date_trunc('milliseconds', a.at) DESC, a.id DESC
+   LIMIT $3`;
+
+function auditEntry(row: AuditRow): AuditEntry {
+  const action = AUDIT_ACTIONS.find((known) => known === row.action);
+  if (!action) throw new Error("invalid audit action in storage");
+  return {
+    id: row.id,
+    action,
+    at: row.at,
+    actorId: row.actor_id,
+    actorEmail: row.actor_email,
+    subjectId: row.subject_id,
+    subjectEmail: row.subject_email,
+  };
+}
+
+export class PostgresAccessStore implements AccessStore, SessionStore, AuditStore {
   private readonly pool: Pool;
 
   constructor(pool: Pool) {
@@ -206,5 +280,45 @@ export class PostgresAccessStore implements AccessStore {
       await this.audit(client, "member_removed", actorId, userId, now);
       return member(rows[0]);
     });
+  }
+
+  async listSessions(userId: string, now: Date): Promise<SessionRecord[]> {
+    const { rows } = await this.pool.query<SessionRow>(
+      `${SESSION_SELECT} WHERE "userId" = $1 AND "expiresAt" > $2 ORDER BY "updatedAt" DESC, id DESC`,
+      [userId, now],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      expiresAt: row.expires_at,
+      ipAddress: row.ip_address,
+      userAgent: row.user_agent,
+    }));
+  }
+
+  async revokeSession(userId: string, sessionId: string): Promise<boolean> {
+    const result = await this.pool.query(
+      'DELETE FROM auth_session WHERE id = $1 AND "userId" = $2',
+      [sessionId, userId],
+    );
+    return result.rowCount === 1;
+  }
+
+  async revokeOtherSessions(userId: string, keepSessionId: string): Promise<number> {
+    const result = await this.pool.query(
+      'DELETE FROM auth_session WHERE "userId" = $1 AND id <> $2',
+      [userId, keepSessionId],
+    );
+    return result.rowCount ?? 0;
+  }
+
+  async listAudit(cursor: AuditCursor | null, limit: number): Promise<AuditEntry[]> {
+    const { rows } = await this.pool.query<AuditRow>(AUDIT_SELECT, [
+      cursor?.at ?? null,
+      cursor?.id ?? null,
+      limit,
+    ]);
+    return rows.map(auditEntry);
   }
 }
