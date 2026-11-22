@@ -13,7 +13,10 @@ A dash means the entry has no matrix row. See the [permissions matrix](permissio
 | Page | `/` | `src/app/page.tsx` | `public` |
 | Page | `/panel/accesos` | `src/app/panel/accesos/page.tsx` | `manage_access` |
 | Page | `/panel/analitica` | `src/app/panel/analitica/page.tsx` | `read_operations` |
+| Page | `/panel/catalogo` | `src/app/panel/catalogo/page.tsx` | `read_operations` |
+| Page | `/panel/consumo` | `src/app/panel/consumo/page.tsx` | `read_operations` |
 | Page | `/panel/cuenta` | `src/app/panel/cuenta/page.tsx` | `read_operations` |
+| Page | `/panel/ejecuciones` | `src/app/panel/ejecuciones/page.tsx` | `read_operations` |
 | Page | `/panel` | `src/app/panel/page.tsx` | `read_operations` |
 | Route handler | `GET /api/auth/[...all]` | `src/app/api/auth/[...all]/route.ts` | `better-auth` |
 | Route handler | `POST /api/auth/[...all]` | `src/app/api/auth/[...all]/route.ts` | `better-auth` |

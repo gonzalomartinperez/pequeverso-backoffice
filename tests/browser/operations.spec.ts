@@ -8,6 +8,18 @@ test.beforeEach(async ({ page }) => {
   await prepare(page);
 });
 
+test("operations routes show their own heading and section", async ({ page }) => {
+  for (const { path, title, section } of [
+    { path: "/panel/ejecuciones", title: "Ejecuciones", section: "#recent-title" },
+    { path: "/panel/consumo", title: "Consumo", section: "#daily-title" },
+    { path: "/panel/catalogo", title: "Catálogo", section: "#catalog-title" },
+  ]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    await expect(page.locator(section)).toBeVisible();
+  }
+});
+
 test("technical observation stays honest, accessible and separate from provider availability @mobile", async ({
   page,
 }, info) => {
