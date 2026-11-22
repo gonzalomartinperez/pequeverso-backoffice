@@ -1,0 +1,97 @@
+name: Release
+
+# Follows ADR 0015 and OD-78. A version-bump PR on develop updates package.json and moves
+# the Unreleased entries into the version's CHANGELOG section. After the develop -> main
+# release PR merges, this workflow tags the merge commit and publishes that section as a
+# GitHub Release. Immutable releases and a v* tag ruleset are owner-only settings (ADR 0015).
+# The backoffice container image has a separate lifecycle. GHCR publication is part of M7,
+# and deployment is outside this workflow.
+"on":
+  push:
+    branches:
+      - main
+permissions: {}
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    name: Tag and release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node (dependency-free, no install step)
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Read version and release notes
+        id: notes
+        run: node scripts/release-notes.ts --out "$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
+      - name: Fail when the version has no CHANGELOG section and no release
+        if: steps.notes.outputs.has_section != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.notes.outputs.version }}
+        run: |
+          set -euo pipefail
+          # "none" only on a confirmed "release not found"; any other lookup error stops the run.
+          if out=$(gh release view "v${VERSION}" --repo "$GITHUB_REPOSITORY" --json isDraft \
+            --jq 'if .isDraft then "draft" else "published" end' 2>&1); then
+            state=$out
+          elif grep -q "release not found" <<< "$out"; then
+            state=none
+          else
+            echo "::error title=release::release lookup failed: $out"
+            exit 1
+          fi
+          if [ "$state" = published ]; then
+            exit 0
+          fi
+          echo "::error title=release::version ${VERSION} has no CHANGELOG section and no published release (${state})"
+          exit 1
+      - name: Create the tag and the release
+        if: steps.notes.outputs.has_section == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.notes.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          tag="v${VERSION}"
+          # "none" only on a confirmed "release not found"; any other lookup error stops the run.
+          if out=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft \
+            --jq 'if .isDraft then "draft" else "published" end' 2>&1); then
+            state=$out
+          elif grep -q "release not found" <<< "$out"; then
+            state=none
+          else
+            echo "::error title=release::release lookup failed: $out"
+            exit 1
+          fi
+          case "$state" in
+            published)
+              echo "release $tag already exists; nothing to do"
+              exit 0
+              ;;
+            draft)
+              # Leave any existing draft for the owner to resolve.
+              echo "::error title=release::release $tag is a draft; publish it by hand or bump package.json version"
+              exit 1
+              ;;
+          esac
+          # Create the tag first with the create-only refs API: it fails (422) if the tag already
+          # exists, so an existing or concurrently created tag is never re-targeted or adopted.
+          if ! gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f "ref=refs/tags/${tag}" -f "sha=${SHA}" > /dev/null; then
+            echo "::error title=release::could not create tag $tag at $SHA (it may already exist); resolve it by hand or bump the version"
+            exit 1
+          fi
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$tag" \
+            --notes-file "$RUNNER_TEMP/notes.md" --latest
+          echo "created $tag at $SHA"

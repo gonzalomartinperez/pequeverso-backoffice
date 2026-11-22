@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 const root = new URL("../../", import.meta.url);
 const workflowDirectory = new URL(".github/workflows/", root);
@@ -164,9 +166,11 @@ const workflows = Object.fromEntries(
 
 describe("dynamic CI profile", () => {
   it("places every tracked file in at least one profile (no silent fail-closed full runs)", () => {
+    const directory = fileURLToPath(root);
     const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
       .split("\0")
-      .filter(Boolean);
+      // A tracked file removed from the working tree can still be in the index.
+      .filter((file) => file && existsSync(join(directory, file)));
     const uncovered = files.filter((file) => profilesOf(file).length === 0);
     assert.deepEqual(uncovered, []);
   });
@@ -181,6 +185,7 @@ describe("dynamic CI profile", () => {
     assert.ok(profilesOf("migrations/0001_init.sql").includes("database"));
     assert.deepEqual(profilesOf("contracts/ops/source.json"), ["contract"]);
     assert.ok(profilesOf(".github/workflows/ci.yml").includes("workflow"));
+    assert.deepEqual(profilesOf(".github/workflows/release.yml"), ["workflow"]);
     assert.deepEqual(profilesOf("unknown/file.bin"), []);
   });
 
