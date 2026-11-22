@@ -15,7 +15,7 @@ import { nodeSecrets } from "../features/auth/adapters/node-secrets.ts";
 import { PostgresAccessStore } from "../features/auth/adapters/postgres-access-store.ts";
 import { type AccessDeps, type Actor, resolveActor } from "../features/auth/application/access.ts";
 import { type Action, can } from "../features/auth/domain/access.ts";
-import { config } from "./config.ts";
+import { config } from "./env.ts";
 
 /** Composition root for authentication and access (server only). */
 type Composition = { pool: Pool; access: AccessDeps; auth: Auth };

@@ -1,10 +1,10 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { inviteMember, removeMember, revokeInvitation } from "@/features/auth/application/access";
-import { isRole } from "@/features/auth/domain/access";
-import type { InviteState } from "@/features/auth/presentation/invite-form";
-import { accessDeps, requireActor } from "@/server/auth";
-import { config } from "@/server/config";
+import { inviteMember, removeMember, revokeInvitation } from "#features/auth/application/access.ts";
+import { isRole } from "#features/auth/domain/access.ts";
+import type { InviteState } from "#features/auth/presentation/invite-form.tsx";
+import { accessDeps, requireActor } from "#server/auth.ts";
+import { config } from "#server/env.ts";
 
 /** Owner-only mutations. Next.js checks the Origin of server actions; the role is re-read here. */
 export async function inviteAction(_: InviteState, form: FormData): Promise<InviteState> {

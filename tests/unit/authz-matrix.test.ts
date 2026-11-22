@@ -8,7 +8,7 @@ import { expectedOutcome, type Guard, MATRIX, type Row } from "../authz/matrix.t
 const root = path.resolve(import.meta.dirname, "../..");
 const fixture = (name: string) => path.join(root, "tests/authz/fixtures", name);
 
-const AUTH = 'import { requireActor } from "@/server/auth";\n';
+const AUTH = 'import { requireActor } from "#server/auth.ts";\n';
 const row = (id: string, guard: Guard, covers: Row["covers"] = "static-only"): Row => ({
   id,
   guard,
@@ -238,7 +238,7 @@ describe("guard verification", () => {
     const actions = (body: string) =>
       checkGuards(
         surfaceOf({
-          "src/app/a/actions.ts": `"use server";\n${AUTH}import { removeMember } from "@/x";\nexport async function go(id: string) {\n${body}\n}`,
+          "src/app/a/actions.ts": `"use server";\n${AUTH}import { removeMember } from "#x.ts";\nexport async function go(id: string) {\n${body}\n}`,
         }),
         [row("action:src/app/a/actions.ts#go", "manage_access")],
       );
@@ -278,17 +278,17 @@ describe("guard verification", () => {
         [row("page:src/app/panel/p/page.tsx#default", "manage_access")],
       );
     const body = 'await requireActor("manage_access");';
-    assert.deepEqual(plain('import { requireActor } from "@/server/auth";', body), []);
+    assert.deepEqual(plain('import { requireActor } from "#server/auth.ts";', body), []);
     assert.deepEqual(plain('import { requireActor } from "../../../server/auth.ts";', body), []);
     for (const spec of [
-      "@/lib/auth",
-      "@/server/other-auth",
+      "#lib/auth.ts",
+      "#server/other-auth.ts",
       "./auth",
       "better-auth",
-      "@/server/auth/extra",
+      "#server/auth/extra.ts",
     ])
       has(plain(`import { requireActor } from "${spec}";`, body), "no verified requireActor");
-    const imp = 'import { requireActor } from "@/server/auth";';
+    const imp = 'import { requireActor } from "#server/auth.ts";';
     has(
       plain(imp, `const requireActor = async (a: string) => {}; ${body}`),
       "no verified requireActor",
@@ -311,7 +311,7 @@ describe("guard verification", () => {
   it("verifies a helper one import level deep, and fails when its guard is removed", () => {
     const call = "const r = await readThing(); return r;";
     const helper = (body: string): Files => ({
-      "src/app/panel/p/page.tsx": `import { readThing } from "@/server/thing";\nexport default async function P() { ${call} }`,
+      "src/app/panel/p/page.tsx": `import { readThing } from "#server/thing.ts";\nexport default async function P() { ${call} }`,
       "src/server/thing.ts": `${AUTH}export async function readThing() { ${body} return 1; }`,
     });
     const rows = [row("page:src/app/panel/p/page.tsx#default", "read_operations")];
@@ -336,7 +336,7 @@ describe("guard verification", () => {
       ...files,
       [file]: (files[file] ?? "").replace(/await requireActor\([^)]*\);/g, ""),
     });
-    const analytics = checkGuards(surfaceOf(strip("src/server/analytics.ts")), MATRIX, { root });
+    const analytics = checkGuards(surfaceOf(strip("src/server/container.ts")), MATRIX, { root });
     has(analytics, "page:src/app/panel/analitica/page.tsx#default: no verified requireActor guard");
     const actions = checkGuards(surfaceOf(strip("src/app/panel/accesos/actions.ts")), MATRIX, {
       root,
@@ -382,8 +382,13 @@ describe("route guards and coverage", () => {
       "no recognizable better-auth",
     );
     const bearer =
-      'export async function POST(r: Request) { const a = source.authorize(r.headers.get("authorization")); if (a !== "allowed") return new Response(null, { status: 401 }); return new Response(); }';
-    assert.deepEqual(route(bearer, "bearer-token"), []);
+      'export async function GET(r: Request) { const a = source.authorize(r.headers.get("authorization")); if (a !== "allowed") return new Response(null, { status: 401 }); return new Response(); }';
+    assert.deepEqual(
+      checkGuards(surfaceOf({ "src/app/r/route.ts": bearer }), [
+        row("route:src/app/r/route.ts#GET", "bearer-token"),
+      ]),
+      [],
+    );
     has(
       route("export async function POST() { return new Response(); }", "bearer-token"),
       "no recognizable bearer-token",
@@ -391,11 +396,11 @@ describe("route guards and coverage", () => {
   });
 
   it("requires the covering test to mention the row", () => {
-    const entry = surfaceOf({ "src/app/r/route.ts": "export function POST() {}" });
+    const entry = surfaceOf({ "src/app/r/route.ts": "export function GET() {}" });
     const covered = (text: string | null) =>
       checkGuards(
         entry,
-        [row("route:src/app/r/route.ts#POST", "public", { file: "t.ts", needle: "/r" })],
+        [row("route:src/app/r/route.ts#GET", "public", { file: "t.ts", needle: "/r" })],
         {
           read: () => text,
         },
@@ -403,6 +408,72 @@ describe("route guards and coverage", () => {
     assert.deepEqual(covered("hits /r here"), []);
     has(covered("unrelated"), "never mentions /r");
     has(covered(null), "does not exist");
+  });
+
+  it("negative fixture: a mutating handler or action listed public or bearer fails (M4.2)", () => {
+    const mutating = "must call requireActor or delegate to Better Auth";
+    for (const method of ["POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]) {
+      const file = {
+        "src/app/r/route.ts": `export async function ${method}() { return new Response(); }`,
+      };
+      has(run(file, [row(`route:src/app/r/route.ts#${method}`, "public")]), mutating);
+    }
+    const bearer =
+      'export async function POST(r: Request) { const a = source.authorize(r.headers.get("authorization")); if (a !== "allowed") return new Response(null, { status: 401 }); return new Response(); }';
+    has(route(bearer, "bearer-token"), mutating);
+    has(
+      run({ "src/app/a/actions.ts": '"use server";\nexport async function doIt() {}' }, [
+        row("action:src/app/a/actions.ts#doIt", "public"),
+      ]),
+      mutating,
+    );
+    has(
+      run(
+        {
+          "src/app/r/route.ts": 'export { POST } from "./handler";',
+          "src/app/r/handler.ts": "export async function POST() { return new Response(); }",
+        },
+        [row("route:src/app/r/route.ts#POST", "public")],
+      ),
+      mutating,
+    );
+    has(
+      run({ "src/app/a/actions.ts": '"use server";\nexport default async function save() {}' }, [
+        row("action:src/app/a/actions.ts#default", "public"),
+      ]),
+      mutating,
+    );
+    const inline = {
+      "src/app/a/page.tsx":
+        'export default function P() { async function save() { "use server"; } return save; }',
+    };
+    const inlineSurface = surfaceOf(inline);
+    has(
+      checkGuards(
+        inlineSurface,
+        inlineSurface.map((entry) => row(entry.id, "public")),
+      ),
+      mutating,
+    );
+    // GET reads stay public; an explicit, reasoned allowlist entry admits a mutation.
+    const get = { "src/app/r/route.ts": "export async function GET() { return new Response(); }" };
+    assert.deepEqual(run(get, [row("route:src/app/r/route.ts#GET", "public")]), []);
+    const post = {
+      "src/app/r/route.ts": "export async function POST() { return new Response(); }",
+    };
+    assert.deepEqual(
+      checkGuards(surfaceOf(post), [row("route:src/app/r/route.ts#POST", "public")], {
+        publicMutations: { "route:src/app/r/route.ts#POST": "synthetic reason" },
+      }),
+      [],
+    );
+    for (const reason of ["", "   "])
+      has(
+        checkGuards(surfaceOf(post), [row("route:src/app/r/route.ts#POST", "public")], {
+          publicMutations: { "route:src/app/r/route.ts#POST": reason },
+        }),
+        mutating,
+      );
   });
 
   it("flags duplicate ids", () => {

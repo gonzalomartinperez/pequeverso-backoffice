@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
-import { cn } from "./cn";
+import { cn } from "./cn.ts";
 
 /** Inline status message. Announcements are the caller's choice (`role="status"` / `alert`). */
 export const calloutVariants = cva(

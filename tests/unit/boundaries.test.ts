@@ -43,7 +43,7 @@ it("rejects IO globals in application and domain, including after a quoted URL",
 it("rejects runtime application dependencies from presentation through aliases and relative paths", () => {
   for (const statement of [
     'import { inviteMember } from "../application/access";',
-    'export { inviteMember } from "@/features/auth/application/access";',
+    'export { inviteMember } from "#features/auth/application/access.ts";',
     'export const load = () => import("../application/access");',
     'export const load = () => import("../application/access", {});',
     "export const load = () => import (`../application/access`);",
@@ -92,7 +92,7 @@ it("preserves legitimate outer composition and pure injected application depende
       "proxy.ts": 'import { NextResponse } from "next/server";',
       "instrumentation.ts": 'export const register = () => import("./server/observability");',
       "server/auth.ts":
-        'import { inviteMember } from "@/features/auth/application/access";\nimport { Pool } from "pg";',
+        'import { inviteMember } from "#features/auth/application/access.ts";\nimport { Pool } from "pg";',
       "features/auth/adapters/store.ts": 'import { Pool } from "pg";',
       "features/auth/application/access.ts":
         'import type { Clock } from "./ports";\nexport const now = (clock: Clock) => clock.now();',
@@ -117,10 +117,10 @@ it("keeps existing cross-feature, package, outside-src and adapter restrictions"
     ],
     [
       "features/auth/presentation/probe.ts",
-      'import type { Port } from "@/features/operations/application/ports";',
+      'import type { Port } from "#features/operations/application/ports.ts";',
       /may not import feature operations/,
     ],
-    ["server/probe.ts", 'import { external } from "@/../../external";', /imports outside src/],
+    ["server/probe.ts", 'import { external } from "../../external";', /imports outside src/],
   ] as const;
   for (const [file, source, expected] of cases) {
     assert.match(inspect({ [file]: source }).join("\n"), expected);
@@ -140,7 +140,7 @@ it("ignores commented-out imports and impurity examples", () => {
 it("rejects static template and import-options adapter dependencies from presentation", () => {
   for (const statement of [
     "export const load = () => import(`../adapters/store`);",
-    "export const load = () => import (`@/features/auth/adapters/store`, {});",
+    "export const load = () => import (`#features/auth/adapters/store.ts`, {});",
     'export const load = () => import("../adapters/store", { with: { type: "json" } });',
   ]) {
     assert.match(
@@ -223,20 +223,20 @@ it("rejects unresolved and ambiguous local targets while accepting existing publ
       "shared/ui/validator.ts":
         'import schema from "./public-wire.json"; export const valid=(value:unknown)=>typeof value==="object" && schema.schema_version==="1";',
       "app/client.tsx":
-        '"use client"; import {valid} from "@/shared/ui/validator"; export const result=valid({schema_version:"1"});',
+        '"use client"; import {valid} from "#shared/ui/validator.ts"; export const result=valid({schema_version:"1"});',
     }),
     [],
   );
 });
 
 it("follows client barrels transitively to private server and builtin dependencies", () => {
-  for (const target of ["@/server/config", "node:fs"])
+  for (const target of ["#server/env.ts", "node:fs"])
     assert.match(
       inspect({
         "app/client.tsx":
-          '"use client"; import {config} from "@/shared/ui/barrel"; export const x=config;',
+          '"use client"; import {config} from "#shared/ui/barrel.ts"; export const x=config;',
         "shared/ui/barrel.ts": `export {config} from "${target}";`,
-        "server/config.ts": "import 'server-only'; export const config={};",
+        "server/env.ts": "import 'server-only'; export const config={};",
       }).join("\n"),
       /client runtime reaches/,
     );
@@ -246,10 +246,10 @@ it("accepts explicit async Server Action RPC and serializable composition withou
   assert.deepEqual(
     inspect({
       "app/panel/actions.ts":
-        '"use server"; import {config} from "@/server/config"; export async function save(){return {ok:Boolean(config)}}',
-      "server/config.ts": "import 'server-only'; export const config={};",
+        '"use server"; import {config} from "#server/env.ts"; export async function save(){return {ok:Boolean(config)}}',
+      "server/env.ts": "import 'server-only'; export const config={};",
       "features/auth/presentation/form.tsx":
-        '"use client"; import {save} from "@/app/panel/actions"; export const run=()=>save();',
+        '"use client"; import {save} from "../../../app/panel/actions.ts"; export const run=()=>save();',
       "app/panel/page.tsx":
         'import {save} from "./actions"; export default function Page(){return <Form action={save} label="Enviar" data={{ok:true}}/>}',
     }),
@@ -259,22 +259,22 @@ it("accepts explicit async Server Action RPC and serializable composition withou
 
 it("rejects fake actions, private re-exports and core-to-action dependencies", () => {
   for (const action of [
-    '"use server"; export {config as save} from "@/server/config";',
+    '"use server"; export {config as save} from "#server/env.ts";',
     '"use server"; export const save={private:true};',
     "export async function save(){return {};}",
   ])
     assert.ok(
       inspect({
         "app/panel/actions.ts": action,
-        "server/config.ts": "import 'server-only'; export const config={};",
+        "server/env.ts": "import 'server-only'; export const config={};",
         "features/auth/presentation/form.tsx":
-          '"use client"; import {save} from "@/app/panel/actions"; export const run=()=>save();',
+          '"use client"; import {save} from "../../../app/panel/actions.ts"; export const run=()=>save();',
       }).length > 0,
     );
   assert.match(
     inspect({
       "app/panel/actions.ts": '"use server"; export async function save(){return {};}',
-      "features/auth/domain/probe.ts": 'import {save} from "@/app/panel/actions";',
+      "features/auth/domain/probe.ts": 'import {save} from "../../../app/panel/actions.ts";',
     }).join("\n"),
     /domain may not import app/,
   );
@@ -284,8 +284,8 @@ it("does not confuse public schema leaves with private server resource paths", (
   assert.match(
     inspect({
       "app/client.tsx":
-        '"use client"; import config from "@/server/config.json"; export const x=config;',
-      "server/config.json": '{"syntheticPrivateConfig":true}',
+        '"use client"; import config from "#server/env.json"; export const x=config;',
+      "server/env.json": '{"syntheticPrivateConfig":true}',
     }).join("\n"),
     /client runtime reaches private server module/,
   );
@@ -309,7 +309,7 @@ it("rejects ambient clock/randomness in pure layers and private environments in 
   assert.match(
     inspect({
       "app/client.tsx":
-        '"use client"; import {value} from "@/shared/ui/read"; export const x=value;',
+        '"use client"; import {value} from "#shared/ui/read.ts"; export const x=value;',
       "shared/ui/read.ts": "export const value=process.env.PRIVATE_TEST_TOKEN;",
     }).join("\n"),
     /client runtime accesses process/,
@@ -370,7 +370,7 @@ it("blocks private package subpaths through both direct client imports and publi
       },
       {
         "app/client.tsx":
-          '"use client"; import {value} from "@/shared/ui/barrel"; export const x=value;',
+          '"use client"; import {value} from "#shared/ui/barrel.ts"; export const x=value;',
         "shared/ui/barrel.ts": `export {default as value} from "${specifier}";`,
       },
       {
@@ -394,7 +394,7 @@ it("admits only the analytics feature's existing four layers and preserves all b
         'import type { Source } from "../application/ports.ts"; export const adapter = (): Source | null => null;',
       "features/analytics/presentation/report.ts":
         'import type { Source } from "../application/ports.ts"; export type Props = { source: Source };',
-      "server/analytics.ts":
+      "server/container.ts":
         'import { adapter } from "../features/analytics/adapters/http.ts"; export const read = adapter;',
     }),
     [],
@@ -419,4 +419,118 @@ it("admits only the analytics feature's existing four layers and preserves all b
   ] as const) {
     assert.match(inspect({ [file]: source }).join("\n"), expected);
   }
+});
+
+it("lets only server/env.ts read process.env (instrumentation may read NEXT_RUNTIME only)", () => {
+  assert.deepEqual(
+    inspect({
+      "server/env.ts": 'import "server-only"; export const config = () => process.env.SECRET;',
+    }),
+    [],
+  );
+  assert.deepEqual(
+    inspect({
+      "instrumentation.ts":
+        'export async function register() { if (process.env.NEXT_RUNTIME !== "nodejs") return; process.exit(1); }',
+      "server/observability.ts":
+        "export const register = () => process.uptime() + process.memoryUsage().rss + globalThis.Number(1);",
+    }),
+    [],
+  );
+  const rejected: [file: string, source: string, use: string][] = [
+    [
+      "server/auth.ts",
+      "export const s = process.env.BETTER_AUTH_SECRET;",
+      "process.env.BETTER_AUTH_SECRET",
+    ],
+    ["proxy.ts", 'export const dev = process.env["NODE_ENV"];', "process.env.*"],
+    [
+      "instrumentation.ts",
+      "export const o = process.env.BACKOFFICE_ORIGIN;",
+      "process.env.BACKOFFICE_ORIGIN",
+    ],
+    [
+      "instrumentation.ts",
+      'export const w = () => { process.env.NEXT_RUNTIME = "nodejs"; };',
+      "process.env.NEXT_RUNTIME",
+    ],
+    ["app/panel/page.tsx", "export const all = process.env;", "process.env.*"],
+    ["server/container.ts", "const key = 'X'; export const v = process.env[key];", "process.env.*"],
+    ["server/auth.ts", 'const key = "env"; export const v = process[key].X;', "process.*"],
+    ["server/auth.ts", "export const v = (process).env.X;", "process.*"],
+    ["server/auth.ts", "const proc = process; export const v = proc.env.X;", "process.*"],
+    ["server/auth.ts", "const { env } = process; export const v = env.X;", "process.*"],
+    ["server/auth.ts", 'const { "env": e } = process; export const v = e.X;', "process.*"],
+    ["server/auth.ts", "export const v = globalThis.process.env.X;", "globalThis.process"],
+    ["server/auth.ts", 'export const v = globalThis["process"];', "globalThis.*"],
+    [
+      "server/auth.ts",
+      'import { env } from "node:process"; export const v = env.X;',
+      "import node:process",
+    ],
+    [
+      "server/auth.ts",
+      'export const v = async () => (await import("node:process")).env.X;',
+      "import node:process",
+    ],
+    ["server/auth.ts", 'export const v = require("process").env.X;', "import process"],
+    ["shared/ui/probe.tsx", "export const v = process.env.X;", "process.env.X"],
+  ];
+  for (const [file, source, use] of rejected)
+    assert.ok(
+      inspect({ [file]: source }).includes(
+        `src/${file}: process.env is read only in src/server/env.ts; elsewhere only process.exit, uptime and memoryUsage (${use})`,
+      ),
+      `${file}: ${source} -> ${inspect({ [file]: source }).join(" | ")}`,
+    );
+});
+
+it("does not treat local bindings named process or globalThis as the environment", () => {
+  assert.deepEqual(
+    inspect({
+      "server/auth.ts":
+        "const process = { env: { X: 1 } }; const globalThis = { process }; export const v = process.env.X + globalThis.process.env.X;",
+    }),
+    [],
+  );
+});
+
+it("resolves only declared subpath imports, by exact file name (M4.3)", () => {
+  assert.deepEqual(
+    inspect({ "server/probe.ts": 'import { store } from "#features/auth/adapters/store.ts";' }),
+    [],
+  );
+  const problems = (source: string) => inspect({ "server/probe.ts": source }).join("\n");
+  // The removed tsconfig alias is just an undeclared package now.
+  assert.match(
+    problems('import { store } from "@/features/auth/adapters/store";'),
+    /undeclared package @\/features/,
+  );
+  assert.match(
+    problems('import { x } from "#lib/x.ts";'),
+    /unknown subpath import \(#lib\/x\.ts\)/,
+  );
+  assert.match(
+    problems('import { store } from "#features/auth/adapters/store";'),
+    /unresolved local target \(#features\/auth\/adapters\/store\)/,
+  );
+  for (const specifier of [
+    "#shared/../../outside.ts",
+    "#server/../features/auth/adapters/store.ts",
+    "#shared/./ui/x.ts",
+    "#shared//x.ts",
+  ])
+    assert.match(
+      problems(`import { x } from "${specifier}";`),
+      /unknown subpath import/,
+      specifier,
+    );
+  assert.match(
+    inspect({
+      "server/env.ts": "import 'server-only'; export const config = {};",
+      "shared/ui/probe.tsx":
+        '"use client"; import { config } from "#server/env.ts"; export const x = config;',
+    }).join("\n"),
+    /client runtime reaches private server module server\/env\.ts/,
+  );
 });

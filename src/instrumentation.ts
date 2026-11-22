@@ -5,7 +5,7 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const { config } = await import("./server/config");
+  const { config } = await import("./server/env.ts");
   let settings: ReturnType<typeof config>;
   try {
     settings = config();
@@ -18,7 +18,7 @@ export async function register() {
     );
     process.exit(1);
   }
-  const { observability } = await import("./server/observability");
+  const { observability } = await import("./server/observability.ts");
   await observability(settings.observability).initialize();
   if (settings.environment === "production" && settings.trustedProxies.length === 0)
     console.warn(

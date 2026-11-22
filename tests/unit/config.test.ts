@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseConfig } from "../../src/server/parse-config.ts";
+import { parseConfig } from "../../src/server/env-parse.ts";
 
 const production = {
   BACKOFFICE_ENVIRONMENT: "production",

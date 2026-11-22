@@ -341,6 +341,25 @@ describe("diff coverage (synthetic fixtures)", () => {
     assert.equal(r.unmeasuredTsxLines, 3);
   });
 
+  it("ignores a type-only module even when c8 --all lists it with zero hits", () => {
+    const listed = new Map([
+      [
+        "src/features/auth/application/ports.ts",
+        new Map([
+          [1, 0],
+          [2, 0],
+          [3, 0],
+        ]),
+      ],
+    ]);
+    const changed = new Map([["src/features/auth/application/ports.ts", new Set([1, 2, 3])]]);
+    const types = evaluateDiff(listed, changed, () => true);
+    assert.deepEqual(types.errors, []);
+    assert.deepEqual(types.results.find((r) => r.group === "auth")?.total, 0);
+    const code = evaluateDiff(listed, changed, () => false);
+    assert.match(code.errors.join(), /diff coverage auth 0\.0% \(0\/3\)/);
+  });
+
   it("detects type-only modules", () => {
     assert.equal(isTypeOnlySource("export interface A { a: string }\nexport type B = A;\n"), true);
     assert.equal(

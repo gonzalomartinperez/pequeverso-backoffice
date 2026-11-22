@@ -28,8 +28,7 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./src/*"] }
+    "plugins": [{ "name": "next" }]
   },
   "include": [
     "next-env.d.ts",
@@ -41,10 +40,12 @@
   ],
   "exclude": [
     "node_modules",
-    ".next",
+    ".next/standalone",
+    ".next/server",
+    ".next/cache",
+    ".next/static",
     ".integration",
     "test-results",
-    "playwright-report",
     "playwright-report"
   ]
 }

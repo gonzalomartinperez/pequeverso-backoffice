@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { backofficeCsp } from "./server/csp";
+import { backofficeCsp } from "./server/csp.ts";
+import { developmentBuild, httpsOrigin } from "./server/env.ts";
 
 const BACKOFFICE = /^\/(?:panel|ingresar|invitacion|api\/auth)(?:\/|$)/;
 
@@ -13,7 +14,7 @@ const BACKOFFICE = /^\/(?:panel|ingresar|invitacion|api\/auth)(?:\/|$)/;
 export function proxy(request: NextRequest) {
   if (BACKOFFICE.test(request.nextUrl.pathname)) {
     const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-    const csp = backofficeCsp(nonce, process.env.NODE_ENV === "development");
+    const csp = backofficeCsp(nonce, developmentBuild());
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-nonce", nonce);
     requestHeaders.set("Content-Security-Policy", csp);
@@ -23,8 +24,7 @@ export function proxy(request: NextRequest) {
     response.headers.set("Cache-Control", "private, no-store");
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     // HSTS when the configured origin is https (the edge may send the same value; never weaker).
-    if (process.env.BACKOFFICE_ORIGIN?.startsWith("https://"))
-      response.headers.set("Strict-Transport-Security", "max-age=31536000");
+    if (httpsOrigin()) response.headers.set("Strict-Transport-Security", "max-age=31536000");
     return response;
   }
   const response = NextResponse.next();

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { AnalyticsReport } from "@/features/analytics/presentation/report";
-import { readAnalytics } from "@/server/analytics";
+import { AnalyticsReport } from "#features/analytics/presentation/report.tsx";
+import { readAnalytics } from "#server/container.ts";
 export const metadata: Metadata = {
   title: "Actividad del sitio",
   robots: { index: false, follow: false },

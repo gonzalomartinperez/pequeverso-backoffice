@@ -11,6 +11,7 @@ import {
   loosening,
   measureLocal,
   parseFlags,
+  parseRenames,
   type Run,
   validate,
 } from "../../scripts/scorecard.ts";
@@ -254,6 +255,31 @@ test("loosening a ratchet against the base revision is reported, tightening is n
     loosening("bundle", { baseline: { fontsBytes: 5 } }, { baseline: { fontsBytes: 6 } }).length,
     1,
   );
+});
+
+test("a per-file mutation floor follows a renamed file and still binds there", () => {
+  const renames = parseRenames(
+    "M\tsrc/a.ts\nR100\tsrc/server/parse-config.ts\tsrc/server/env-parse.ts\nD\tsrc/b.ts\n",
+  );
+  assert.deepEqual([...renames], [["src/server/parse-config.ts", "src/server/env-parse.ts"]]);
+  const base = { files: { "src/server/parse-config.ts": 83 } };
+  const kept = { files: { "src/server/env-parse.ts": 83 } };
+  const lowered = { files: { "src/server/env-parse.ts": 80 } };
+  assert.equal(
+    loosening("mutation", base, kept).length,
+    1,
+    "without the rename it reads as removed",
+  );
+  assert.deepEqual(loosening("mutation", base, kept, renames), []);
+  assert.match(
+    loosening("mutation", base, lowered, renames).join(),
+    /files\.src\/server\/env-parse\.ts: 80 is looser than 83/,
+  );
+  assert.equal(loosening("mutation", base, { files: {} }, renames).length, 1);
+  const collision = { files: { "src/old.ts": 90, "src/new.ts": 70 } };
+  const onto = new Map([["src/old.ts", "src/new.ts"]]);
+  assert.equal(loosening("mutation", collision, { files: { "src/new.ts": 80 } }, onto).length, 1);
+  assert.deepEqual(loosening("mutation", collision, { files: { "src/new.ts": 90 } }, onto), []);
 });
 
 test("lowering or removing a mutation score or per-file floor is loosening", () => {
