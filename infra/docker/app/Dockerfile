@@ -15,7 +15,7 @@ COPY public ./public
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 
-FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:6abfcb367ebc291572c774c1592a986be2ab26a2486f73093401327495a5962a AS runtime
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:39b0407357c9fadf1a9708d22088f02de21f0e1e8a688474eea2d8701e7d5693 AS runtime
 # Not secret (provenance records build args). ARGs do not cross stages, so both are declared here.
 ARG SERVICE_REVISION=unknown
 ARG VERSION=0.0.0-dev
