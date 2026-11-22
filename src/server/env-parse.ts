@@ -41,6 +41,16 @@ export type BackofficeConfig = {
   version: string;
 };
 
+/**
+ * Build label baked into the image (Dockerfile ARG VERSION), shown on /healthz and /readyz.
+ * Cosmetic: an unset label is `0.0.0-dev` and a malformed one reads `unknown` instead of
+ * stopping the server (strict checks belong to the image build).
+ */
+export function parseVersion(raw: string | undefined): string {
+  if (raw === undefined) return "0.0.0-dev";
+  return /^[0-9A-Za-z][0-9A-Za-z.+_-]{0,63}$/.test(raw) ? raw : "unknown";
+}
+
 function proxies(raw: string | undefined): string[] {
   const list = (raw ?? "")
     .split(",")
@@ -167,10 +177,7 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
   }
   if (opsToken && opsToken.length < 32)
     throw new Error("OPS_READ_TOKEN must have at least 32 characters");
-  // Build label baked into the image (Dockerfile ARG VERSION); shown on /healthz and /readyz.
-  const version = env.VERSION ?? "0.0.0-dev";
-  if (!/^[0-9A-Za-z][0-9A-Za-z.+_-]{0,63}$/.test(version))
-    throw new Error("VERSION must be a short version label (letters, digits, . + _ -)");
+  const version = parseVersion(env.VERSION);
   const analyticsReadEnabled = observabilitySwitch(
     env.PRODUCT_ANALYTICS_READ_ENABLED,
     "PRODUCT_ANALYTICS_READ_ENABLED",

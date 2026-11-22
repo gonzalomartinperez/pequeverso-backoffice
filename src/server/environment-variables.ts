@@ -122,7 +122,7 @@ export const ENVIRONMENT_VARIABLES = {
       "VERSION",
       "Optional",
       "`0.0.0-dev`",
-      "Build label set by the image (`ARG VERSION`); reported as `version` by `/healthz` and `/readyz`.",
+      "Build label set by the image (`ARG VERSION`); reported as `version` by `/healthz` and `/readyz`. A malformed label reads `unknown` and never stops the server.",
     ],
   ],
   observability: [
