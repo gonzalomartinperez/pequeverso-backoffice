@@ -51,26 +51,31 @@ export function parseVersion(raw: string | undefined): string {
   return /^[0-9A-Za-z][0-9A-Za-z.+_-]{0,63}$/.test(raw) ? raw : "unknown";
 }
 
+function invalidProxyPrefix(bits: number, family: number): boolean {
+  return (
+    !Number.isInteger(bits) || bits < (family === 4 ? 8 : 16) || bits > (family === 4 ? 32 : 128)
+  );
+}
+
+function invalidProxy(entry: string): boolean {
+  const [address = "", prefix, extra] = entry.split("/");
+  const family = isIP(address);
+  const bits = prefix === undefined ? null : Number(prefix);
+  return (
+    extra !== undefined ||
+    family === 0 ||
+    (prefix !== undefined && !/^\d{1,3}$/.test(prefix)) ||
+    (bits !== null && invalidProxyPrefix(bits, family))
+  );
+}
+
 function proxies(raw: string | undefined): string[] {
   const list = (raw ?? "")
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
-  for (const entry of list) {
-    const [address = "", prefix, extra] = entry.split("/");
-    const family = isIP(address);
-    const bits = prefix === undefined ? null : Number(prefix);
-    if (
-      extra !== undefined ||
-      family === 0 ||
-      (prefix !== undefined && !/^\d{1,3}$/.test(prefix)) ||
-      (bits !== null &&
-        (!Number.isInteger(bits) ||
-          bits < (family === 4 ? 8 : 16) ||
-          bits > (family === 4 ? 32 : 128)))
-    )
-      throw new Error("TRUSTED_PROXY_IPS entries must be IP addresses or narrow CIDR ranges");
-  }
+  if (list.some(invalidProxy))
+    throw new Error("TRUSTED_PROXY_IPS entries must be IP addresses or narrow CIDR ranges");
   return list;
 }
 
@@ -115,7 +120,13 @@ function pair(id: string | undefined, secret: string | undefined, name: string) 
   return { clientId, clientSecret };
 }
 
-export function parseConfig(env: Record<string, string | undefined>): BackofficeConfig {
+type Env = Record<string, string | undefined>;
+
+function parseEnvironment(env: Env): {
+  environment: BackofficeConfig["environment"];
+  production: boolean;
+  origin: string;
+} {
   const nodeProduction = env.NODE_ENV === "production";
   const environment =
     env.BACKOFFICE_ENVIRONMENT?.trim() || (nodeProduction ? "production" : "development");
@@ -131,6 +142,14 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
   );
   if (environment === "test" && nodeProduction && !isLoopbackUrl(origin))
     throw new Error("BACKOFFICE_ENVIRONMENT=test on a production build requires a loopback origin");
+  return { environment, production, origin };
+}
+
+function parseAuthStorage(
+  env: Env,
+  environment: BackofficeConfig["environment"],
+  production: boolean,
+) {
   const authSecret = env.BETTER_AUTH_SECRET?.trim() ?? "";
   if (authSecret.length < 32 && environment !== "test")
     throw new Error("BETTER_AUTH_SECRET must have at least 32 characters");
@@ -138,23 +157,42 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
   if (!databaseUrl && production) throw new Error("DATABASE_URL is required");
   const ownerEmail = env.OWNER_EMAIL?.trim().toLowerCase() || null;
   if (!ownerEmail && production) throw new Error("OWNER_EMAIL is required");
-  const google = pair(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, "Google");
-  const github = pair(env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET, "GitHub");
+  return { authSecret, databaseUrl, ownerEmail };
+}
+
+function validateTestAuth(env: Env, origin: string, issuer: string | null): void {
+  // Test-only switches also require a loopback origin and a disposable loopback database, so a
+  // misconfigured shared or remote environment can never run with them.
+  if (!isLoopbackUrl(origin) || (issuer && !isLoopbackUrl(issuer)))
+    throw new Error("test-only authentication settings require loopback origins");
+  assertDisposableDatabase(env.DATABASE_URL, true);
+}
+
+function parseTestAuth(env: Env, origin: string, production: boolean) {
   const testIssuerRaw = env.AUTH_TEST_ISSUER?.trim() || null;
   if (testIssuerRaw && production) throw new Error("AUTH_TEST_ISSUER is not allowed in production");
   const rateLimitOff = env.AUTH_DISABLE_RATE_LIMIT === "1";
   if (rateLimitOff && production)
     throw new Error("AUTH_DISABLE_RATE_LIMIT is not allowed in production");
-  // Test-only switches also require a loopback origin and a disposable loopback database, so a
-  // misconfigured shared or remote environment can never run with them.
-  if (testIssuerRaw || rateLimitOff) {
-    if (!isLoopbackUrl(origin) || (testIssuerRaw && !isLoopbackUrl(testIssuerRaw)))
-      throw new Error("test-only authentication settings require loopback origins");
-    assertDisposableDatabase(env.DATABASE_URL, true);
-  }
+  if (testIssuerRaw || rateLimitOff) validateTestAuth(env, origin, testIssuerRaw);
   const testIssuer = testIssuerRaw ? bareOrigin("AUTH_TEST_ISSUER", testIssuerRaw, true) : null;
-  if (production && !google && !github)
-    throw new Error("production needs at least one OAuth provider (Google or GitHub)");
+  return { testIssuer, rateLimitOff };
+}
+
+function validateOpsUrl(raw: string, production: boolean, insecureHosts: string[]): void {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("OPS_API_URL must be an absolute URL");
+  }
+  if (!opsUrlAllowed(url, production, insecureHosts))
+    throw new Error("OPS_API_URL must be https, or http only to a private-network service name");
+  if (url.username || url.password || url.search || url.hash)
+    throw new Error("OPS_API_URL must not carry credentials, query or fragment");
+}
+
+function parseOps(env: Env, production: boolean): BackofficeConfig["ops"] {
   const opsUrl = env.OPS_API_URL?.trim() || "";
   const opsToken = env.OPS_READ_TOKEN?.trim() || "";
   if (Boolean(opsUrl) !== Boolean(opsToken))
@@ -163,20 +201,21 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
     .split(",")
     .map((host) => host.trim().toLowerCase())
     .filter(Boolean);
-  if (opsUrl) {
-    let url: URL;
-    try {
-      url = new URL(opsUrl);
-    } catch {
-      throw new Error("OPS_API_URL must be an absolute URL");
-    }
-    if (!opsUrlAllowed(url, production, insecureHosts))
-      throw new Error("OPS_API_URL must be https, or http only to a private-network service name");
-    if (url.username || url.password || url.search || url.hash)
-      throw new Error("OPS_API_URL must not carry credentials, query or fragment");
-  }
+  if (opsUrl) validateOpsUrl(opsUrl, production, insecureHosts);
   if (opsToken && opsToken.length < 32)
     throw new Error("OPS_READ_TOKEN must have at least 32 characters");
+  return opsUrl ? { url: opsUrl.replace(/\/$/, ""), token: opsToken } : null;
+}
+
+export function parseConfig(env: Record<string, string | undefined>): BackofficeConfig {
+  const { environment, production, origin } = parseEnvironment(env);
+  const { authSecret, databaseUrl, ownerEmail } = parseAuthStorage(env, environment, production);
+  const google = pair(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, "Google");
+  const github = pair(env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET, "GitHub");
+  const { testIssuer, rateLimitOff } = parseTestAuth(env, origin, production);
+  if (production && !google && !github)
+    throw new Error("production needs at least one OAuth provider (Google or GitHub)");
+  const ops = parseOps(env, production);
   const version = parseVersion(env.VERSION);
   const analyticsReadEnabled = observabilitySwitch(
     env.PRODUCT_ANALYTICS_READ_ENABLED,
@@ -191,7 +230,7 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
     google,
     github,
     testIssuer,
-    ops: opsUrl ? { url: opsUrl.replace(/\/$/, ""), token: opsToken } : null,
+    ops,
     analyticsReadEnabled,
     telemetryEnabled: observabilitySwitch(env.OPS_TELEMETRY_ENABLED, "OPS_TELEMETRY_ENABLED"),
     observability: parseObservability({ ...env, BACKOFFICE_ENVIRONMENT: environment }),

@@ -136,15 +136,21 @@ export function percent(part: number | null, whole: number | null): number | nul
   return Math.round((part / whole) * 1000) / 10;
 }
 
+function parseMicroDollars(value: Money): bigint | null {
+  if (value == null) return null;
+  const match = /^(-)?(\d+)(?:\.(\d{1,6}))?$/.exec(value);
+  if (!match) return null;
+  const amount = BigInt(match[2] ?? "0") * 1_000_000n + BigInt((match[3] ?? "").padEnd(6, "0"));
+  return match[1] ? -amount : amount;
+}
+
 /** Sum of decimal USD strings with micro-dollar precision; null if any part is unavailable. */
 export function addMoney(...values: Money[]): Money {
   let micro = 0n;
   for (const value of values) {
-    if (value == null) return null;
-    const match = /^(-)?(\d+)(?:\.(\d{1,6}))?$/.exec(value);
-    if (!match) return null;
-    const amount = BigInt(match[2] ?? "0") * 1_000_000n + BigInt((match[3] ?? "").padEnd(6, "0"));
-    micro += match[1] ? -amount : amount;
+    const amount = parseMicroDollars(value);
+    if (amount === null) return null;
+    micro += amount;
   }
   const negative = micro < 0n;
   const abs = negative ? -micro : micro;
