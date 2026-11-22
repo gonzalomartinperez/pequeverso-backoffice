@@ -1,5 +1,5 @@
-import { config } from "@/server/env";
-import { observability } from "@/server/observability";
+import { config } from "#server/env.ts";
+import { observability } from "#server/observability.ts";
 
 /** Private network scrape only: no cookies, roles or API client token used for machine access. */
 export async function GET(request: Request) {

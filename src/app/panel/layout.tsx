@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { SignOutButton } from "@/features/auth/presentation/account-controls";
-import { BackofficeFrame } from "@/features/auth/presentation/backoffice-frame";
-import { PanelNav } from "@/features/auth/presentation/panel-nav";
-import { requireActor } from "@/server/auth";
+import { SignOutButton } from "#features/auth/presentation/account-controls.tsx";
+import { BackofficeFrame } from "#features/auth/presentation/backoffice-frame.tsx";
+import { PanelNav } from "#features/auth/presentation/panel-nav.tsx";
+import { requireActor } from "#server/auth.ts";
 
 export const metadata: Metadata = {
   title: "Backoffice · Asistente Pequeverso",

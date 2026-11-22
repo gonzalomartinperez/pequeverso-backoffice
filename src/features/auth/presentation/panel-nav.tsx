@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/shared/ui/cn";
+import { cn } from "#shared/ui/cn.ts";
 
 const LINKS = [
   { href: "/panel", label: "Estado", owner: false },

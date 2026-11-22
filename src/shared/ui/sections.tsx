@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn } from "@/shared/ui/cn";
+import { cn } from "#shared/ui/cn.ts";
 
 /** Dashboard section: a labelled region with a heading and optional description. */
 export function Section({

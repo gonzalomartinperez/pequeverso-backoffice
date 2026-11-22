@@ -48,7 +48,26 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const manifest = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8")) as {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
+  imports?: Record<string, string>;
 };
+/** Node subpath imports (`#shared/*` -> `./src/shared/*`): the only non-relative local form. */
+const SUBPATHS = Object.entries(manifest.imports ?? {}).flatMap(([key, target]) =>
+  key.endsWith("/*") && target.startsWith("./") && target.endsWith("/*")
+    ? [{ prefix: key.slice(0, -1), target: target.slice(2, -1) }]
+    : [],
+);
+function subpath(root: string, specifier: string): string | null {
+  const entry = SUBPATHS.find(({ prefix }) => specifier.startsWith(prefix));
+  const rest = entry ? specifier.slice(entry.prefix.length) : "";
+  // No `.` or `..` segments: `#server/../features/x.ts` must not leave its namespace.
+  if (
+    !entry ||
+    !rest ||
+    rest.split("/").some((part) => part === "" || part === "." || part === "..")
+  )
+    return null;
+  return path.join(root, entry.target, rest);
+}
 const PACKAGES = new Set([
   ...Object.keys(manifest.dependencies),
   ...Object.keys(manifest.devDependencies),
@@ -392,7 +411,7 @@ export function checkBoundaries(modules: ReadonlyMap<string, string>, root: stri
         continue;
       }
       const local =
-        specifier.startsWith("@/") || specifier.startsWith(".") || path.isAbsolute(specifier);
+        specifier.startsWith("#") || specifier.startsWith(".") || path.isAbsolute(specifier);
       if (!local) {
         const pkg = specifier.startsWith("@")
           ? specifier.split("/").slice(0, 2).join("/")
@@ -405,19 +424,29 @@ export function checkBoundaries(modules: ReadonlyMap<string, string>, root: stri
           report(file, `presentation may not import ${specifier}`);
         continue;
       }
-      const target = specifier.startsWith("@/")
-        ? path.resolve(src, specifier.slice(2))
-        : path.resolve(path.dirname(file), specifier);
+      const mapped = specifier.startsWith("#") ? subpath(root, specifier) : null;
+      if (specifier.startsWith("#") && !mapped) {
+        report(file, `unknown subpath import (${specifier})`);
+        continue;
+      }
+      const target = mapped ?? path.resolve(path.dirname(file), specifier);
       if (path.isAbsolute(specifier) || !target.startsWith(`${src}${path.sep}`)) {
         report(file, `imports outside src (${specifier})`);
         continue;
       }
-      const candidates = [
-        target,
-        ...[".ts", ".tsx", ".js", ".jsx", ".mts", ".cts"].map((suffix) => `${target}${suffix}`),
-        path.join(target, "index.ts"),
-        path.join(target, "index.tsx"),
-      ].filter((candidate) => modules.has(candidate));
+      // A subpath import names its file exactly (Node and TypeScript add no extension).
+      const candidates = (
+        mapped
+          ? [target]
+          : [
+              target,
+              ...[".ts", ".tsx", ".js", ".jsx", ".mts", ".cts"].map(
+                (suffix) => `${target}${suffix}`,
+              ),
+              path.join(target, "index.ts"),
+              path.join(target, "index.tsx"),
+            ]
+      ).filter((candidate) => modules.has(candidate));
       if (candidates.length !== 1) {
         report(
           file,
