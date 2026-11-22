@@ -5,9 +5,8 @@ import { SafeObservability } from "../../src/server/observability.ts";
 import { parseObservability } from "../../src/server/observability-config.ts";
 
 // Log redaction (docs/master-plan/testing.md, Observability). Everything here uses PLANTED
-// synthetic secrets. Passing tests prove today's server paths stay quiet and clean; the todo
-// tests need structured logging with a request id (M4.7) and are listed in
-// quality/ratchets/known-failures.json.
+// synthetic secrets. Passing tests prove today's server paths stay quiet and clean, and that the
+// structured logger (src/server/log.ts, M4.7) carries the request id but no e-mail or token.
 const plant = (label: string) => ({
   token: `planted-ops-token-${label}-0000000000000000`,
   scrape: `planted-scrape-token-${label}-1111111111111111`,
@@ -133,9 +132,7 @@ test("rejected scrape credentials are not echoed", async () => {
   assertClean(output, planted);
 });
 
-test("structured server logs carry the request id and no e-mail or token", {
-  todo: "M4.7: structured logger with request id does not exist yet",
-}, async () => {
+test("structured server logs carry the request id and no e-mail or token", async () => {
   const planted = plant("log");
   // Expected shape once M4.7 lands: src/server/log.ts exports log(event, fields, requestId).
   const modulePath = "../../src/server/log.ts";
@@ -149,12 +146,34 @@ test("structured server logs carry the request id and no e-mail or token", {
   assertClean(output, planted);
 });
 
-test("trace spans carry the request id and no e-mail or token", {
-  todo: "M4.7: spans do not carry a request id attribute yet",
-}, async () => {
+test("trace spans carry the request id and no e-mail or token", async () => {
   const modulePath = "../../src/server/request-id.ts";
   const { REQUEST_ID_ATTRIBUTE } = (await import(modulePath)) as {
     REQUEST_ID_ATTRIBUTE: string;
   };
   assert.equal(REQUEST_ID_ATTRIBUTE, "request.id");
+});
+
+test("structured logs keep only allow-listed, code-like fields and a valid request id", async () => {
+  const { log } = await import("../../src/server/log.ts");
+  const output = await captured(async () => {
+    log(
+      "access_check_failed",
+      { reason: "db_down", count: 2, ok: true, url: "https://x" },
+      "req-12345678",
+      "error",
+    );
+    log("bad event!", { reason: "has spaces in it", code: "x".repeat(65) }, "short", "info");
+  });
+  const [first, second] = output
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  assert.deepEqual(first, {
+    event: "access_check_failed",
+    request_id: "req-12345678",
+    reason: "db_down",
+    count: 2,
+  });
+  assert.deepEqual(second, { event: "invalid_event" });
 });

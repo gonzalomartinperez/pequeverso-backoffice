@@ -40,7 +40,9 @@ and metrics-only modes avoid that initialization overhead. An isolated `BasicTra
 HTTP/fetch/route spans can contain private URLs and invitation paths. No HTTP, SQL, OAuth or
 browser auto-instrumentation, incoming browser trace propagation, resource detectors, exception text,
 headers, bodies, user identifiers, invitation tokens or raw URLs are collected. Manual spans
-carry only the fixed operation name, outcome and `service.name=pequeverso-backoffice`.
+carry only the fixed operation name, outcome, `service.name=pequeverso-backoffice` and the
+sanitized `request.id` correlation attribute (M4.7; the same id as the `x-request-id` response
+header, never a user, e-mail or URL).
 The server may forward its newly created W3C traceparent to the authenticated private API
 summary/telemetry read. It never trusts a browser-supplied parent, forwards baggage/tracestate,
 or exposes that header to the browser. The API must validate both the private bearer and
@@ -56,6 +58,11 @@ export bound overhead. The pinned official HTTP transport caps collector respons
 4 MiB; only sanitized batch result codes reach the processor, never raw collector errors. Request handlers never await an export. Collector outage must not
 turn a successful business read into a failure. There is no guarantee of final trace delivery
 at shutdown or when the bounded queue fills. No global diagnostic logger is enabled.
+
+Structured server logs (`src/server/log.ts`) are one JSON line per event with `request_id` and
+only allow-listed, code-like fields (`reason`, `outcome`, `operation`, `status`, `code`,
+`count`); any other field, or a value with spaces, `@`, `/` or over 64 characters, is dropped.
+`tests/unit/log-redaction.test.ts` plants synthetic e-mails and tokens to prove it.
 
 ## Infrastructure handoff
 

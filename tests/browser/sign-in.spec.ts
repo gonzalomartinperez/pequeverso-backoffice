@@ -16,6 +16,15 @@ test("sign-in page is private, unframable and accessible", async ({ page }, info
   expect(headers["x-frame-options"]).toBe("DENY");
   expect(headers["cache-control"]).toContain("no-store");
   expect(headers["x-robots-tag"]).toContain("noindex");
+  // M4.7: every response carries a request id; a well-formed incoming one is echoed, others replaced.
+  expect(headers["x-request-id"]).toMatch(/^[0-9a-f-]{36}$/);
+  const echoed = await page.request.get("/healthz", {
+    headers: { "x-request-id": "probe-12345678" },
+  });
+  expect(echoed.headers()["x-request-id"]).toBe("probe-12345678");
+  expect(await echoed.json()).toMatchObject({ status: "ok", schema_version: "0002" });
+  const replaced = await page.request.get("/ingresar", { headers: { "x-request-id": "bad id" } });
+  expect(replaced.headers()["x-request-id"]).toMatch(/^[0-9a-f-]{36}$/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Backoffice del asistente" }),
   ).toBeVisible();

@@ -13,6 +13,7 @@ RUN apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update \
         tzdata=2026f-0+deb13u1 \
         apt=3.0.4 libapt-pkg7.0=3.0.4 \
         zlib1g=1:1.3.dfsg+really1.3.1-1+deb13u1 \
+        libc6=2.41-12+deb13u5 libc-bin=2.41-12+deb13u5 locales=2.41-12+deb13u5 \
     && rm -rf /var/lib/apt/lists/* /usr/local/bin/gosu \
     && test "$(id -u postgres)" = 999 \
     && test "$(id -g postgres)" = 999
