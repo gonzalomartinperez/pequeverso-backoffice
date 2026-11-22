@@ -4,7 +4,7 @@ The private backoffice of the Pequeverso assistant: sign-in, access management a
 dashboard. Feature-organized, with dependencies pointing inward; `scripts/check-boundaries.ts`
 enforces the layers (part of `npm test`). The public conversation lives only in the storefront.
 
-```
+```text
 src/
   app/                      routes: composition and metadata only
     ingresar/               sign-in            invitacion/[token]/  invitation landing (route handler)
@@ -57,7 +57,6 @@ that the example parses.
 
 The former public chat shells (`/`, `/embed`) were removed once the storefront's native
 assistant reached parity; their design remains in the git history.
-
 
 ## Optional operational observability
 
@@ -132,7 +131,6 @@ imports, timeouts, assertions and project coverage. Public verification PNG path
 The source guard rejects direct static acquisition or destructuring of ambient clock/random
 methods while allowing injected shadowed ports and deterministic `Date.parse`. It does not
 trace global-object aliases, casts, later assignments or arbitrary reflection and is not a sandbox.
-
 
 ## Paired repository conventions
 

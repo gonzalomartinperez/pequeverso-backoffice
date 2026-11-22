@@ -18,7 +18,7 @@ runs everything. A unit test keeps every tracked file inside some profile.
 | `classify` | classify | always | Profile and job list |
 | `security` | security / … | every PR (base) | zizmor (low and above), actionlint, gitleaks on the PR commits, dependency review |
 | `secrets` | Secret scan | every PR (base) | Redacted full-history gitleaks scan |
-| `docs` | Docs checks | docs, code, contract, workflow | Public-file scan, local links, skills catalog (Node built-ins, no install) |
+| `docs` | Docs checks | docs, code, contract, workflow | Public-file scan, local links, skills catalog (Node built-ins, no install), markdownlint (`.markdownlint-cli2.jsonc`) and offline lychee link and anchor check, with the engineering-standards action pins. Vale is not run: it is optional in the ecosystem standard and absent from its v1.0.0 docs workflow |
 | `static` | Static checks | code, database, container, contract, workflow | `npm run setup` (install and `check:fast`), dependency audit, knip |
 | `mutation` | Mutation (incremental, changed scoped modules) | mutation paths (scoped modules, Stryker config, gate scripts, ratchet), workflow | Stryker runs on up to eight changed scoped files and runs the full scope when more than eight change. `scripts/mutation-gate.ts` checks every changed scoped file against `quality/ratchets/mutation.json`. Same-repository release PRs skip the run. [Decision](decisions/0018-test-runner-decision.md) |
 | `build` | Production build | code, contract, workflow | `next build` once; the `.next` output is the browser job's artifact |

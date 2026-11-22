@@ -68,7 +68,6 @@ correctly withheld auto-merge (label `dependencies:manual-review`):
 
 The former positive auto-merge path had only deterministic coverage at that time; it is no longer enabled.
 
-
 ## Runtime support inventory (2026-10-17)
 
 "LTS" is used only where the upstream publishes that policy; a maintained stable library
