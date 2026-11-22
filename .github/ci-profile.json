@@ -86,7 +86,7 @@
         "src/features/operations/adapters/telemetry-validate.ts",
         "src/features/operations/domain/**",
         "src/server/csp.ts",
-        "src/server/parse-config.ts",
+        "src/server/env-parse.ts",
         "src/server/fixture-safety.ts",
         "stryker.config.json",
         "scripts/mutation-scope.ts",

@@ -230,13 +230,13 @@ it("rejects unresolved and ambiguous local targets while accepting existing publ
 });
 
 it("follows client barrels transitively to private server and builtin dependencies", () => {
-  for (const target of ["@/server/config", "node:fs"])
+  for (const target of ["@/server/env", "node:fs"])
     assert.match(
       inspect({
         "app/client.tsx":
           '"use client"; import {config} from "@/shared/ui/barrel"; export const x=config;',
         "shared/ui/barrel.ts": `export {config} from "${target}";`,
-        "server/config.ts": "import 'server-only'; export const config={};",
+        "server/env.ts": "import 'server-only'; export const config={};",
       }).join("\n"),
       /client runtime reaches/,
     );
@@ -246,8 +246,8 @@ it("accepts explicit async Server Action RPC and serializable composition withou
   assert.deepEqual(
     inspect({
       "app/panel/actions.ts":
-        '"use server"; import {config} from "@/server/config"; export async function save(){return {ok:Boolean(config)}}',
-      "server/config.ts": "import 'server-only'; export const config={};",
+        '"use server"; import {config} from "@/server/env"; export async function save(){return {ok:Boolean(config)}}',
+      "server/env.ts": "import 'server-only'; export const config={};",
       "features/auth/presentation/form.tsx":
         '"use client"; import {save} from "@/app/panel/actions"; export const run=()=>save();',
       "app/panel/page.tsx":
@@ -259,14 +259,14 @@ it("accepts explicit async Server Action RPC and serializable composition withou
 
 it("rejects fake actions, private re-exports and core-to-action dependencies", () => {
   for (const action of [
-    '"use server"; export {config as save} from "@/server/config";',
+    '"use server"; export {config as save} from "@/server/env";',
     '"use server"; export const save={private:true};',
     "export async function save(){return {};}",
   ])
     assert.ok(
       inspect({
         "app/panel/actions.ts": action,
-        "server/config.ts": "import 'server-only'; export const config={};",
+        "server/env.ts": "import 'server-only'; export const config={};",
         "features/auth/presentation/form.tsx":
           '"use client"; import {save} from "@/app/panel/actions"; export const run=()=>save();',
       }).length > 0,
@@ -284,8 +284,8 @@ it("does not confuse public schema leaves with private server resource paths", (
   assert.match(
     inspect({
       "app/client.tsx":
-        '"use client"; import config from "@/server/config.json"; export const x=config;',
-      "server/config.json": '{"syntheticPrivateConfig":true}',
+        '"use client"; import config from "@/server/env.json"; export const x=config;',
+      "server/env.json": '{"syntheticPrivateConfig":true}',
     }).join("\n"),
     /client runtime reaches private server module/,
   );
@@ -394,7 +394,7 @@ it("admits only the analytics feature's existing four layers and preserves all b
         'import type { Source } from "../application/ports.ts"; export const adapter = (): Source | null => null;',
       "features/analytics/presentation/report.ts":
         'import type { Source } from "../application/ports.ts"; export type Props = { source: Source };',
-      "server/analytics.ts":
+      "server/container.ts":
         'import { adapter } from "../features/analytics/adapters/http.ts"; export const read = adapter;',
     }),
     [],
@@ -419,4 +419,78 @@ it("admits only the analytics feature's existing four layers and preserves all b
   ] as const) {
     assert.match(inspect({ [file]: source }).join("\n"), expected);
   }
+});
+
+it("lets only server/env.ts read process.env (instrumentation may read NEXT_RUNTIME only)", () => {
+  assert.deepEqual(
+    inspect({
+      "server/env.ts": 'import "server-only"; export const config = () => process.env.SECRET;',
+    }),
+    [],
+  );
+  assert.deepEqual(
+    inspect({
+      "instrumentation.ts":
+        'export async function register() { if (process.env.NEXT_RUNTIME !== "nodejs") return; process.exit(1); }',
+      "server/observability.ts":
+        "export const register = () => process.uptime() + process.memoryUsage().rss + globalThis.Number(1);",
+    }),
+    [],
+  );
+  const rejected: [file: string, source: string, use: string][] = [
+    [
+      "server/auth.ts",
+      "export const s = process.env.BETTER_AUTH_SECRET;",
+      "process.env.BETTER_AUTH_SECRET",
+    ],
+    ["proxy.ts", 'export const dev = process.env["NODE_ENV"];', "process.env.*"],
+    [
+      "instrumentation.ts",
+      "export const o = process.env.BACKOFFICE_ORIGIN;",
+      "process.env.BACKOFFICE_ORIGIN",
+    ],
+    [
+      "instrumentation.ts",
+      'export const w = () => { process.env.NEXT_RUNTIME = "nodejs"; };',
+      "process.env.NEXT_RUNTIME",
+    ],
+    ["app/panel/page.tsx", "export const all = process.env;", "process.env.*"],
+    ["server/container.ts", "const key = 'X'; export const v = process.env[key];", "process.env.*"],
+    ["server/auth.ts", 'const key = "env"; export const v = process[key].X;', "process.*"],
+    ["server/auth.ts", "export const v = (process).env.X;", "process.*"],
+    ["server/auth.ts", "const proc = process; export const v = proc.env.X;", "process.*"],
+    ["server/auth.ts", "const { env } = process; export const v = env.X;", "process.*"],
+    ["server/auth.ts", 'const { "env": e } = process; export const v = e.X;', "process.*"],
+    ["server/auth.ts", "export const v = globalThis.process.env.X;", "globalThis.process"],
+    ["server/auth.ts", 'export const v = globalThis["process"];', "globalThis.*"],
+    [
+      "server/auth.ts",
+      'import { env } from "node:process"; export const v = env.X;',
+      "import node:process",
+    ],
+    [
+      "server/auth.ts",
+      'export const v = async () => (await import("node:process")).env.X;',
+      "import node:process",
+    ],
+    ["server/auth.ts", 'export const v = require("process").env.X;', "import process"],
+    ["shared/ui/probe.tsx", "export const v = process.env.X;", "process.env.X"],
+  ];
+  for (const [file, source, use] of rejected)
+    assert.ok(
+      inspect({ [file]: source }).includes(
+        `src/${file}: process.env is read only in src/server/env.ts; elsewhere only process.exit, uptime and memoryUsage (${use})`,
+      ),
+      `${file}: ${source} -> ${inspect({ [file]: source }).join(" | ")}`,
+    );
+});
+
+it("does not treat local bindings named process or globalThis as the environment", () => {
+  assert.deepEqual(
+    inspect({
+      "server/auth.ts":
+        "const process = { env: { X: 1 } }; const globalThis = { process }; export const v = process.env.X + globalThis.process.env.X;",
+    }),
+    [],
+  );
 });

@@ -11,7 +11,7 @@ import {
   type Selection,
 } from "../../src/features/analytics/domain/report.ts";
 import { reportSelection } from "../../src/features/analytics/domain/selection.ts";
-import { parseConfig } from "../../src/server/parse-config.ts";
+import { parseConfig } from "../../src/server/env-parse.ts";
 
 const example = JSON.parse(
   readFileSync(

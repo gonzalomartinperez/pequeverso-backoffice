@@ -15,6 +15,6 @@
     "src/features/operations/domain/summary.ts": 66,
     "src/server/csp.ts": 37,
     "src/server/fixture-safety.ts": 72,
-    "src/server/parse-config.ts": 83
+    "src/server/env-parse.ts": 83
   }
 }
