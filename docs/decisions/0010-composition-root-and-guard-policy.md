@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-22
-- Task: M4.1 (roadmap); M4.8 completes the TypeScript 7.1 part
+- Task: M4.1 (roadmap); amended by M4.8 (2026-11-22)
 
 ## Context and problem statement
 
@@ -63,6 +63,23 @@ Option 2.
   Moving the proxy to the edge runtime would need these two checks split out first.
 - Bad: the guard still parses with the TypeScript 6 compiler API (`@typescript/typescript6`)
   until TypeScript 7.1 exposes one; M4.8 records the evaluation.
+
+### Amendment (M4.8, 2026-11-22): second layer enforced, TypeScript 7.1 deferred
+
+- Biome is the enforced second layer, with no baseline: `noImportCycles`,
+  `noUndeclaredDependencies`, `noPrivateImports`, `useImportType` and `useImportExtensions`
+  (every import names its file). `noExcessiveCognitiveComplexity` is capped at 10 for `src/`.
+  `scripts/` and `tests/` keep ratcheted ceilings at their measured maximum (110 and 59 on
+  2026-11-22), which may only go down. knip reports zero findings in `npm run check`.
+- The guard adds target-state rule 10: a presentation or `shared/ui` module may not exceed 250
+  lines. Dictionary data in `shared/i18n` is exempt. `shared/` covers `ui`, `lib` and `i18n` and
+  imports only `shared`.
+- TypeScript 7.1 evaluation: the stable `typescript` is 7.0.2, and it exposes only the
+  `typescript/unstable/*` IPC API. 7.1 is published as `7.1.0-beta` and nightly `7.1.0-dev`, not
+  as a stable release. The guard needs a synchronous parser and checker, so it stays on
+  `@typescript/typescript6` (risk R9 realised, dev dependency only). Re-evaluate when
+  `typescript@7.1.0` is stable: migrate the guard and the authz surface, then drop
+  `@typescript/typescript6`.
 
 ### Confirmation
 

@@ -14,6 +14,46 @@ const ERRORS: Record<string, string> = {
   account_not_linked: es.signIn.errors.accountNotLinked,
 };
 
+/** A signed-in visitor goes to the panel; an unreadable session counts as signed out. */
+async function signedIn(ready: boolean): Promise<boolean> {
+  if (!ready) return false;
+  try {
+    return (await currentActor()) !== null;
+  } catch {
+    return false;
+  }
+}
+
+function Notices({
+  ready,
+  invited,
+  error,
+}: {
+  ready: boolean;
+  invited: boolean;
+  error: string | null;
+}) {
+  return (
+    <>
+      {!ready || error === "unavailable" ? (
+        <Callout tone="danger" role="alert" data-testid="sign-in-unavailable">
+          <p>{es.signIn.errors.unavailable}</p>
+        </Callout>
+      ) : null}
+      {invited && ready ? (
+        <Callout tone="info" role="status">
+          <p>{es.signIn.invited}</p>
+        </Callout>
+      ) : null}
+      {error && error !== "unavailable" ? (
+        <Callout tone="danger" role="alert" data-testid="sign-in-error">
+          <p>{ERRORS[error] ?? es.signIn.errors.noAccess}</p>
+        </Callout>
+      ) : null}
+    </>
+  );
+}
+
 export default async function SignInPage({
   searchParams,
 }: {
@@ -21,15 +61,7 @@ export default async function SignInPage({
 }) {
   const params = await searchParams;
   const ready = await authReady();
-  if (ready) {
-    let signedIn = false;
-    try {
-      signedIn = (await currentActor()) !== null;
-    } catch {
-      signedIn = false;
-    }
-    if (signedIn) redirect("/panel");
-  }
+  if (await signedIn(ready)) redirect("/panel");
   const error = typeof params.error === "string" ? params.error : null;
   const invited = params.invitacion === "1";
   const providers = ready ? enabledProviders() : [];
@@ -40,21 +72,7 @@ export default async function SignInPage({
           <h1 className="text-heading">{es.signIn.title}</h1>
           <p className="text-small text-copy">{es.signIn.description}</p>
         </header>
-        {!ready || error === "unavailable" ? (
-          <Callout tone="danger" role="alert" data-testid="sign-in-unavailable">
-            <p>{es.signIn.errors.unavailable}</p>
-          </Callout>
-        ) : null}
-        {invited && ready ? (
-          <Callout tone="info" role="status">
-            <p>{es.signIn.invited}</p>
-          </Callout>
-        ) : null}
-        {error && error !== "unavailable" ? (
-          <Callout tone="danger" role="alert" data-testid="sign-in-error">
-            <p>{ERRORS[error] ?? es.signIn.errors.noAccess}</p>
-          </Callout>
-        ) : null}
+        <Notices ready={ready} invited={invited} error={error} />
         {ready ? <SignInPanel providers={providers} /> : null}
       </div>
     </BackofficeFrame>

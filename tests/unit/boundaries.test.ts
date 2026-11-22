@@ -551,3 +551,19 @@ it("resolves only declared subpath imports, by exact file name (M4.3)", () => {
     /client runtime reaches private server module server\/env\.ts/,
   );
 });
+
+it("keeps presentation and shared/ui modules at most 250 lines (target-state rule 10)", () => {
+  const long = (lines: number) =>
+    Array.from({ length: lines }, (_, i) => `export const v${i} = ${i};`).join("\n");
+  assert.deepEqual(inspect({ "features/auth/presentation/probe.tsx": long(250) }), []);
+  assert.match(
+    inspect({ "features/auth/presentation/probe.tsx": long(251) }).join("\n"),
+    /presentation module has 251 lines \(max 250\)/,
+  );
+  assert.match(
+    inspect({ "shared/ui/probe.tsx": long(260) }).join("\n"),
+    /shared module has 260 lines/,
+  );
+  assert.deepEqual(inspect({ "features/auth/application/probe.ts": long(400) }), []);
+  assert.deepEqual(inspect({ "shared/i18n/probe.ts": long(400) }), []);
+});
