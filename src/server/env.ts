@@ -1,5 +1,5 @@
 import "server-only";
-import { type BackofficeConfig, parseConfig } from "./env-parse.ts";
+import { type BackofficeConfig, parseConfig, parseVersion } from "./env-parse.ts";
 
 export type { BackofficeConfig };
 
@@ -26,4 +26,9 @@ export function developmentBuild(): boolean {
  */
 export function httpsOrigin(): boolean {
   return process.env.BACKOFFICE_ORIGIN?.startsWith("https://") === true;
+}
+
+/** The build label alone, for liveness: never parses (or fails on) the full configuration. */
+export function buildVersion(): string {
+  return parseVersion(process.env.VERSION);
 }

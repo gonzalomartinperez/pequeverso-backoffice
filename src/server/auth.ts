@@ -16,6 +16,8 @@ import { PostgresAccessStore } from "../features/auth/adapters/postgres-access-s
 import { type AccessDeps, type Actor, resolveActor } from "../features/auth/application/access.ts";
 import { type Action, can } from "../features/auth/domain/access.ts";
 import { config } from "./env.ts";
+import { log } from "./log.ts";
+import { currentRequestId } from "./request-context.ts";
 
 /** Composition root for authentication and access (server only). */
 type Composition = { pool: Pool; access: AccessDeps; auth: Auth };
@@ -99,7 +101,7 @@ export async function requireActor(action: Action): Promise<Actor> {
     actor = await currentActor();
   } catch (error) {
     if (isRedirectOrDynamic(error)) throw error;
-    console.error(JSON.stringify({ event: "access_check_failed" }));
+    log("access_check_failed", {}, await currentRequestId(), "error");
     redirect("/ingresar?error=unavailable");
   }
   if (!actor) redirect("/ingresar");
