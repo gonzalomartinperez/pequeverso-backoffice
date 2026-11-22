@@ -1,6 +1,7 @@
 "use client";
 import { LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
+import { es } from "#shared/i18n/es.ts";
 import { Button } from "#shared/ui/button.tsx";
 import { Callout } from "#shared/ui/callout.tsx";
 import { authClient } from "./auth-client.ts";
@@ -32,7 +33,7 @@ export function SignInPanel({ providers }: { providers: ProviderOption[] }) {
   if (!providers.length)
     return (
       <Callout tone="danger" role="alert">
-        <p>No hay proveedores de identidad configurados en este entorno.</p>
+        <p>{es.signIn.noProviders}</p>
       </Callout>
     );
 
@@ -47,12 +48,12 @@ export function SignInPanel({ providers }: { providers: ProviderOption[] }) {
           onClick={() => void start(provider.id)}
         >
           <LogIn aria-hidden="true" />
-          Continuar con {provider.label}
+          {es.signIn.continueWith(provider.label)}
         </Button>
       ))}
       {failed ? (
         <p role="alert" className="text-small text-danger">
-          No pudimos iniciar el ingreso. Vuelve a intentarlo.
+          {es.signIn.errors.failed}
         </p>
       ) : null}
     </div>

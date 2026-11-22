@@ -23,6 +23,9 @@ source drift apart.
 | page | `src/app/ingresar/page.tsx#default` | `public` | `allowed` | `allowed` | `allowed` |
 | page | `src/app/panel/layout.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
 | page | `src/app/panel/page.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
+| page | `src/app/panel/ejecuciones/page.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
+| page | `src/app/panel/consumo/page.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
+| page | `src/app/panel/catalogo/page.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
 | page | `src/app/panel/analitica/page.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
 | page | `src/app/panel/cuenta/page.tsx#default` | `read_operations` | `allowed` | `allowed` | `redirect:/ingresar` |
 | page | `src/app/panel/accesos/page.tsx#default` | `manage_access` | `allowed` | `redirect:/panel` | `redirect:/ingresar` |

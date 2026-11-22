@@ -1,6 +1,7 @@
 "use client";
 import { Check, Copy, UserPlus } from "lucide-react";
 import { useActionState, useId, useState } from "react";
+import { es } from "#shared/i18n/es.ts";
 import { Button } from "#shared/ui/button.tsx";
 import { Callout } from "#shared/ui/callout.tsx";
 
@@ -29,7 +30,7 @@ export function InviteForm({
       <form action={submit} className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
         <div className="flex flex-col gap-1">
           <label htmlFor={emailId} className="text-small font-extrabold text-ink">
-            E-mail verificado de la persona
+            {es.invitation.verifiedEmail}
           </label>
           <input
             id={emailId}
@@ -43,16 +44,16 @@ export function InviteForm({
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor={roleId} className="text-small font-extrabold text-ink">
-            Rol
+            {es.access.role}
           </label>
           <select id={roleId} name="role" defaultValue="viewer" className={field}>
-            <option value="viewer">Lectura (viewer)</option>
-            <option value="owner">Propietario (owner)</option>
+            <option value="viewer">{es.invitation.viewerOption}</option>
+            <option value="owner">{es.invitation.ownerOption}</option>
           </select>
         </div>
         <Button type="submit" size="sm" disabled={pending} aria-busy={pending}>
           <UserPlus aria-hidden="true" />
-          Crear invitación
+          {es.invitation.create}
         </Button>
       </form>
       <div aria-live="polite">
@@ -65,9 +66,9 @@ export function InviteForm({
           <Callout tone="notice" data-testid="invitation-created">
             <div className="flex min-w-0 flex-col gap-2">
               <p>
-                Invitación para <strong>{state.email}</strong> ({state.role}). Vence el{" "}
-                {new Date(state.expiresAt).toLocaleString("es", { timeZone: "UTC" })} UTC y sirve
-                una sola vez. Este enlace no se vuelve a mostrar: envíalo por un canal privado.
+                {`${es.invitation.createdPrefix} `}
+                <strong>{state.email}</strong>
+                {` ${es.invitation.createdDetails(state.role, new Date(state.expiresAt).toLocaleString("es", { timeZone: "UTC" }))}`}
               </p>
               <code
                 className="block rounded-sm bg-surface-raised px-2 py-1 text-tiny [overflow-wrap:anywhere]"
@@ -102,10 +103,10 @@ function CopyLink({ link }: { link: string }) {
         }}
       >
         {state === "copied" ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-        {state === "copied" ? "Copiado" : "Copiar enlace"}
+        {state === "copied" ? es.invitation.copied : es.invitation.copyLink}
       </Button>
       <span role="status" className="text-tiny">
-        {state === "failed" ? "No se pudo copiar; selecciona el enlace y cópialo a mano." : ""}
+        {state === "failed" ? es.invitation.copyFailed : ""}
       </span>
     </div>
   );

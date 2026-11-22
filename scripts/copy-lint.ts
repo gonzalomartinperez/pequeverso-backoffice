@@ -3,6 +3,7 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 type CopyString = { line: number; text: string };
+type CopyContext = { kind: "literal" | "jsxText"; offset: number };
 type Finding = { file: string; line: number; word: string };
 type BaselineEntry = { file: string; word: string; count: number };
 
@@ -24,7 +25,10 @@ export function findVoseo(text: string): string[] {
  * Small lexer, not a TS parser: JSX is recognized by an opening tag/fragment.
  * Template expressions recurse into code; only their literal segments become copy.
  */
-export function extractCopyStrings(source: string): CopyString[] {
+export function extractCopyStrings(
+  source: string,
+  select?: (copy: CopyString, context: CopyContext) => boolean,
+): CopyString[] {
   const result: CopyString[] = [];
   let i = 0;
   let line = 1;
@@ -33,10 +37,10 @@ export function extractCopyStrings(source: string): CopyString[] {
     if (char === "\n") line++;
     return char;
   };
-  const add = (text: string, startLine: number) => {
+  const add = (text: string, startLine: number, context: CopyContext) => {
     const leading = text.match(/^\s*/)?.[0] ?? "";
-    if (text.trim())
-      result.push({ line: startLine + (leading.match(/\n/g)?.length ?? 0), text: text.trim() });
+    const copy = { line: startLine + (leading.match(/\n/g)?.length ?? 0), text: text.trim() };
+    if (copy.text && (!select || select(copy, context))) result.push(copy);
   };
   const escaped = () => {
     const char = take();
@@ -54,6 +58,7 @@ export function extractCopyStrings(source: string): CopyString[] {
   function literal(quote: string, skip = false): void {
     take();
     let startLine = line;
+    let offset = i;
     let text = "";
     while (i < source.length) {
       if (source[i] === quote) {
@@ -64,15 +69,16 @@ export function extractCopyStrings(source: string): CopyString[] {
         take();
         text += escaped();
       } else if (quote === "`" && source.startsWith("${", i)) {
-        if (!skip) add(text, startLine);
+        if (!skip) add(text, startLine, { kind: "literal", offset });
         text = "";
         take();
         take();
         code(true);
         startLine = line;
+        offset = i;
       } else text += take();
     }
-    if (!skip) add(text, startLine);
+    if (!skip) add(text, startLine, { kind: "literal", offset });
   }
   function jsx(): void {
     take(); // <
@@ -102,9 +108,10 @@ export function extractCopyStrings(source: string): CopyString[] {
         code(true);
       } else {
         const startLine = line;
+        const offset = i;
         let text = "";
         while (i < source.length && source[i] !== "<" && source[i] !== "{") text += take();
-        add(text, startLine);
+        add(text, startLine, { kind: "jsxText", offset });
       }
     }
   }

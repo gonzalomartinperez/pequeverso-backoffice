@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import { es } from "#shared/i18n/es.ts";
 import type { ChartRow } from "./daily-charts.tsx";
 
 /**
@@ -10,7 +11,7 @@ import type { ChartRow } from "./daily-charts.tsx";
 function ChartsPlaceholder() {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-5" data-testid="charts-loading">
-      {["Ejecuciones por día", "Costo por día (US$)"].map((caption) => (
+      {[es.operations.daily.runsChart, es.operations.daily.costChart].map((caption) => (
         <figure key={caption} className="m-0 min-w-0 rounded-md border border-line bg-surface p-3">
           <figcaption className="mb-2 text-small font-extrabold text-ink">{caption}</figcaption>
           <div aria-hidden="true" className="h-64 w-full" />

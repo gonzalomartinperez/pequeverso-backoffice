@@ -4,9 +4,10 @@ import { SignOutButton } from "#features/auth/presentation/account-controls.tsx"
 import { BackofficeFrame } from "#features/auth/presentation/backoffice-frame.tsx";
 import { PanelNav } from "#features/auth/presentation/panel-nav.tsx";
 import { requireActor } from "#server/auth.ts";
+import { es } from "#shared/i18n/es.ts";
 
 export const metadata: Metadata = {
-  title: "Backoffice · Asistente Pequeverso",
+  title: es.common.siteTitle,
   robots: { index: false, follow: false },
 };
 
@@ -22,10 +23,10 @@ export default async function PanelLayout({ children }: { children: ReactNode })
             className="hidden max-w-56 truncate text-tiny text-muted sm:inline"
             data-testid="actor"
           >
-            {actor.email} · {actor.role === "owner" ? "propietario" : "lectura"}
+            {actor.email} · {actor.role === "owner" ? es.panel.ownerInline : es.panel.viewerInline}
           </span>
           <span className="text-tiny text-muted sm:hidden" data-testid="actor-role">
-            {actor.role === "owner" ? "Propietario" : "Lectura"}
+            {actor.role === "owner" ? es.common.owner : es.common.viewer}
           </span>
           <SignOutButton />
         </>

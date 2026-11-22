@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { es } from "#shared/i18n/es.ts";
 
 export type ChartRow = {
   day: string;
@@ -45,7 +46,7 @@ export function DailyCharts({ rows }: { rows: ChartRow[] }) {
     <div className="grid min-w-0 grid-cols-1 gap-5">
       <figure className="m-0 min-w-0 rounded-md border border-line bg-surface p-3">
         <figcaption className="mb-2 text-small font-extrabold text-ink">
-          Ejecuciones por día
+          {es.operations.daily.runsChart}
         </figcaption>
         <div aria-hidden="true" className="h-64 w-full" data-testid="chart-runs">
           <ResponsiveContainer width="100%" height="100%">
@@ -66,28 +67,28 @@ export function DailyCharts({ rows }: { rows: ChartRow[] }) {
               <Legend wrapperStyle={legendStyle} formatter={legendLabel} />
               <Bar
                 dataKey="completed"
-                name="Completadas"
+                name={es.operations.runs.completed}
                 stackId="runs"
                 fill="var(--chart-completed)"
                 isAnimationActive={false}
               />
               <Bar
                 dataKey="failed"
-                name="Fallidas"
+                name={es.operations.runs.failed}
                 stackId="runs"
                 fill="var(--chart-failed)"
                 isAnimationActive={false}
               />
               <Bar
                 dataKey="cancelled"
-                name="Canceladas"
+                name={es.operations.runs.cancelled}
                 stackId="runs"
                 fill="var(--chart-cancelled)"
                 isAnimationActive={false}
               />
               <Bar
                 dataKey="interrupted"
-                name="Interrumpidas"
+                name={es.operations.runs.interrupted}
                 stackId="runs"
                 fill="var(--chart-interrupted)"
                 isAnimationActive={false}
@@ -98,7 +99,7 @@ export function DailyCharts({ rows }: { rows: ChartRow[] }) {
       </figure>
       <figure className="m-0 min-w-0 rounded-md border border-line bg-surface p-3">
         <figcaption className="mb-2 text-small font-extrabold text-ink">
-          Costo por día (US$)
+          {es.operations.daily.costChart}
         </figcaption>
         <div aria-hidden="true" className="h-64 w-full" data-testid="chart-cost">
           <ResponsiveContainer width="100%" height="100%">
@@ -129,14 +130,14 @@ export function DailyCharts({ rows }: { rows: ChartRow[] }) {
               <Legend wrapperStyle={legendStyle} formatter={legendLabel} />
               <Bar
                 dataKey="confirmed"
-                name="Con uso informado"
+                name={es.operations.budget.confirmed}
                 stackId="cost"
                 fill="var(--chart-confirmed)"
                 isAnimationActive={false}
               />
               <Bar
                 dataKey="estimated"
-                name="Estimado"
+                name={es.operations.budget.estimated}
                 stackId="cost"
                 fill="var(--chart-estimated)"
                 isAnimationActive={false}

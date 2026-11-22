@@ -108,6 +108,21 @@ export const MATRIX: readonly Row[] = [
     covers: { file: browser("navigation"), needle: '"/panel"' },
   },
   {
+    id: "page:src/app/panel/ejecuciones/page.tsx#default",
+    guard: "read_operations",
+    covers: { file: browser("operations"), needle: "/panel/ejecuciones" },
+  },
+  {
+    id: "page:src/app/panel/consumo/page.tsx#default",
+    guard: "read_operations",
+    covers: { file: browser("operations"), needle: "/panel/consumo" },
+  },
+  {
+    id: "page:src/app/panel/catalogo/page.tsx#default",
+    guard: "read_operations",
+    covers: { file: browser("operations"), needle: "/panel/catalogo" },
+  },
+  {
     id: "page:src/app/panel/analitica/page.tsx#default",
     guard: "read_operations",
     covers: { file: browser("analytics"), needle: "/panel/analitica" },

@@ -1,9 +1,10 @@
 import { Activity, CircleCheck, FlaskConical, TriangleAlert } from "lucide-react";
+import { es } from "#shared/i18n/es.ts";
+import * as f from "#shared/lib/format.ts";
 import { Badge } from "#shared/ui/badge.tsx";
 import { Callout } from "#shared/ui/callout.tsx";
 import { Facts, Section } from "#shared/ui/sections.tsx";
 import type { TelemetryReading } from "../application/ports.ts";
-import * as f from "./format.ts";
 
 function bytes(value: number | null): string {
   return value == null
@@ -21,21 +22,13 @@ function lifetime(seconds: number): string {
 export function Telemetry({ reading }: { reading: TelemetryReading }) {
   if (reading.status !== "ok")
     return (
-      <Section
-        id="telemetry"
-        title="Estado técnico"
-        description="Lectura opcional e independiente del resumen de negocio."
-      >
+      <Section id="telemetry" title={es.telemetry.title} description={es.telemetry.description}>
         <p className="text-small text-copy">
           <strong>{f.UNAVAILABLE}.</strong>{" "}
-          {reading.reason === "disabled"
-            ? "La telemetría privada está desactivada o este productor todavía no la ofrece."
-            : "No se pudo obtener una muestra técnica válida."}{" "}
-          El resumen de solicitudes y presupuesto sigue disponible si la API lo informa.
+          {reading.reason === "disabled" ? es.telemetry.disabled : es.telemetry.invalidSample}{" "}
+          {es.telemetry.summaryStillAvailable}
         </p>
-        <p className="mt-2 text-tiny text-muted">
-          No se infiere que el servicio esté caído por la ausencia de esta lectura.
-        </p>
+        <p className="mt-2 text-tiny text-muted">{es.telemetry.availabilityCaveat}</p>
       </Section>
     );
   const t = reading.telemetry;
@@ -43,15 +36,15 @@ export function Telemetry({ reading }: { reading: TelemetryReading }) {
   return (
     <Section
       id="telemetry"
-      title="Estado técnico"
-      description={`Muestra del ${f.when(t.generatedAt)}. Es una observación puntual; no mide uptime del proveedor.`}
+      title={es.telemetry.title}
+      description={es.telemetry.sampleDescription(f.when(t.generatedAt))}
     >
       {t.synthetic ? (
         <Callout tone="notice" role="note" data-testid="telemetry-fixture-banner">
           <FlaskConical aria-hidden="true" />
           <p>
-            <strong>Proveedor de prueba (fixture).</strong> La muestra informa HTTP y recursos del
-            proceso; no acredita disponibilidad de OpenAI ni calidad del modelo.
+            <strong>{es.telemetry.syntheticTitle}</strong>
+            {` ${es.telemetry.syntheticDescription}`}
           </p>
         </Callout>
       ) : null}
@@ -63,103 +56,96 @@ export function Telemetry({ reading }: { reading: TelemetryReading }) {
             ) : (
               <TriangleAlert aria-hidden="true" className="size-5 text-danger" />
             )}
-            API {t.readiness.ready ? "preparada" : "no preparada"}
+            {es.telemetry.apiReadiness(
+              t.readiness.ready ? es.telemetry.ready : es.telemetry.notReady,
+            )}
           </p>
-          <p className="mt-2 text-small text-copy">
-            Comprobación local de la API, independiente de que el asistente esté habilitado.
+          <p className="mt-2 text-small text-copy">{es.telemetry.readinessDescription}</p>
+          <p className="mt-2 text-tiny text-muted">
+            {es.telemetry.checkedAt(f.when(t.readiness.checkedAt))}
           </p>
-          <p className="mt-2 text-tiny text-muted">Comprobada: {f.when(t.readiness.checkedAt)}</p>
         </div>
         <div className="rounded-md bg-surface-sunken p-4">
           <p className="flex items-center gap-2 font-extrabold text-ink">
             <Activity aria-hidden="true" className="size-5 text-icon" />
-            {f.count(t.activeRuns)} / {f.count(t.maxConcurrentRuns)} ejecuciones activas
+            {es.telemetry.activeRuns(f.count(t.activeRuns), f.count(t.maxConcurrentRuns))}
           </p>
-          <p className="mt-2 text-small text-copy">
-            Capacidad simultánea configurada, no una garantía de rendimiento.
-          </p>
+          <p className="mt-2 text-small text-copy">{es.telemetry.capacityDescription}</p>
           <p className="mt-2 text-tiny text-muted">
-            Proceso en marcha: {lifetime(t.processUptimeSeconds)}
+            {es.telemetry.uptime(lifetime(t.processUptimeSeconds))}
           </p>
         </div>
         <div className="rounded-md bg-surface-sunken p-4">
-          <Badge tone="quiet">Proveedor: sin comprobar</Badge>
-          <p className="mt-2 text-small text-copy">
-            No se envían preguntas ni llamadas pagas para comprobarlo. Una API preparada no acredita
-            que el modelo responda.
-          </p>
+          <Badge tone="quiet">{es.telemetry.providerUnchecked}</Badge>
+          <p className="mt-2 text-small text-copy">{es.telemetry.providerCaveat}</p>
         </div>
       </div>
       <details className="mt-5 rounded-md border border-line p-4">
         <summary className="min-h-11 cursor-pointer [overflow-wrap:anywhere] font-extrabold text-link focus-visible:outline-3 focus-visible:outline-ring">
-          Recursos, tráfico y exportación de trazas
+          {es.telemetry.diagnosticsTitle}
         </summary>
         <div className="mt-4 grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
-            <h3 className="mb-3 text-title">Proceso y cgroup</h3>
+            <h3 className="mb-3 text-title">{es.telemetry.processTitle}</h3>
             <Facts
               items={[
-                { term: "Memoria RSS del proceso", value: bytes(resource.processRssBytes) },
-                { term: "Pico RSS del proceso", value: bytes(resource.processPeakRssBytes) },
+                { term: es.telemetry.processRss, value: bytes(resource.processRssBytes) },
+                { term: es.telemetry.peakRss, value: bytes(resource.processPeakRssBytes) },
                 {
-                  term: "Memoria actual del cgroup",
+                  term: es.telemetry.cgroupMemory,
                   value: bytes(resource.cgroupMemoryCurrentBytes),
                 },
                 {
-                  term: "Límite de memoria del cgroup",
+                  term: es.telemetry.cgroupMemoryLimit,
                   value: bytes(resource.cgroupMemoryLimitBytes),
                 },
                 {
-                  term: "Límite de CPU del cgroup",
+                  term: es.telemetry.cgroupCpuLimit,
                   value:
                     resource.cgroupCpuLimitCores == null
                       ? f.UNAVAILABLE
                       : `${resource.cgroupCpuLimitCores} CPU`,
                 },
                 {
-                  term: "PIDs actuales / límite",
+                  term: es.telemetry.cgroupPids,
                   value: `${f.count(resource.cgroupPidsCurrent)} / ${f.count(resource.cgroupPidsLimit)}`,
                 },
               ]}
             />
-            <p className="mt-3 text-tiny text-muted">
-              El cgroup puede incluir otros procesos. Sus límites no son una reserva exclusiva del
-              asistente; RSS y memoria del cgroup son métricas diferentes.
-            </p>
+            <p className="mt-3 text-tiny text-muted">{es.telemetry.cgroupDescription}</p>
           </div>
           <div>
-            <h3 className="mb-3 text-title">HTTP y trazas</h3>
+            <h3 className="mb-3 text-title">{es.telemetry.httpAndTraces}</h3>
             <Facts
               items={[
-                { term: "Solicitudes HTTP", value: f.count(t.http.requests) },
-                { term: "Errores HTTP 5xx", value: f.count(t.http.serverErrors) },
-                { term: "Solicitudes HTTP en curso", value: f.count(t.http.inflight) },
+                { term: es.telemetry.httpRequests, value: f.count(t.http.requests) },
+                { term: es.telemetry.httpServerErrors, value: f.count(t.http.serverErrors) },
+                { term: es.telemetry.httpInflight, value: f.count(t.http.inflight) },
                 {
-                  term: "Exportación de trazas",
-                  value: t.traces.enabled ? "Activada" : "Desactivada",
+                  term: es.telemetry.traceExport,
+                  value: t.traces.enabled
+                    ? es.telemetry.traceExportEnabled
+                    : es.telemetry.traceExportDisabled,
                 },
-                { term: "Muestreo configurado", value: f.pct(t.traces.samplingRatio * 100) },
+                { term: es.telemetry.traceSampling, value: f.pct(t.traces.samplingRatio * 100) },
                 {
-                  term: "Exportaciones correctas / fallidas",
+                  term: es.telemetry.traceExportCounts,
                   value: `${f.count(t.traces.exportSuccesses)} / ${f.count(t.traces.exportFailures)}`,
                 },
-                { term: "Último intento de exportación", value: f.when(t.traces.lastExportAt) },
+                { term: es.telemetry.traceLastExport, value: f.when(t.traces.lastExportAt) },
                 {
-                  term: "Resultado del último intento",
+                  term: es.telemetry.traceLastResult,
                   value:
                     t.traces.lastExportSuccess === null
                       ? f.UNAVAILABLE
                       : t.traces.lastExportSuccess
-                        ? "Correcto"
-                        : "Fallido",
+                        ? es.telemetry.traceExportSucceeded
+                        : es.telemetry.traceExportFailed,
                 },
               ]}
             />
             <p className="mt-3 text-tiny text-muted">
-              Contadores desde {f.when(t.processStartedAt)}: se reinician con el proceso. Los
-              errores 5xx no incluyen fallos SSE enviados dentro de HTTP 200; consulta Solicitudes
-              para los resultados del asistente. Las trazas son best effort, no un registro
-              duradero.
+              {es.telemetry.countersSince(f.when(t.processStartedAt))}
             </p>
           </div>
         </div>

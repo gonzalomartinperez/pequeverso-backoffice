@@ -23,7 +23,7 @@ const ALLOWED: Record<Layer, Layer[]> = {
   application: ["domain", "application"],
   adapters: ["domain", "application", "adapters"],
   presentation: ["domain", "application", "presentation", "shared"],
-  shared: ["domain", "shared"],
+  shared: ["shared"],
   server: ["domain", "application", "adapters", "server", "shared"],
   app: ["domain", "application", "presentation", "shared", "server", "app"],
 };
@@ -96,7 +96,7 @@ function place(src: string, file: string): Place | null {
       rel,
     );
   if (feature) return { feature: feature[1] ?? null, layer: feature[2] as Layer };
-  if (rel.startsWith("shared/ui/")) return { feature: null, layer: "shared" };
+  if (/^shared\/(?:ui|lib|i18n)\//.test(rel)) return { feature: null, layer: "shared" };
   if (rel.startsWith("server/")) return { feature: null, layer: "server" };
   if (rel.startsWith("app/") || rel === "proxy.ts" || rel === "instrumentation.ts")
     return { feature: null, layer: "app" };

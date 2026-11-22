@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
-import { cn } from "./cn.ts";
+import { cn } from "#shared/lib/cn.ts";
 
 /**
  * Owned adaptation of the shadcn/ui button (MIT) to Pequeverso roles. Every target is ≥ 44 px

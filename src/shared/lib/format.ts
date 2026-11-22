@@ -1,7 +1,7 @@
-import type { Money } from "../domain/summary.ts";
+import { es } from "#shared/i18n/es.ts";
 
 /** Spanish display helpers. Every function renders `null` as the same honest placeholder. */
-export const UNAVAILABLE = "No disponible";
+export const UNAVAILABLE = es.common.unavailable;
 
 const integer = new Intl.NumberFormat("es", { maximumFractionDigits: 0 });
 const compact = new Intl.NumberFormat("es", { notation: "compact", maximumFractionDigits: 1 });
@@ -25,7 +25,7 @@ export function tokens(value: number | null): string {
 }
 
 /** USD with enough decimals for sub-cent model costs (4 below one dollar, 2 above). */
-export function usd(value: Money): string {
+export function usd(value: string | null): string {
   if (value == null) return UNAVAILABLE;
   const amount = Number(value);
   if (!Number.isFinite(amount)) return UNAVAILABLE;
@@ -64,30 +64,31 @@ export function pct(value: number | null): string {
 export function age(value: Date | null, now: Date): string {
   if (value == null) return UNAVAILABLE;
   const minutes = Math.round((now.getTime() - value.getTime()) / 60_000);
-  if (minutes < 1) return "hace menos de 1 min";
-  if (minutes < 60) return `hace ${minutes} min`;
+  if (minutes < 1) return es.format.ageUnderMinute;
+  if (minutes < 60) return es.format.ageMinutes(minutes);
   const hours = Math.round(minutes / 60);
-  if (hours < 48) return `hace ${hours} h`;
-  return `hace ${Math.round(hours / 24)} días`;
+  if (hours < 48) return es.format.ageHours(hours);
+  return es.format.ageDays(Math.round(hours / 24));
 }
 
-const REASONS: Record<string, string> = {
-  assistant_disabled: "El asistente está desactivado",
-  catalog_unavailable: "No hay un catálogo válido activo",
-  budget_exhausted: "Se alcanzó el presupuesto",
-  provider_unavailable: "Proveedor del modelo no disponible",
-  generation_failed: "La respuesta no se pudo generar",
-  timeout: "Tiempo de respuesta agotado",
-  busy: "Capacidad ocupada",
+/** API reason codes (snake_case, from the ops contract) to their dictionary messages. */
+const REASONS: Readonly<Record<string, string>> = {
+  assistant_disabled: es.format.reasons.assistantDisabled,
+  catalog_unavailable: es.format.reasons.catalogUnavailable,
+  budget_exhausted: es.format.reasons.budgetExhausted,
+  provider_unavailable: es.format.reasons.providerUnavailable,
+  generation_failed: es.format.reasons.generationFailed,
+  timeout: es.format.reasons.timeout,
+  busy: es.format.reasons.busy,
 };
 
 export function reason(code: string | null): string {
-  if (code == null) return "Sin motivo informado";
-  return REASONS[code] ?? code;
+  if (code == null) return es.format.noReason;
+  return Object.hasOwn(REASONS, code) ? (REASONS[code] ?? code) : code;
 }
 
 export function windowLabel(hours: number): string {
-  if (hours === 24) return "Últimas 24 horas";
-  if (hours % 24 === 0) return `Últimos ${hours / 24} días`;
-  return `Últimas ${hours} horas`;
+  if (hours === 24) return es.format.last24Hours;
+  if (hours % 24 === 0) return es.format.lastDays(hours / 24);
+  return es.format.lastHours(hours);
 }
