@@ -336,7 +336,7 @@ describe("guard verification", () => {
       ...files,
       [file]: (files[file] ?? "").replace(/await requireActor\([^)]*\);/g, ""),
     });
-    const analytics = checkGuards(surfaceOf(strip("src/server/analytics.ts")), MATRIX, { root });
+    const analytics = checkGuards(surfaceOf(strip("src/server/container.ts")), MATRIX, { root });
     has(analytics, "page:src/app/panel/analitica/page.tsx#default: no verified requireActor guard");
     const actions = checkGuards(surfaceOf(strip("src/app/panel/accesos/actions.ts")), MATRIX, {
       root,

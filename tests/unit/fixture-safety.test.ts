@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { describe, it } from "node:test";
+import { parseConfig } from "../../src/server/env-parse.ts";
 import { assertDisposableDatabase } from "../../src/server/fixture-safety.ts";
-import { parseConfig } from "../../src/server/parse-config.ts";
 
 const PROBE = "fixture-redaction-probe";
 
