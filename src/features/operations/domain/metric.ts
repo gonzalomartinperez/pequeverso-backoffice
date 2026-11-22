@@ -6,8 +6,6 @@
 import type { DailyRow, OpsSummary, RunWindow } from "./summary.ts";
 import { acceptedRuns, addMoney, budgetUse, catalogFreshness, percent } from "./summary.ts";
 
-export type MetricState = "ok" | "empty" | "unavailable" | "stale" | "withheld" | "error";
-
 export type UnavailableReason = "not_reported" | "no_budget" | "not_configured" | "source_down";
 
 export type Metric<T> =
@@ -18,11 +16,14 @@ export type Metric<T> =
   | { state: "withheld" }
   | { state: "error" };
 
-export function ok<T>(value: T): { state: "ok"; value: T } {
+export function ok<T extends NonNullable<unknown>>(value: T): { state: "ok"; value: T } {
   return { state: "ok", value };
 }
 
-export function stale<T>(value: T, ageMs: number): { state: "stale"; value: T; ageMs: number } {
+export function stale<T extends NonNullable<unknown>>(
+  value: T,
+  ageMs: number,
+): { state: "stale"; value: T; ageMs: number } {
   return { state: "stale", value, ageMs };
 }
 
@@ -45,7 +46,7 @@ export function error(): { state: "error" } {
   return { state: "error" };
 }
 
-export function fromNullable<T>(
+export function fromNullable<T extends NonNullable<unknown>>(
   value: T | null | undefined,
   reason: UnavailableReason = "not_reported",
 ): Metric<T> {
@@ -56,14 +57,20 @@ export function hasValue<T>(metric: Metric<T>): metric is Extract<Metric<T>, { v
   return metric.state === "ok" || metric.state === "stale";
 }
 
-export function mapMetric<T, U>(metric: Metric<T>, map: (value: T) => U): Metric<U> {
-  if (metric.state === "ok") return ok(map(metric.value));
-  if (metric.state === "stale") return stale(map(metric.value), metric.ageMs);
-  return metric;
+/** Maps a present value; a mapping that yields null or undefined makes the metric unavailable. */
+export function mapMetric<T, U extends NonNullable<unknown>>(
+  metric: Metric<T>,
+  map: (value: T) => U | null | undefined,
+): Metric<U> {
+  if (metric.state !== "ok" && metric.state !== "stale") return metric;
+  const value = map(metric.value);
+  if (value == null) return unavailable("not_reported");
+  return metric.state === "ok" ? ok(value) : stale(value, metric.ageMs);
 }
 
 export function withheldBelow(count: number | null, k = 3): Metric<number> {
   if (count === null) return unavailable("not_reported");
+  if (!Number.isFinite(count) || count < 0) return error();
   return count > 0 && count < k ? withheld() : ok(count);
 }
 
@@ -99,22 +106,33 @@ export function priceExpiry(
   summary: OpsSummary,
   now: Date,
 ): Metric<{ expiresAt: Date; remainingMs: number }> {
-  const { verifiedAt, priceMaxAgeHours } = summary.catalog;
+  const { verifiedAt, priceMaxAgeHours, priceStatus } = summary.catalog;
   if (verifiedAt === null || priceMaxAgeHours === null) return unavailable("not_reported");
   const expiresAt = new Date(verifiedAt.getTime() + priceMaxAgeHours * 3_600_000);
   const remainingMs = expiresAt.getTime() - now.getTime();
+  if (!Number.isFinite(remainingMs)) return error();
   const value = { expiresAt, remainingMs };
-  return remainingMs < 0 ? stale(value, -remainingMs) : ok(value);
+  // The API's own verdict wins, as in catalogFreshness: "unverified" is stale even before expiry.
+  if (remainingMs < 0 || priceStatus === "unverified")
+    return stale(value, Math.max(0, -remainingMs));
+  return ok(value);
 }
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 export function monthProjection(
   daily: readonly DailyRow[],
   monthToDate: string | null,
   now: Date,
 ): Metric<string> {
-  const recent = daily
+  if (Number.isNaN(now.getTime())) return error();
+  // Complete UTC days only: today's row is still accruing, so it is never averaged.
+  const today = now.toISOString().slice(0, 10);
+  const days = daily.filter(({ day }) => ISO_DAY.test(day) && day < today);
+  if (new Set(days.map(({ day }) => day)).size !== days.length) return unavailable("not_reported");
+  const recent = days
     .filter(({ confirmed, estimated }) => confirmed !== null && estimated !== null)
-    .sort((a, b) => b.day.localeCompare(a.day))
+    .sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
     .slice(0, 7);
   if (recent.length < 7) return empty();
   if (monthToDate === null) return unavailable("not_reported");
@@ -157,7 +175,8 @@ export function stampStatus(
   if (budget.state === "ok" && Number(budget.value) <= 0) reasons.push("budget_exhausted");
   const critical = reasons.length > 0;
 
-  const used = budget.state === "ok" ? budgetUse(summary) : null;
+  // Computable from the limit and spend even when the API omits the remaining amount.
+  const used = budgetUse(summary);
   if (!reasons.includes("budget_exhausted") && used !== null && used >= 90)
     reasons.push("budget_low");
   if (catalogFreshness(summary, now) === "stale") reasons.push("prices_stale");

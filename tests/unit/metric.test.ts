@@ -45,6 +45,14 @@ test("mapMetric transforms only states that have a value", () => {
   assert.equal(hasValue(stale(0, 5)), true);
   assert.deepEqual(mapMetric(ok(0), String), ok("0"));
   assert.deepEqual(mapMetric(stale(0, 5), String), stale("0", 5));
+  assert.deepEqual(
+    mapMetric(ok(1), () => null),
+    unavailable("not_reported"),
+  );
+  assert.deepEqual(
+    mapMetric(stale(1, 5), () => undefined),
+    unavailable("not_reported"),
+  );
   for (const metric of [empty(), unavailable("not_reported"), withheld(), error()]) {
     assert.equal(hasValue(metric), false);
     assert.equal(
@@ -62,6 +70,8 @@ test("withheldBelow keeps zero and suppresses positive counts below the threshol
   assert.deepEqual(withheldBelow(3), ok(3));
   assert.deepEqual(withheldBelow(3, 4), withheld());
   assert.deepEqual(withheldBelow(4, 4), ok(4));
+  for (const bad of [Number.NaN, -1, Number.POSITIVE_INFINITY])
+    assert.deepEqual(withheldBelow(bad), error());
 });
 
 const summary = parseOpsSummary(
@@ -74,6 +84,9 @@ assert.ok(firstWindow && secondWindow && firstDay && budget);
 
 const noRuns = { completed: 0, failed: 0, cancelled: 0, interrupted: 0, refused: 2 };
 const now = summary.generatedAt;
+// The fixture's last daily row is the day of `generatedAt`, still accruing: projections read the
+// next day, when all seven fixture rows are complete.
+const nextDay = new Date("2026-10-06T12:00:00Z");
 const notReported = unavailable("not_reported");
 
 test("run rates use accepted outcomes and round to one decimal", () => {
@@ -130,6 +143,12 @@ test("priceExpiry requires both inputs and preserves expiry when stale", () => {
     catalog: { ...summary.catalog, verifiedAt: now, priceMaxAgeHours: 0 },
   };
   assert.deepEqual(priceExpiry(zeroHours, now), ok({ expiresAt: now, remainingMs: 0 }));
+  const unverified = {
+    ...summary,
+    catalog: { ...summary.catalog, priceStatus: "unverified" as const },
+  };
+  assert.deepEqual(priceExpiry(unverified, now), stale({ expiresAt, remainingMs: 511_200_000 }, 0));
+  assert.deepEqual(priceExpiry(summary, new Date(Number.NaN)), error());
 });
 
 test("monthProjection selects the seven newest complete rows without changing their input order", () => {
@@ -140,16 +159,31 @@ test("monthProjection selects the seven newest complete rows without changing th
     { ...firstDay, day: "2026-10-06", estimated: null },
   ];
   const before = rows.slice();
-  assert.deepEqual(monthProjection(rows, "0.430300", now), ok("2.029664"));
+  assert.deepEqual(monthProjection(rows, "0.430300", nextDay), ok("1.968150"));
   assert.deepEqual(rows, before);
 });
 
 test("monthProjection distinguishes insufficient rows and a missing month-to-date amount", () => {
-  assert.deepEqual(monthProjection(summary.daily, null, now), notReported);
-  assert.deepEqual(monthProjection(summary.daily.slice(1), "0", now), empty());
-  assert.deepEqual(monthProjection(summary.daily.slice(1), null, now), empty());
+  assert.deepEqual(monthProjection(summary.daily, null, nextDay), notReported);
+  assert.deepEqual(monthProjection(summary.daily.slice(1), "0", nextDay), empty());
+  assert.deepEqual(monthProjection(summary.daily.slice(1), null, nextDay), empty());
   const incomplete = summary.daily.map((row) => ({ ...row, estimated: null }));
-  assert.deepEqual(monthProjection(incomplete, "0", now), empty());
+  assert.deepEqual(monthProjection(incomplete, "0", nextDay), empty());
+});
+
+test("monthProjection never averages today's or later rows, duplicates or malformed days", () => {
+  // On the fixture's own day only six rows are complete.
+  assert.deepEqual(monthProjection(summary.daily, "0", now), empty());
+  const future = [...summary.daily, { ...firstDay, day: "2026-10-09" }];
+  assert.deepEqual(
+    monthProjection(future, "0.430300", nextDay),
+    monthProjection(summary.daily, "0.430300", nextDay),
+  );
+  const duplicate = [...summary.daily, { ...firstDay }];
+  assert.deepEqual(monthProjection(duplicate, "0", nextDay), notReported);
+  const malformed = [...summary.daily.slice(1), { ...firstDay, day: "2026-9-29" }];
+  assert.deepEqual(monthProjection(malformed, "0", nextDay), empty());
+  assert.deepEqual(monthProjection(summary.daily, "0", new Date(Number.NaN)), error());
 });
 
 test("monthProjection rounds the average in micro-dollars before multiplying", () => {
@@ -157,9 +191,9 @@ test("monthProjection rounds the average in micro-dollars before multiplying", (
   const small = [...rows.slice(1), { ...firstDay, confirmed: "0.000003", estimated: "0" }];
   const large = [...rows.slice(1), { ...firstDay, confirmed: "0.000003", estimated: "0.000001" }];
   const negative = [...rows.slice(1), { ...firstDay, confirmed: "-0.000004", estimated: "0" }];
-  assert.deepEqual(monthProjection(small, "0", now), ok("0.000000"));
-  assert.deepEqual(monthProjection(large, "999999999.999999", now), ok("1000000000.000025"));
-  assert.deepEqual(monthProjection(negative, "0", now), ok("-0.000026"));
+  assert.deepEqual(monthProjection(small, "0", nextDay), ok("0.000000"));
+  assert.deepEqual(monthProjection(large, "999999999.999999", nextDay), ok("1000000000.000024"));
+  assert.deepEqual(monthProjection(negative, "0", nextDay), ok("-0.000025"));
 });
 
 test("monthProjection uses the UTC month end and excludes today", () => {
@@ -172,7 +206,7 @@ test("monthProjection uses the UTC month end and excludes today", () => {
   assert.deepEqual(monthProjection(rows, "2", new Date("2026-12-30T12:00:00Z")), ok("3.500000"));
 });
 
-test("stampStatus is ok for healthy, empty or unconfigured optional readings", () => {
+test("stampStatus is ok for healthy, empty or unconfigured readings; low budget needs no remaining amount", () => {
   assert.deepEqual(stampStatus(summary, now), { status: "ok", reasons: [] });
   assert.deepEqual(
     stampStatus({ ...summary, budget: null, windows: [{ ...firstWindow, runs: noRuns }] }, now),
@@ -190,7 +224,7 @@ test("stampStatus is ok for healthy, empty or unconfigured optional readings", (
       },
       now,
     ),
-    { status: "ok", reasons: [] },
+    { status: "warn", reasons: ["budget_low"] },
   );
   assert.deepEqual(stampStatus({ ...summary, budget: { ...budget, monthlyLimit: null } }, now), {
     status: "ok",
@@ -355,14 +389,18 @@ test("property: projections are finite and at least month-to-date for nonnegativ
     fc.property(
       fc.array(reportedCosts, { minLength: 7, maxLength: 12 }),
       money,
-      fc.integer({ min: 1, max: 31 }),
+      fc.integer({ min: 1, max: 30 }),
       (costs, monthToDate, today) => {
         const rows = costs.map((row, index) => ({
           ...firstDay,
           ...row,
           day: octoberDay(index + 1),
         }));
-        const result = monthProjection(rows, monthToDate, new Date(octoberDay(today)));
+        const result = monthProjection(
+          rows,
+          monthToDate,
+          new Date(`2026-11-${String(today).padStart(2, "0")}T12:00:00Z`),
+        );
         assert.equal(result.state, "ok");
         assert.match(result.value, /^\d+\.\d{6}$/);
         const projected = Number(result.value);
