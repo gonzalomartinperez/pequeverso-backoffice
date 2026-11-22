@@ -1,8 +1,8 @@
 import { CircleAlert, CircleCheck, FlaskConical, TriangleAlert } from "lucide-react";
-import { Badge } from "@/shared/ui/badge";
-import { LinkButton } from "@/shared/ui/button";
-import { Callout } from "@/shared/ui/callout";
-import { Facts, Section, TableRegion, td, th } from "@/shared/ui/sections";
+import { Badge } from "#shared/ui/badge.tsx";
+import { LinkButton } from "#shared/ui/button.tsx";
+import { Callout } from "#shared/ui/callout.tsx";
+import { Facts, Section, TableRegion, td, th } from "#shared/ui/sections.tsx";
 import type { OpsReading, TelemetryReading } from "../application/ports";
 import {
   acceptedRuns,

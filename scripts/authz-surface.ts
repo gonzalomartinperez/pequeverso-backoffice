@@ -245,7 +245,9 @@ function resolveModule(files: Files, from: string, spec: string): string | null 
 }
 
 function moduleBase(from: string, spec: string): string | null {
-  if (spec.startsWith("@/")) return `src/${spec.slice(2)}`;
+  // Subpath imports of package.json (`#server/auth.ts` -> `src/server/auth.ts`).
+  const subpath = /^#(features|server|shared)\/(.+)$/.exec(spec);
+  if (subpath) return `src/${subpath[1]}/${subpath[2]}`;
   if (spec.startsWith(".")) return path.posix.join(path.posix.dirname(from), spec);
   return null;
 }

@@ -28,8 +28,7 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./src/*"] }
+    "plugins": [{ "name": "next" }]
   },
   "include": [
     "next-env.d.ts",

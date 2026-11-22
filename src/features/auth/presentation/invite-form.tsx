@@ -1,8 +1,8 @@
 "use client";
 import { Check, Copy, UserPlus } from "lucide-react";
 import { useActionState, useId, useState } from "react";
-import { Button } from "@/shared/ui/button";
-import { Callout } from "@/shared/ui/callout";
+import { Button } from "#shared/ui/button.tsx";
+import { Callout } from "#shared/ui/callout.tsx";
 
 export type InviteState =
   | { status: "idle" }

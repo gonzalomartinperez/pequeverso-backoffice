@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { BackofficeFrame } from "@/features/auth/presentation/backoffice-frame";
-import { SignInPanel } from "@/features/auth/presentation/sign-in-panel";
-import { authReady, currentActor, enabledProviders } from "@/server/auth";
-import { Callout } from "@/shared/ui/callout";
+import { BackofficeFrame } from "#features/auth/presentation/backoffice-frame.tsx";
+import { SignInPanel } from "#features/auth/presentation/sign-in-panel.tsx";
+import { authReady, currentActor, enabledProviders } from "#server/auth.ts";
+import { Callout } from "#shared/ui/callout.tsx";
 
 export const metadata: Metadata = { title: "Ingresar · Backoffice Pequeverso" };
 
