@@ -43,6 +43,8 @@ const IMPURE = new Set([
   "TextDecoder",
 ]);
 const CODE = /\.(?:[cm]?[jt]sx?)$/;
+/** Target-state rule 10: a presentation module stays small enough to review (M4.4/M4.8). */
+const PRESENTATION_MAX_LINES = 250;
 const LEAF = /\.(?:css|json|svg|png|webp|avif|woff2)$/;
 const ROOT = path.resolve(import.meta.dirname, "..");
 const manifest = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8")) as {
@@ -270,6 +272,21 @@ function environmentUses(
   }
   visit(file);
   return uses;
+}
+
+/** Presentation and kit modules over the line budget; dictionary data (shared/i18n) is exempt. */
+function lengthProblems(parsed: ReadonlyMap<string, Module>, src: string, root: string): string[] {
+  return [...parsed].flatMap(([file, module]) => {
+    const rel = posix(path.relative(src, file));
+    const layer = module.place?.layer;
+    if (layer !== "presentation" && !rel.startsWith("shared/ui/")) return [];
+    const lines = module.file.getLineStarts().length;
+    return lines > PRESENTATION_MAX_LINES
+      ? [
+          `${posix(path.relative(root, file))}: ${layer} module has ${lines} lines (max ${PRESENTATION_MAX_LINES})`,
+        ]
+      : [];
+  });
 }
 
 /** Analyze snapshots only: fixture modules are parsed, never imported or executed. */
@@ -544,6 +561,7 @@ export function checkBoundaries(modules: ReadonlyMap<string, string>, root: stri
     }
     client(entry);
   }
+  problems.push(...lengthProblems(parsed, src, root));
   return [...new Set(problems)].sort();
 }
 

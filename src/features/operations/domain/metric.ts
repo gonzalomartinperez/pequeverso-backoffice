@@ -164,29 +164,41 @@ export type StampReason =
   | "failures_high"
   | "no_data";
 
-export function stampStatus(
-  summary: OpsSummary,
-  now: Date,
-): { status: "ok" | "warn" | "critical" | "unknown"; reasons: StampReason[] } {
+function criticalReasons(summary: OpsSummary): StampReason[] {
   const reasons: StampReason[] = [];
   const budget = remainingBudget(summary);
   if (summary.availability.status === "unavailable") reasons.push("unavailable");
   if (summary.catalog.status === "missing") reasons.push("catalog_missing");
   if (budget.state === "ok" && Number(budget.value) <= 0) reasons.push("budget_exhausted");
-  const critical = reasons.length > 0;
+  return reasons;
+}
 
+function warningReasons(
+  summary: OpsSummary,
+  now: Date,
+  critical: readonly StampReason[],
+): StampReason[] {
+  const reasons: StampReason[] = [];
   // Computable from the limit and spend even when the API omits the remaining amount.
   const used = budgetUse(summary);
-  if (!reasons.includes("budget_exhausted") && used !== null && used >= 90)
+  if (!critical.includes("budget_exhausted") && used !== null && used >= 90)
     reasons.push("budget_low");
   if (catalogFreshness(summary, now) === "stale") reasons.push("prices_stale");
   const firstWindow = summary.windows[0];
   const failures = firstWindow && failureShare(firstWindow);
-  if (failures?.state === "ok" && failures.value.accepted >= 5 && failures.value.percent >= 20) {
+  if (failures?.state === "ok" && failures.value.accepted >= 5 && failures.value.percent >= 20)
     reasons.push("failures_high");
-  }
+  return reasons;
+}
 
-  if (critical) return { status: "critical", reasons };
+export function stampStatus(
+  summary: OpsSummary,
+  now: Date,
+): { status: "ok" | "warn" | "critical" | "unknown"; reasons: StampReason[] } {
+  const critical = criticalReasons(summary);
+  const reasons: StampReason[] = [...critical, ...warningReasons(summary, now, critical)];
+  const firstWindow = summary.windows[0];
+  if (critical.length > 0) return { status: "critical", reasons };
   if (reasons.length > 0) return { status: "warn", reasons };
   if (!firstWindow || completionRate(firstWindow).state === "unavailable") {
     return { status: "unknown", reasons: ["no_data"] };

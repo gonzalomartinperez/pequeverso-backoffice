@@ -4,6 +4,18 @@ import { Badge } from "#shared/ui/badge.tsx";
 import { Facts, Section } from "#shared/ui/sections.tsx";
 import { catalogFreshness, type OpsSummary } from "../../domain/summary.ts";
 
+const FRESHNESS = {
+  fresh: es.operations.catalog.freshPrices,
+  stale: es.operations.catalog.stalePrices,
+  unknown: es.operations.catalog.unknownFreshness,
+} as const;
+
+function origin(source: string | null): string {
+  if (source === "live") return es.operations.catalog.remoteSnapshot;
+  if (source === "bundled") return es.operations.catalog.bundledSnapshot;
+  return f.UNAVAILABLE;
+}
+
 export function Catalog({ summary, now }: { summary: OpsSummary; now: Date }) {
   const c = summary.catalog;
   const freshness = catalogFreshness(summary, now);
@@ -15,13 +27,7 @@ export function Catalog({ summary, now }: { summary: OpsSummary; now: Date }) {
             ? es.operations.catalog.active
             : es.operations.catalog.noValidCatalog}
         </Badge>
-        <Badge tone={freshness === "fresh" ? "chip" : "notice"}>
-          {freshness === "fresh"
-            ? es.operations.catalog.freshPrices
-            : freshness === "stale"
-              ? es.operations.catalog.stalePrices
-              : es.operations.catalog.unknownFreshness}
-        </Badge>
+        <Badge tone={freshness === "fresh" ? "chip" : "notice"}>{FRESHNESS[freshness]}</Badge>
       </div>
       <Facts
         items={[
@@ -31,12 +37,7 @@ export function Catalog({ summary, now }: { summary: OpsSummary; now: Date }) {
           },
           {
             term: es.operations.catalog.origin,
-            value:
-              c.source === "live"
-                ? es.operations.catalog.remoteSnapshot
-                : c.source === "bundled"
-                  ? es.operations.catalog.bundledSnapshot
-                  : f.UNAVAILABLE,
+            value: origin(c.source),
           },
           {
             term: es.operations.catalog.verified,

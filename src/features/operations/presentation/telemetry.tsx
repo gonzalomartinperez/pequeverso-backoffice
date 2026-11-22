@@ -19,18 +19,38 @@ function lifetime(seconds: number): string {
       : `${new Intl.NumberFormat("es", { maximumFractionDigits: 1 }).format(seconds / 3600)} h`;
 }
 
+function Unavailable({ disabled }: { disabled: boolean }) {
+  return (
+    <Section id="telemetry" title={es.telemetry.title} description={es.telemetry.description}>
+      <p className="text-small text-copy">
+        <strong>{f.UNAVAILABLE}.</strong>{" "}
+        {disabled ? es.telemetry.disabled : es.telemetry.invalidSample}{" "}
+        {es.telemetry.summaryStillAvailable}
+      </p>
+      <p className="mt-2 text-tiny text-muted">{es.telemetry.availabilityCaveat}</p>
+    </Section>
+  );
+}
+
+function Readiness({ ready, checkedAt }: { ready: boolean; checkedAt: Date | null }) {
+  return (
+    <div className="rounded-md bg-surface-sunken p-4">
+      <p className="flex items-center gap-2 font-extrabold text-ink">
+        {ready ? (
+          <CircleCheck aria-hidden="true" className="size-5 text-icon" />
+        ) : (
+          <TriangleAlert aria-hidden="true" className="size-5 text-danger" />
+        )}
+        {es.telemetry.apiReadiness(ready ? es.telemetry.ready : es.telemetry.notReady)}
+      </p>
+      <p className="mt-2 text-small text-copy">{es.telemetry.readinessDescription}</p>
+      <p className="mt-2 text-tiny text-muted">{es.telemetry.checkedAt(f.when(checkedAt))}</p>
+    </div>
+  );
+}
+
 export function Telemetry({ reading }: { reading: TelemetryReading }) {
-  if (reading.status !== "ok")
-    return (
-      <Section id="telemetry" title={es.telemetry.title} description={es.telemetry.description}>
-        <p className="text-small text-copy">
-          <strong>{f.UNAVAILABLE}.</strong>{" "}
-          {reading.reason === "disabled" ? es.telemetry.disabled : es.telemetry.invalidSample}{" "}
-          {es.telemetry.summaryStillAvailable}
-        </p>
-        <p className="mt-2 text-tiny text-muted">{es.telemetry.availabilityCaveat}</p>
-      </Section>
-    );
+  if (reading.status !== "ok") return <Unavailable disabled={reading.reason === "disabled"} />;
   const t = reading.telemetry;
   const resource = t.resources;
   return (
@@ -49,22 +69,7 @@ export function Telemetry({ reading }: { reading: TelemetryReading }) {
         </Callout>
       ) : null}
       <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-md bg-surface-sunken p-4">
-          <p className="flex items-center gap-2 font-extrabold text-ink">
-            {t.readiness.ready ? (
-              <CircleCheck aria-hidden="true" className="size-5 text-icon" />
-            ) : (
-              <TriangleAlert aria-hidden="true" className="size-5 text-danger" />
-            )}
-            {es.telemetry.apiReadiness(
-              t.readiness.ready ? es.telemetry.ready : es.telemetry.notReady,
-            )}
-          </p>
-          <p className="mt-2 text-small text-copy">{es.telemetry.readinessDescription}</p>
-          <p className="mt-2 text-tiny text-muted">
-            {es.telemetry.checkedAt(f.when(t.readiness.checkedAt))}
-          </p>
-        </div>
+        <Readiness ready={t.readiness.ready} checkedAt={t.readiness.checkedAt} />
         <div className="rounded-md bg-surface-sunken p-4">
           <p className="flex items-center gap-2 font-extrabold text-ink">
             <Activity aria-hidden="true" className="size-5 text-icon" />

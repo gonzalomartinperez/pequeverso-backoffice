@@ -12,17 +12,21 @@ function ipv4(value: string): number[] | null {
   return parts.map(Number);
 }
 
+/** Rewrites a trailing dotted IPv4 (`::ffff:1.2.3.4`) as two hex groups; null if malformed. */
+function embeddedIpv4(text: string): string | null {
+  const tail = /:(\d+\.\d+\.\d+\.\d+)$/.exec(text);
+  if (!tail) return text;
+  const v4 = ipv4(tail[1] ?? "");
+  if (!v4) return null;
+  const [a = 0, b = 0, c = 0, d = 0] = v4;
+  return `${text.slice(0, tail.index)}:${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+}
+
 /** Expands an IPv6 address to eight 16-bit groups, or null when it is not one. */
 function ipv6(value: string): number[] | null {
   if (!/^[0-9a-f:.]+$/i.test(value) || value.split("::").length > 2) return null;
-  let text = value;
-  const tail = /:(\d+\.\d+\.\d+\.\d+)$/.exec(text);
-  if (tail) {
-    const v4 = ipv4(tail[1] ?? "");
-    if (!v4) return null;
-    const [a = 0, b = 0, c = 0, d = 0] = v4;
-    text = `${text.slice(0, tail.index)}:${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
-  }
+  const text = embeddedIpv4(value);
+  if (text === null) return null;
   const [head = "", rest] = text.split("::");
   const left = head ? head.split(":") : [];
   const right = rest ? rest.split(":") : [];
