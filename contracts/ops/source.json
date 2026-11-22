@@ -1,13 +1,13 @@
 {
   "status": "pinned",
-  "note": "Pinned from pequeverso-assistant-api develop (ops contract 1.2: pricing and recent runs). Only committed revisions are consumed.",
+  "note": "Pinned from pequeverso-assistant-api develop (ops contract 1.2: pricing and recent runs). Only committed revisions are consumed. Re-pinned on 2026-11-22 from API develop 6c1147e: description strings only (no field change).",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "b7dcb0c27d214cb1b560a8ee6101f858545646fc",
+  "api_revision": "6c1147ee345fcf10207864a9d4a6393d6233df83",
   "api_branch": "develop",
   "files": {
     "contracts/ops.schema.json": {
       "local": "contracts/ops/ops.schema.json",
-      "sha256": "42894f370c4f513b10dd6f5f9c3e45f3978ee8cc8b17ad30f6ac32cfe5f20d0f"
+      "sha256": "ba87eb6af562e3f5eedf7d0fe9efaed1e5624651fc8df51c85ecc9b69420da35"
     },
     "contracts/examples/ops.summary.json": {
       "local": "contracts/ops/ops.summary.example.json",

@@ -1,18 +1,18 @@
 {
   "status": "committed-reviewed-local-fixture",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "850e78cf84df78f0ea66e2811e92aeb15a6f5d04",
+  "api_revision": "6c1147ee345fcf10207864a9d4a6393d6233df83",
   "api_branch": "develop",
   "contract": "Peque private analytics schema1 revision1.1; strict boolean classification and suppressed country aggregates; default OFF",
-  "note": "Five byte-exact committed producer copies, independently reviewed and integrated via API PR95/develop and release97/main. Isolated PostgreSQL006 five integration tests passed on ddf5 with the same analytics source bytes. Exact API850/BOee068 local paired fixture V22 passed A-I on 2026-10-19, including authenticated owner/viewer, strict response-body privacy and proof-bound backup custody; no fresh006/Neo restore or deployed-edge proof. Country capability describes configuration, not authenticated upstream provenance.",
+  "note": "Five byte-exact committed producer copies, independently reviewed and integrated via API PR95/develop and release97/main. Isolated PostgreSQL006 five integration tests passed on ddf5 with the same analytics source bytes. Exact API850/BOee068 local paired fixture V22 passed A-I on 2026-10-19, including authenticated owner/viewer, strict response-body privacy and proof-bound backup custody; no fresh006/Neo restore or deployed-edge proof. Country capability describes configuration, not authenticated upstream provenance. Re-pinned on 2026-11-22 from API develop 6c1147e (not yet on API main): against 850e78c the five files differ only in JSON Schema description strings and the profile's hashes of those schemas, and the country source only in quote style (same 249 codes); validators are unchanged and the acceptance evidence above was recorded on 850e78c.",
   "files": {
     "contracts/product-analytics.schema.json": {
       "local": "contracts/analytics/product-analytics.schema.json",
-      "sha256": "c0de21b74a1c2c7bcc3015874dc702375f0b9fcca9f66d0007e7ff0912da2713"
+      "sha256": "cfa654b84562b48e18d1e8a4e10c3c24286762d48bdeb16ab4fd1cd7a5777561"
     },
     "contracts/site-experience-pequeverso-v1.schema.json": {
       "local": "contracts/analytics/site-experience-pequeverso-v1.schema.json",
-      "sha256": "10264058e6c9b26fd308f51eaa2b9286b352b418e2c625511caf22d0e9c7dcf7"
+      "sha256": "def87634702fec19fadb4a07c4bfad4bfea4176d25516982cca8f6b8b5e8aa1b"
     },
     "contracts/examples/product-analytics.json": {
       "local": "contracts/analytics/product-analytics.example.json",
@@ -20,7 +20,7 @@
     },
     "contracts/product-analytics.source.json": {
       "local": "contracts/analytics/profile.source.json",
-      "sha256": "ae6df6e8b546984390547acbd561f1364f46524f407f15dcdab1638550048747"
+      "sha256": "1fe60b9d9af399bb5ad343d1c4167cb3ce6e25e38a24a62d04cb69c586f32560"
     },
     "contracts/analytics-semantics.examples.json": {
       "local": "contracts/analytics/analytics-semantics.examples.json",
@@ -29,10 +29,10 @@
   },
   "derived_country_codes": {
     "source_path": "app/domain/analytics_country.py",
-    "source_sha256": "cf5c0a066e0f02de12a9d576abc381fe7bb7a369557344201aaac0aeaab7c8d9",
+    "source_sha256": "2bbc0e25121277e6563cbdc63c1ce18aca45ff21778182af2a8247d050a010f3",
     "local": "src/features/analytics/domain/countries.ts",
     "count": 249,
     "labels_sha256": "bad3b0ab6d1073f237d176df4d3ec9297269c1c13c73f714c0736a87912b1523"
   },
-  "integration": "main"
+  "integration": "develop"
 }
