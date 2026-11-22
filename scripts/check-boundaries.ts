@@ -187,64 +187,70 @@ function reference(node: ts.Identifier): boolean {
   return true;
 }
 
-// The single reader of process.env (M4.1); validation stays in env-parse.ts. instrumentation.ts may
-// read only NEXT_RUNTIME, which Next.js inlines per runtime before any server module loads.
+// The single reader of process.env (M4.1); validation stays in env-parse.ts. Elsewhere `process` may
+// be used only through a direct, named, non-environment member, so aliases, computed keys and
+// module imports cannot smuggle an environment read. instrumentation.ts may also read (never
+// write) NEXT_RUNTIME, which Next.js inlines per runtime before any server module loads.
 const ENV_READER = "server/env.ts";
+const PROCESS_MEMBERS = new Set(["exit", "uptime", "memoryUsage"]);
 const ENV_EXCEPTIONS: Record<string, readonly string[]> = {
   "instrumentation.ts": ["NEXT_RUNTIME"],
 };
-/** Every read of the process environment in a module: the variable name, or null when computed. */
-function environmentReads(file: ts.SourceFile, ambient: (node: ts.Identifier) => boolean) {
-  const reads: (string | null)[] = [];
-  const member = (node: ts.Expression): string | null =>
-    ts.isPropertyAccessExpression(node)
-      ? node.name.text
-      : ts.isElementAccessExpression(node)
-        ? literal(node.argumentExpression)
-        : null;
-  const processEnv = (node: ts.Node): boolean =>
-    (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
-    member(node) === "env" &&
-    ((ts.isIdentifier(node.expression) &&
-      node.expression.text === "process" &&
-      ambient(node.expression)) ||
-      ((ts.isPropertyAccessExpression(node.expression) ||
-        ts.isElementAccessExpression(node.expression)) &&
-        member(node.expression) === "process" &&
-        ts.isIdentifier(node.expression.expression) &&
-        node.expression.expression.text === "globalThis"));
+const ASSIGNMENTS = new Set([
+  ts.SyntaxKind.EqualsToken,
+  ts.SyntaxKind.QuestionQuestionEqualsToken,
+  ts.SyntaxKind.BarBarEqualsToken,
+  ts.SyntaxKind.AmpersandAmpersandEqualsToken,
+]);
+/** Each forbidden use of the process environment in a module, as a short description. */
+function environmentUses(
+  file: ts.SourceFile,
+  rel: string,
+  edges: readonly Edge[],
+  ambient: (node: ts.Identifier) => boolean,
+): string[] {
+  const uses: string[] = [];
+  for (const edge of edges)
+    if (edge.specifier === "process" || edge.specifier === "node:process")
+      uses.push(`import ${edge.specifier}`);
+  const named = (parent: ts.Node, node: ts.Node): string | null =>
+    ts.isPropertyAccessExpression(parent) && parent.expression === node ? parent.name.text : null;
+  const written = (node: ts.Node): boolean => {
+    const parent = node.parent;
+    return (
+      (ts.isBinaryExpression(parent) &&
+        parent.left === node &&
+        (ASSIGNMENTS.has(parent.operatorToken.kind) ||
+          (parent.operatorToken.kind >= ts.SyntaxKind.FirstCompoundAssignment &&
+            parent.operatorToken.kind <= ts.SyntaxKind.LastCompoundAssignment))) ||
+      ts.isDeleteExpression(parent) ||
+      ts.isPrefixUnaryExpression(parent) ||
+      ts.isPostfixUnaryExpression(parent)
+    );
+  };
   function visit(node: ts.Node): void {
-    if (processEnv(node)) {
-      const parent = node.parent;
-      reads.push(
-        (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent)) &&
-          parent.expression === node
-          ? member(parent)
-          : null,
-      );
-    } else if (
-      ts.isVariableDeclaration(node) &&
-      ts.isObjectBindingPattern(node.name) &&
-      node.initializer &&
-      ts.isIdentifier(node.initializer) &&
-      node.initializer.text === "process" &&
-      ambient(node.initializer) &&
-      node.name.elements.some((element) => {
-        const property = element.propertyName ?? element.name;
-        return element.dotDotDotToken || (ts.isIdentifier(property) && property.text === "env");
-      })
-    ) {
-      reads.push(null);
-    } else if (
-      ts.isImportDeclaration(node) &&
-      ["process", "node:process"].includes(literal(node.moduleSpecifier) ?? "")
-    ) {
-      reads.push(null);
+    if (ts.isIdentifier(node) && reference(node) && ambient(node)) {
+      if (node.text === "process") {
+        const member = named(node.parent, node);
+        const variable = member === "env" ? named(node.parent.parent, node.parent) : null;
+        const allowed =
+          (member !== null && PROCESS_MEMBERS.has(member)) ||
+          (variable !== null &&
+            ENV_EXCEPTIONS[rel]?.includes(variable) === true &&
+            !written(node.parent.parent));
+        if (!allowed)
+          uses.push(
+            member === "env" ? `process.env.${variable ?? "*"}` : `process.${member ?? "*"}`,
+          );
+      } else if (node.text === "globalThis") {
+        const member = named(node.parent, node);
+        if (member === null || member === "process") uses.push(`globalThis.${member ?? "*"}`);
+      }
     }
     ts.forEachChild(node, visit);
   }
   visit(file);
-  return reads;
+  return uses;
 }
 
 /** Analyze snapshots only: fixture modules are parsed, never imported or executed. */
@@ -303,9 +309,8 @@ export function checkBoundaries(modules: ReadonlyMap<string, string>, root: stri
   for (const [file, module] of parsed) {
     const rel = posix(path.relative(src, file));
     if (rel !== ENV_READER)
-      for (const name of environmentReads(module.file, ambient))
-        if (name === null || !ENV_EXCEPTIONS[rel]?.includes(name))
-          report(file, `process.env is read only in src/${ENV_READER} (${name ?? "computed"})`);
+      for (const use of environmentUses(module.file, rel, module.edges, ambient))
+        report(file, `process.env is read only in src/${ENV_READER} (${use})`);
     const from = module.place;
     if (!from) continue;
     if (from.layer === "domain" || from.layer === "application") {
