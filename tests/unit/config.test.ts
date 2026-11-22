@@ -79,6 +79,13 @@ describe("backoffice configuration", () => {
     );
   });
 
+  it("reads the build VERSION label and refuses anything that is not one", () => {
+    assert.equal(parseConfig(production).version, "0.0.0-dev");
+    assert.equal(parseConfig({ ...production, VERSION: "1.4.0+abc.1" }).version, "1.4.0+abc.1");
+    for (const bad of ["", " 1.0", "1.0\nx", "-1", "v".repeat(65), "1.0/../x"])
+      assert.throws(() => parseConfig({ ...production, VERSION: bad }), /VERSION/);
+  });
+
   it("never uses a fixed secret outside test", () => {
     assert.throws(
       () => parseConfig({ BACKOFFICE_ENVIRONMENT: "development" }),

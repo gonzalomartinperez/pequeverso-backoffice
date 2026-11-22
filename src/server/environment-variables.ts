@@ -118,6 +118,12 @@ export const ENVIRONMENT_VARIABLES = {
       "No trusted proxies",
       "Comma-separated IP addresses or narrow CIDRs trusted to supply `X-Forwarded-For`.",
     ],
+    [
+      "VERSION",
+      "Optional",
+      "`0.0.0-dev`",
+      "Build label set by the image (`ARG VERSION`); reported as `version` by `/healthz` and `/readyz`.",
+    ],
   ],
   observability: [
     [
