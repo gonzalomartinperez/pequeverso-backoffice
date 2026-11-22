@@ -11,6 +11,23 @@ it("keeps the feature architecture boundaries", () => {
   assert.match(output, /0 violations/);
 });
 
+it("keeps shared helpers independent and rejects unknown shared folders", () => {
+  for (const [target, layer] of [
+    ["#features/auth/domain/probe.ts", "domain"],
+    ["#server/observability.ts", "server"],
+  ] as const) {
+    const problems = inspect({
+      "features/auth/domain/probe.ts": "export const value = 1;",
+      "shared/lib/probe.ts": `import "${target}";`,
+    });
+    assert.match(problems.join("\n"), new RegExp(`shared may not import ${layer}`));
+  }
+  assert.match(
+    inspect({ "shared/xyz/probe.ts": "export const value = 1;" }).join("\n"),
+    /unknown source placement/,
+  );
+});
+
 // Virtual modules exercise the checker without importing/executing fixture code or touching src/.
 const fixtureRoot = path.resolve("/virtual-backoffice");
 function inspect(files: Record<string, string>): string[] {

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { AnalyticsReport } from "#features/analytics/presentation/report.tsx";
 import { readAnalytics } from "#server/container.ts";
+import { es } from "#shared/i18n/es.ts";
 export const metadata: Metadata = {
-  title: "Actividad del sitio",
+  title: es.analytics.title,
   robots: { index: false, follow: false },
 };
 export default async function AnalyticsPage({

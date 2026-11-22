@@ -1,16 +1,17 @@
 import { CircleAlert, FlaskConical } from "lucide-react";
 import type { ReactNode } from "react";
+import { es } from "#shared/i18n/es.ts";
+import * as f from "#shared/lib/format.ts";
 import { LinkButton } from "#shared/ui/button.tsx";
 import { Callout } from "#shared/ui/callout.tsx";
 import type { OpsReading } from "../application/ports.ts";
 import type { OpsSummary } from "../domain/summary.ts";
-import * as f from "./format.ts";
 
 const UNAVAILABLE_READING: Record<Exclude<OpsReading, { status: "ok" }>["reason"], string> = {
-  not_configured: "El backoffice no tiene configurada la conexión privada con la API.",
-  unreachable: "La API no respondió a tiempo.",
-  rejected: "La API rechazó la lectura (credencial o servicio).",
-  invalid: "La API respondió con datos que no cumplen el contrato.",
+  not_configured: es.operations.unavailableReading.notConfigured,
+  unreachable: es.operations.unavailableReading.unreachable,
+  rejected: es.operations.unavailableReading.rejected,
+  invalid: es.operations.unavailableReading.invalid,
 };
 
 export function OpsFrame({
@@ -32,12 +33,11 @@ export function OpsFrame({
         <div className="flex flex-col gap-1">
           <h1 className="text-heading">{title}</h1>
           <p className="text-small text-muted">
-            Lectura del {f.when(reading.fetchedAt)}. Sin contenido de conversaciones: solo agregados
-            operativos.
+            {es.operations.readingDescription(f.when(reading.fetchedAt))}
           </p>
         </div>
         <LinkButton href={refreshHref} variant="outline" size="sm">
-          Actualizar lectura
+          {es.operations.refresh}
         </LinkButton>
       </header>
       {reading.status === "ok" ? (
@@ -46,8 +46,8 @@ export function OpsFrame({
         <Callout tone="danger" role="alert">
           <CircleAlert aria-hidden="true" />
           <div>
-            <p className="font-extrabold text-ink">Métricas no disponibles</p>
-            <p>{UNAVAILABLE_READING[reading.reason]} Ningún valor se muestra como cero por esto.</p>
+            <p className="font-extrabold text-ink">{es.operations.metricsUnavailable}</p>
+            <p>{es.operations.unavailableDescription(UNAVAILABLE_READING[reading.reason])}</p>
           </div>
         </Callout>
       )}
@@ -61,8 +61,8 @@ export function SyntheticBanner({ summary }: { summary: OpsSummary }) {
     <Callout tone="notice" role="note" data-testid="synthetic-banner">
       <FlaskConical aria-hidden="true" />
       <p>
-        <strong>Datos sintéticos (fixture).</strong> La API usa el proveedor de prueba: las cifras
-        de uso y costo no representan consumo real de OpenAI.
+        <strong>{es.operations.syntheticTitle}</strong>
+        {` ${es.operations.syntheticDescription}`}
       </p>
     </Callout>
   ) : null;

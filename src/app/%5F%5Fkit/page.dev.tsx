@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { es } from "#shared/i18n/es.ts";
 
-export const metadata: Metadata = { title: "Kit (solo desarrollo)", robots: { index: false } };
+export const metadata: Metadata = { title: es.kit.metadataTitle, robots: { index: false } };
 
 /**
  * Development-only component kit (skeleton for M2: every shared component in every state).
@@ -12,9 +13,9 @@ export const metadata: Metadata = { title: "Kit (solo desarrollo)", robots: { in
 export default function KitPage() {
   return (
     <main id="contenido" className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <h1 className="font-display text-2xl font-bold text-ink">Kit de componentes</h1>
+      <h1 className="font-display text-2xl font-bold text-ink">{es.kit.title}</h1>
       <p data-testid="kit-marker" className="text-copy">
-        Esqueleto de desarrollo: los componentes se añaden aquí con todos sus estados.
+        {es.kit.description}
       </p>
     </main>
   );

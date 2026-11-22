@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
+import { day as displayDay, usd as displayUsd } from "#shared/lib/format.ts";
 import { httpOpsSource, readBounded } from "../../src/features/operations/adapters/ops-http.ts";
 import {
   OpsPayloadError,
@@ -14,11 +15,6 @@ import {
   hasTrend,
   percent,
 } from "../../src/features/operations/domain/summary.ts";
-
-import {
-  day as displayDay,
-  usd as displayUsd,
-} from "../../src/features/operations/presentation/format.ts";
 
 const pinned = JSON.parse(readFileSync("contracts/ops/ops.summary.example.json", "utf8"));
 const fixture = JSON.parse(readFileSync("contracts/ops/summary.fixture.json", "utf8"));

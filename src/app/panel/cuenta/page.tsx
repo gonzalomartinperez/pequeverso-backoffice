@@ -1,5 +1,6 @@
 import { LinkProviderButton } from "#features/auth/presentation/account-controls.tsx";
 import { accessDeps, enabledProviders, requireActor } from "#server/auth.ts";
+import { es } from "#shared/i18n/es.ts";
 import { Section } from "#shared/ui/sections.tsx";
 
 export default async function AccountPage() {
@@ -12,14 +13,17 @@ export default async function AccountPage() {
     actor.role === "owner" ? enabledProviders().filter((provider) => !linked.has(provider.id)) : [];
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-heading">Tu cuenta</h1>
+      <h1 className="text-heading">{es.account.title}</h1>
       <Section
         id="identities"
-        title="Identidades vinculadas"
-        description="Vincular es siempre explícito, solo para propietarios, y solo acepta otra identidad con el mismo e-mail verificado."
+        title={es.account.linkedIdentities}
+        description={es.account.linkPolicy}
       >
         <p className="text-small text-copy">
-          {actor.email}: {[...linked].join(", ") || "sin identidades"}.
+          {es.account.identitySummary(
+            actor.email,
+            [...linked].join(", ") || es.account.noIdentities,
+          )}
         </p>
         {available.length ? (
           <div className="mt-4 flex flex-wrap gap-3">

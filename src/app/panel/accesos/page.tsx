@@ -1,18 +1,12 @@
 import { invitationState } from "#features/auth/domain/access.ts";
 import { ConfirmAction } from "#features/auth/presentation/confirm-action.tsx";
 import { InviteForm } from "#features/auth/presentation/invite-form.tsx";
-import { when } from "#features/operations/presentation/format.ts";
 import { accessDeps, requireActor } from "#server/auth.ts";
 import { config } from "#server/env.ts";
+import { es } from "#shared/i18n/es.ts";
+import { when } from "#shared/lib/format.ts";
 import { Section, TableRegion, td, th } from "#shared/ui/sections.tsx";
 import { inviteAction, removeMemberAction, revokeInvitationAction } from "./actions.ts";
-
-const STATE_LABEL = {
-  pending: "Pendiente",
-  accepted: "Aceptada",
-  revoked: "Revocada",
-  expired: "Vencida",
-} as const;
 
 export default async function AccessPage() {
   const actor = await requireActor("manage_access");
@@ -26,37 +20,34 @@ export default async function AccessPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-heading">Accesos</h1>
-        <p className="text-small text-muted">
-          Solo cuentas con un e-mail verificado por Google o GitHub. Quitar una cuenta cierra sus
-          sesiones en la siguiente solicitud.
-        </p>
+        <h1 className="text-heading">{es.access.title}</h1>
+        <p className="text-small text-muted">{es.access.description}</p>
       </header>
-      <Section id="invite" title="Invitar a una persona">
+      <Section id="invite" title={es.access.invitePerson}>
         <InviteForm action={inviteAction} />
       </Section>
-      <Section id="members" title="Cuentas con acceso">
-        <TableRegion label="Cuentas con acceso">
+      <Section id="members" title={es.access.members}>
+        <TableRegion label={es.access.members}>
           <table className="w-full border-collapse">
             <thead>
               <tr>
                 <th scope="col" className={th}>
-                  E-mail
+                  {es.access.email}
                 </th>
                 <th scope="col" className={th}>
-                  Rol
+                  {es.access.role}
                 </th>
                 <th scope="col" className={th}>
-                  Proveedores
+                  {es.access.providers}
                 </th>
                 <th scope="col" className={th}>
-                  Sesiones activas
+                  {es.access.activeSessions}
                 </th>
                 <th scope="col" className={th}>
-                  Alta
+                  {es.access.membershipStart}
                 </th>
                 <th scope="col" className={th}>
-                  <span className="sr-only">Acciones</span>
+                  <span className="sr-only">{es.access.actions}</span>
                 </th>
               </tr>
             </thead>
@@ -69,22 +60,24 @@ export default async function AccessPage() {
                   >
                     {member.email}
                   </th>
-                  <td className={td}>{member.role === "owner" ? "Propietario" : "Lectura"}</td>
-                  <td className={td}>{member.providers.join(", ") || "—"}</td>
+                  <td className={td}>
+                    {member.role === "owner" ? es.common.owner : es.common.viewer}
+                  </td>
+                  <td className={td}>{member.providers.join(", ") || es.common.dash}</td>
                   <td className={td}>{member.activeSessions}</td>
                   <td className={`${td} whitespace-nowrap`}>{when(member.createdAt)}</td>
                   <td className={td}>
                     {member.id === actor.id ? (
-                      <span className="text-tiny text-muted">Tu cuenta</span>
+                      <span className="text-tiny text-muted">{es.account.title}</span>
                     ) : member.email === ownerEmail ? (
-                      <span className="text-tiny text-muted">Propietario configurado</span>
+                      <span className="text-tiny text-muted">{es.access.configuredOwner}</span>
                     ) : (
                       <ConfirmAction
-                        label="Quitar acceso"
+                        label={es.access.removeAccess}
                         subject={member.email}
-                        title="¿Quitar el acceso?"
-                        description="Se cierran sus sesiones de inmediato. Para volver a entrar necesitará una invitación nueva."
-                        confirmLabel="Quitar acceso"
+                        title={es.access.removeTitle}
+                        description={es.access.removeDescription}
+                        confirmLabel={es.access.removeAccess}
                         fallbackFocusId="members-title"
                         action={removeMemberAction.bind(null, member.id)}
                       />
@@ -96,28 +89,28 @@ export default async function AccessPage() {
           </table>
         </TableRegion>
       </Section>
-      <Section id="invitations" title="Invitaciones">
+      <Section id="invitations" title={es.access.invitations}>
         {invitations.length === 0 ? (
-          <p className="text-small text-copy">Todavía no creaste invitaciones.</p>
+          <p className="text-small text-copy">{es.access.noInvitations}</p>
         ) : (
-          <TableRegion label="Invitaciones">
+          <TableRegion label={es.access.invitations}>
             <table className="w-full border-collapse">
               <thead>
                 <tr>
                   <th scope="col" className={th}>
-                    E-mail
+                    {es.access.email}
                   </th>
                   <th scope="col" className={th}>
-                    Rol
+                    {es.access.role}
                   </th>
                   <th scope="col" className={th}>
-                    Estado
+                    {es.access.status}
                   </th>
                   <th scope="col" className={th}>
-                    Vence
+                    {es.access.expires}
                   </th>
                   <th scope="col" className={th}>
-                    <span className="sr-only">Acciones</span>
+                    <span className="sr-only">{es.access.actions}</span>
                   </th>
                 </tr>
               </thead>
@@ -133,18 +126,18 @@ export default async function AccessPage() {
                         {invitation.email}
                       </th>
                       <td className={td}>
-                        {invitation.role === "owner" ? "Propietario" : "Lectura"}
+                        {invitation.role === "owner" ? es.common.owner : es.common.viewer}
                       </td>
-                      <td className={td}>{STATE_LABEL[state]}</td>
+                      <td className={td}>{es.access.invitationStatus[state]}</td>
                       <td className={`${td} whitespace-nowrap`}>{when(invitation.expiresAt)}</td>
                       <td className={td}>
                         {state === "pending" ? (
                           <ConfirmAction
-                            label="Revocar"
+                            label={es.access.revoke}
                             subject={invitation.email}
-                            title="¿Revocar la invitación?"
-                            description="El enlace deja de servir de inmediato."
-                            confirmLabel="Revocar invitación"
+                            title={es.access.revokeTitle}
+                            description={es.access.revokeDescription}
+                            confirmLabel={es.access.revokeInvitation}
                             fallbackFocusId="invitations-title"
                             action={revokeInvitationAction.bind(null, invitation.id)}
                           />

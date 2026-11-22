@@ -64,7 +64,7 @@ request to Google Fonts. Reading width is capped at `max-w-measure` (42 rem).
 
 **Naming rule:** font-size and colour token names must never collide (`text-body` is a size, the
 reading colour is `text-copy`; `text-price` is a size, the price colour is `text-amount`), and every
-custom size is registered in `src/shared/ui/cn.ts` so `tailwind-merge` does not drop colours.
+custom size is registered in `src/shared/lib/cn.ts` so `tailwind-merge` does not drop colours.
 
 ## Spacing, radius, elevation, icons
 

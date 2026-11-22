@@ -1,6 +1,7 @@
 "use client";
 import { Link2, LogOut } from "lucide-react";
 import { useState } from "react";
+import { es } from "#shared/i18n/es.ts";
 import { Button } from "#shared/ui/button.tsx";
 import { authClient } from "./auth-client.ts";
 
@@ -18,7 +19,7 @@ export function SignOutButton() {
       }}
     >
       <LogOut aria-hidden="true" />
-      Salir
+      {es.account.signOut}
     </Button>
   );
 }
@@ -42,11 +43,11 @@ export function LinkProviderButton({ provider, label }: { provider: string; labe
         }}
       >
         <Link2 aria-hidden="true" />
-        Vincular {label}
+        {es.account.linkProvider(label)}
       </Button>
       {state === "failed" ? (
         <p role="alert" className="text-tiny text-danger">
-          No se pudo vincular. La cuenta debe usar el mismo e-mail verificado.
+          {es.account.linkFailed}
         </p>
       ) : null}
     </div>

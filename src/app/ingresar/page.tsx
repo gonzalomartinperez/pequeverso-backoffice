@@ -3,16 +3,15 @@ import { redirect } from "next/navigation";
 import { BackofficeFrame } from "#features/auth/presentation/backoffice-frame.tsx";
 import { SignInPanel } from "#features/auth/presentation/sign-in-panel.tsx";
 import { authReady, currentActor, enabledProviders } from "#server/auth.ts";
+import { es } from "#shared/i18n/es.ts";
 import { Callout } from "#shared/ui/callout.tsx";
 
-export const metadata: Metadata = { title: "Ingresar · Backoffice Pequeverso" };
+export const metadata: Metadata = { title: es.signIn.metadataTitle };
 
 const ERRORS: Record<string, string> = {
-  invitation_invalid: "La invitación no es válida, ya se usó o venció. Pide una nueva.",
-  unable_to_create_user:
-    "Esa cuenta no tiene acceso. Entra con el e-mail verificado que recibió la invitación, desde el enlace de la invitación.",
-  account_not_linked:
-    "Esa identidad no está vinculada a tu cuenta. Ingresa con la identidad habitual; el propietario puede vincular otra desde «Cuenta».",
+  invitation_invalid: es.signIn.errors.invitationInvalid,
+  unable_to_create_user: es.signIn.errors.unableToCreateUser,
+  account_not_linked: es.signIn.errors.accountNotLinked,
 };
 
 export default async function SignInPage({
@@ -38,34 +37,22 @@ export default async function SignInPage({
     <BackofficeFrame>
       <div className="mx-auto flex w-full max-w-md flex-col gap-6 py-10">
         <header className="flex flex-col gap-2">
-          <h1 className="text-heading">Backoffice del asistente</h1>
-          <p className="text-small text-copy">
-            Acceso privado para operar el asistente de Pequeverso. No hay registro público: entra
-            solo el propietario configurado y las personas invitadas.
-          </p>
+          <h1 className="text-heading">{es.signIn.title}</h1>
+          <p className="text-small text-copy">{es.signIn.description}</p>
         </header>
         {!ready || error === "unavailable" ? (
           <Callout tone="danger" role="alert" data-testid="sign-in-unavailable">
-            <p>
-              El acceso no está disponible en este momento. No es un problema de tu cuenta: vuelve a
-              intentarlo más tarde.
-            </p>
+            <p>{es.signIn.errors.unavailable}</p>
           </Callout>
         ) : null}
         {invited && ready ? (
           <Callout tone="info" role="status">
-            <p>
-              Tienes una invitación. Ingresa con la cuenta cuyo e-mail verificado recibió la
-              invitación.
-            </p>
+            <p>{es.signIn.invited}</p>
           </Callout>
         ) : null}
         {error && error !== "unavailable" ? (
           <Callout tone="danger" role="alert" data-testid="sign-in-error">
-            <p>
-              {ERRORS[error] ??
-                "No pudimos darte acceso con esa cuenta. Si te invitaron, usa el enlace de la invitación y el mismo e-mail."}
-            </p>
+            <p>{ERRORS[error] ?? es.signIn.errors.noAccess}</p>
           </Callout>
         ) : null}
         {ready ? <SignInPanel providers={providers} /> : null}

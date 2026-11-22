@@ -1,4 +1,4 @@
-import { cn } from "#shared/ui/cn.ts";
+import { cn } from "#shared/lib/cn.ts";
 
 /**
  * Pequeverso isotipo (approved raster, public/brand; all rights reserved — see
