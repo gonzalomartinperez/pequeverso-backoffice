@@ -131,3 +131,11 @@ config, two scripts and the ratchet; the tests stay on `node:test`. The `qs` ove
 replaces the 6.15.1 that `typed-rest-client` (through `@stryker-mutator/core`) pins exactly, which
 npm audit flags (GHSA-q8mj-m7cp-5q26); dev-only, same major. Remove it when Stryker's dependency
 moves past the advisory.
+
+## Licence allow-list
+
+Dependency review (the `security` job, engineering-standards `security.yml`) uses the standard
+allow-list plus `LGPL-3.0-or-later`. That exception is for unmodified, dynamically linked
+libraries only: today `@img/sharp-*` (libvips), an optional dependency of Next.js image
+optimisation (owner decision OD-80, 2026-11-14). Copyleft licences that would reach this
+repository's code stay denied.
