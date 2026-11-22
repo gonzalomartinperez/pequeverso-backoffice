@@ -180,6 +180,9 @@ No observability switch changes OAuth admission, roles or assistant activation.
 - `version` is the image's `VERSION` build label (`0.0.0-dev` when unset); `schema_version` is
   the newest migration this build expects. Both fields were added at M4.7 (expand only: probes
   that read `status` or the HTTP code are unaffected).
+- If the database drops, the pool reconnects on the next query; meanwhile protected pages redirect
+  to a safe "unavailable" sign-in page. The dashboard reports "no disponible" if the API is
+  unreachable.
 
 ## Request correlation
 
@@ -188,9 +191,6 @@ Every response carries `x-request-id`. A well-formed incoming value (8 to 64 cha
 the private API calls (`x-request-id` on `/internal/v1/ops/summary` and `/ops/telemetry`), set as
 the `request.id` span attribute and written as `request_id` in structured logs. The reverse
 proxy may send its own id; it must not strip the response header. Added at M4.7 (expand only).
-- If the database drops, the pool reconnects on the next query; meanwhile protected pages redirect
-  to a safe "unavailable" sign-in page. The dashboard reports "no disponible" if the API is
-  unreachable.
 
 ## Bounded monitoring and shared-host budgets
 
