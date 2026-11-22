@@ -87,12 +87,7 @@ export function checkGuards(
     if (
       entry.mutating &&
       (row.guard === "public" || row.guard === "bearer-token") &&
-      !(
-        Object.getOwnPropertyDescriptor(options.publicMutations ?? PUBLIC_MUTATIONS, at)?.value ??
-        ""
-      )
-        .toString()
-        .trim()
+      !allowedMutation(options.publicMutations ?? PUBLIC_MUTATIONS, at)
     )
       problems.push(
         `${at}: mutating entry must call requireActor or delegate to Better Auth (listed ${row.guard}); allowlist it in PUBLIC_MUTATIONS with a reason only if it truly needs no session`,
