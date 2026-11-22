@@ -11,7 +11,7 @@ Server-only variables (see `.env.example` and [deployment-contract.md](../deploy
 `BACKOFFICE_ORIGIN` (exact https origin; http only on loopback outside production),
 `BETTER_AUTH_SECRET` (≥ 32 chars, required except in `test`; also encrypts stored OAuth tokens, so
 keep it stable and backed up), `DATABASE_URL`, `OWNER_EMAIL`, and the Google and/or GitHub client id + secret. Production
-fails closed when any is missing or weak (`src/server/parse-config.ts`). Register the callbacks
+fails closed when any is missing or weak (`src/server/env-parse.ts`). Register the callbacks
 `<origin>/api/auth/callback/google` and `<origin>/api/auth/callback/github` in owner-managed OAuth
 apps, separate for development and production.
 

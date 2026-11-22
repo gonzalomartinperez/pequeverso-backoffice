@@ -11,7 +11,8 @@ src/
     panel/                  layout guard + dashboard, accesos/ (owner), cuenta/
     api/auth/[...all]/      Better Auth endpoints       healthz/  liveness
   proxy.ts                  per-request headers (nonce CSP on backoffice routes)
-  server/                   server-only composition: config, auth (pool, Better Auth, guards), operations
+  server/                   server-only composition: env.ts (the only process.env reader) and env-parse.ts,
+                            auth.ts (pool, Better Auth, requireActor), container.ts (ops, telemetry, analytics reads)
   features/
     auth/
       domain/access.ts      roles, permissions, e-mail normalization, invitation state, admission route
@@ -38,7 +39,7 @@ tests/browser/             real IAM with fake IdP and synthetic operations
    `/panel`, `/ingresar`, `/invitacion` and `/api/auth`.
 2. `panel/layout.tsx` calls `requireActor("read_operations")`: the Better Auth session is read
    from PostgreSQL and the role re-read from the user row; anonymous visitors go to `/ingresar`.
-3. The dashboard page reads the API's private summary through `server/operations.ts` (bearer
+3. The dashboard page reads the API's private summary through `server/container.ts` (bearer
    token from server env), validates it and renders it; failures become "no disponible".
 4. Owner mutations are server actions that call `requireActor("manage_access")` again before the
    use case runs.
@@ -152,7 +153,7 @@ evidence, not tests rerun by the skill migration.
 ## Private site analytics
 
 `src/features/analytics/{domain,application,adapters,presentation}` owns the separate
-site report, with separate synthetic and production-class aggregate namespaces owned by the API. `src/server/analytics.ts` checks live `read_operations` membership
+site report, with separate synthetic and production-class aggregate namespaces owned by the API. `src/server/container.ts` (`readAnalytics`) checks live `read_operations` membership
 before any selection/read, then composes its private bounded adapter. `/panel/analitica`
 inherits the panel's headers. Its independent server flag defaults OFF; enabling a read in
 production does not activate collection or establish deployment or trusted-edge provenance. Domain/application purity and cross-feature restrictions apply;

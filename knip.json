@@ -4,6 +4,8 @@
     "scripts/*.ts",
     "tests/unit/**/*.test.ts",
     "tests/integration/**/*.test.ts",
+    "tests/unit/support/container-probe.ts",
+    "tests/unit/support/server-modules.ts",
     "tests/browser/**/*.spec.ts",
     "tests/browser/auth.setup.ts",
     "tests/visual/**/*.spec.ts",

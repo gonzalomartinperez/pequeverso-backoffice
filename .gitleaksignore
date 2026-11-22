@@ -4,3 +4,7 @@ e247ca1b9013ac6dea8baba644dc7f4a0cac492a:tests/unit/telemetry.test.ts:generic-ap
 298e6a21d2a6181bc898c3a1a705c1a55d27b263:tests/unit/telemetry.test.ts:generic-api-key:13
 # Exact public API Git tree in the native capture receipt; original receipt stays intact.
 25bfc48db45630657e507a27456311e42824c86b:docs/verification/analytics-native-2026-10-19/capture-manifest.json:generic-api-key:5
+# Public API Git producer revisions in the 2026-11-22 contract re-pin (api_revision), not credentials.
+0d34673cb4fc8f92161273623b9ca8d056bbfe21:contracts/ops/source.json:generic-api-key:5
+0d34673cb4fc8f92161273623b9ca8d056bbfe21:contracts/analytics/source.json:generic-api-key:4
+0d34673cb4fc8f92161273623b9ca8d056bbfe21:contracts/telemetry/source.json:generic-api-key:4
