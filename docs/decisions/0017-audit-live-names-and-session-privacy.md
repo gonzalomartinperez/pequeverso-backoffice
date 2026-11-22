@@ -28,7 +28,7 @@ Option 2, and reduce session data.
 
 - **Audit.** `PostgresAccessStore.listAudit` joins the actor's current e-mail and the subject's:
   the invitation e-mail for invitation entries, the member's e-mail for `member_removed`. A
-  removed account resolves to null, never to a stale copy. The audit row stays free of e-mails
+  removed account's own e-mail resolves to null, never to a stale copy. The audit row stays free of e-mails
   and tokens, as migration 0002 promises. Pages are keyset-ordered by (`at`, `id`) at millisecond
   precision, the precision of the cursor. They neither skip nor repeat entries.
 - **Audit access.** Owners only: `listAudit` checks `manage_access` before reading.
@@ -49,7 +49,11 @@ Option 2, and reduce session data.
 
 - Good: names are current and honest, and the stored audit stays minimal.
 - Good: the session view cannot leak a full address, a raw agent or a token.
-- Bad: a removed member's audit entries show no name. That is the honest state.
+- Bad: a removed member's `member_removed` entry shows no name. That is the honest state.
+- Neutral: invitation entries resolve through the invitation row, which is kept, so the
+  invited e-mail stays visible to owners after the member is removed. This is the same e-mail
+  the access screen already lists for that invitation. Erasing it would need a schema decision
+  (out of scope here).
 
 ### Confirmation
 

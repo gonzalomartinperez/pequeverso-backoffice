@@ -305,10 +305,10 @@ export class PostgresAccessStore implements AccessStore, SessionStore, AuditStor
     return result.rowCount === 1;
   }
 
-  async revokeOtherSessions(userId: string, keepSessionId: string): Promise<number> {
+  async revokeOtherSessions(userId: string, keepSessionId: string, now: Date): Promise<number> {
     const result = await this.pool.query(
-      'DELETE FROM auth_session WHERE "userId" = $1 AND id <> $2',
-      [userId, keepSessionId],
+      'DELETE FROM auth_session WHERE "userId" = $1 AND id <> $2 AND "expiresAt" > $3',
+      [userId, keepSessionId, now],
     );
     return result.rowCount ?? 0;
   }

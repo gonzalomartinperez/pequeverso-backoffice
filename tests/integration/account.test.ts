@@ -102,11 +102,12 @@ describe("account sessions and audit (PostgreSQL)", {
       ok: false,
       reason: "unknown_current",
     });
-    assert.deepEqual(await revokeOtherSessions(deps, owner, "s-owner-a"), { ok: true, ended: 2 });
+    // Only the one other live session ends; the expired row is not counted or touched.
+    assert.deepEqual(await revokeOtherSessions(deps, owner, "s-owner-a"), { ok: true, ended: 1 });
     const { rows } = await pool.query<{ id: string }>("SELECT id FROM auth_session ORDER BY id");
     assert.deepEqual(
       rows.map((row) => row.id),
-      ["s-owner-a", "s-viewer"],
+      ["s-owner-a", "s-owner-old", "s-viewer"],
     );
     assert.equal(await revokeSession(deps, viewer, "s-viewer", "other"), "revoked");
   });
