@@ -1,6 +1,6 @@
-import { LinkProviderButton } from "@/features/auth/presentation/account-controls";
-import { accessDeps, enabledProviders, requireActor } from "@/server/auth";
-import { Section } from "@/shared/ui/sections";
+import { LinkProviderButton } from "#features/auth/presentation/account-controls.tsx";
+import { accessDeps, enabledProviders, requireActor } from "#server/auth.ts";
+import { Section } from "#shared/ui/sections.tsx";
 
 export default async function AccountPage() {
   const actor = await requireActor("read_operations");

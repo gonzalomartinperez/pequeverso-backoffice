@@ -29,6 +29,16 @@ it("keeps the strict typing flags on", () => {
   assert.deepEqual(tsconfig.compilerOptions.types, ["node"]);
 });
 
+it("uses Node subpath imports instead of a tsconfig alias", () => {
+  assert.equal(tsconfig.compilerOptions.paths, undefined);
+  const manifest = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
+  assert.deepEqual(manifest.imports, {
+    "#features/*": "./src/features/*",
+    "#server/*": "./src/server/*",
+    "#shared/*": "./src/shared/*",
+  });
+});
+
 it("enables typed routes and keeps the generated route types in the program", () => {
   assert.match(readFileSync(path.join(root, "next.config.ts"), "utf8"), /^\s*typedRoutes: true,$/m);
   assert.ok(tsconfig.include.includes(".next/types/**/*.ts"));

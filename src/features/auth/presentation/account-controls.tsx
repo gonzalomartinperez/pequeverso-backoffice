@@ -1,8 +1,8 @@
 "use client";
 import { Link2, LogOut } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/shared/ui/button";
-import { authClient } from "./auth-client";
+import { Button } from "#shared/ui/button.tsx";
+import { authClient } from "./auth-client.ts";
 
 export function SignOutButton() {
   const [pending, setPending] = useState(false);

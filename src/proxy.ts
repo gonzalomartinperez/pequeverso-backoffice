@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { backofficeCsp } from "./server/csp";
-import { developmentBuild, httpsOrigin } from "./server/env";
+import { backofficeCsp } from "./server/csp.ts";
+import { developmentBuild, httpsOrigin } from "./server/env.ts";
 
 const BACKOFFICE = /^\/(?:panel|ingresar|invitacion|api\/auth)(?:\/|$)/;
 

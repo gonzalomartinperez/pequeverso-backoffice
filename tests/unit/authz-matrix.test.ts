@@ -8,7 +8,7 @@ import { expectedOutcome, type Guard, MATRIX, type Row } from "../authz/matrix.t
 const root = path.resolve(import.meta.dirname, "../..");
 const fixture = (name: string) => path.join(root, "tests/authz/fixtures", name);
 
-const AUTH = 'import { requireActor } from "@/server/auth";\n';
+const AUTH = 'import { requireActor } from "#server/auth.ts";\n';
 const row = (id: string, guard: Guard, covers: Row["covers"] = "static-only"): Row => ({
   id,
   guard,
@@ -238,7 +238,7 @@ describe("guard verification", () => {
     const actions = (body: string) =>
       checkGuards(
         surfaceOf({
-          "src/app/a/actions.ts": `"use server";\n${AUTH}import { removeMember } from "@/x";\nexport async function go(id: string) {\n${body}\n}`,
+          "src/app/a/actions.ts": `"use server";\n${AUTH}import { removeMember } from "#x.ts";\nexport async function go(id: string) {\n${body}\n}`,
         }),
         [row("action:src/app/a/actions.ts#go", "manage_access")],
       );
@@ -278,17 +278,17 @@ describe("guard verification", () => {
         [row("page:src/app/panel/p/page.tsx#default", "manage_access")],
       );
     const body = 'await requireActor("manage_access");';
-    assert.deepEqual(plain('import { requireActor } from "@/server/auth";', body), []);
+    assert.deepEqual(plain('import { requireActor } from "#server/auth.ts";', body), []);
     assert.deepEqual(plain('import { requireActor } from "../../../server/auth.ts";', body), []);
     for (const spec of [
-      "@/lib/auth",
-      "@/server/other-auth",
+      "#lib/auth.ts",
+      "#server/other-auth.ts",
       "./auth",
       "better-auth",
-      "@/server/auth/extra",
+      "#server/auth/extra.ts",
     ])
       has(plain(`import { requireActor } from "${spec}";`, body), "no verified requireActor");
-    const imp = 'import { requireActor } from "@/server/auth";';
+    const imp = 'import { requireActor } from "#server/auth.ts";';
     has(
       plain(imp, `const requireActor = async (a: string) => {}; ${body}`),
       "no verified requireActor",
@@ -311,7 +311,7 @@ describe("guard verification", () => {
   it("verifies a helper one import level deep, and fails when its guard is removed", () => {
     const call = "const r = await readThing(); return r;";
     const helper = (body: string): Files => ({
-      "src/app/panel/p/page.tsx": `import { readThing } from "@/server/thing";\nexport default async function P() { ${call} }`,
+      "src/app/panel/p/page.tsx": `import { readThing } from "#server/thing.ts";\nexport default async function P() { ${call} }`,
       "src/server/thing.ts": `${AUTH}export async function readThing() { ${body} return 1; }`,
     });
     const rows = [row("page:src/app/panel/p/page.tsx#default", "read_operations")];

@@ -8,15 +8,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { parseAnalyticsReport } from "../../src/features/analytics/adapters/validate.ts";
 import { defaultSelection } from "../../src/features/analytics/domain/report.ts";
 
-// Native Node does not parse JSX. Compile the real owned presentation modules, without a server.
+// Native Node does not parse JSX. Compile the real owned presentation modules, without a server;
+// `#shared/*` subpath imports resolve natively through package.json `imports`.
 const sourceRoot = new URL("../../src/", import.meta.url).href;
 const hooks = registerHooks({
-  resolve(specifier, context, nextResolve) {
-    // Match the existing project alias used by the real shared section primitive.
-    if (specifier === "@/shared/ui/cn")
-      return nextResolve(new URL("../../src/shared/ui/cn.ts", import.meta.url).href, context);
-    return nextResolve(specifier, context);
-  },
   load(url, context, nextLoad) {
     if (url.startsWith(sourceRoot) && url.endsWith(".tsx"))
       return {

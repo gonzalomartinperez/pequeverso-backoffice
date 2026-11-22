@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { inspectInvitation } from "@/features/auth/application/access";
-import { accessDeps, INVITATION_COOKIE, SECURE_INVITATION_COOKIE } from "@/server/auth";
-import { config } from "@/server/env";
+import { inspectInvitation } from "#features/auth/application/access.ts";
+import { accessDeps, INVITATION_COOKIE, SECURE_INVITATION_COOKIE } from "#server/auth.ts";
+import { config } from "#server/env.ts";
 
 /**
  * Invitation landing. The token is checked (not consumed) and handed to the sign-in flow in a

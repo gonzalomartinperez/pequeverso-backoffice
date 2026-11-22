@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import type { ChartRow } from "./daily-charts";
+import type { ChartRow } from "./daily-charts.tsx";
 
 /**
  * Same frame as the loaded charts (two captioned figures with an h-64 plot area), so swapping
@@ -26,7 +26,7 @@ function ChartsPlaceholder() {
  * the DOM, so server rendering it produced only an empty frame anyway. M5 replaces the charts
  * with server-rendered SVG.
  */
-const Charts = dynamic(() => import("./daily-charts").then((module) => module.DailyCharts), {
+const Charts = dynamic(() => import("./daily-charts.tsx").then((module) => module.DailyCharts), {
   ssr: false,
   loading: ChartsPlaceholder,
 });

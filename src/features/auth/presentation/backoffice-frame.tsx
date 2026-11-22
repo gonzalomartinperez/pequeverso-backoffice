@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BrandMark } from "@/shared/ui/brand-mark";
+import { BrandMark } from "#shared/ui/brand-mark.tsx";
 
 /**
  * Page frame of the private backoffice. Narrow screens: brand and account on the first row,
