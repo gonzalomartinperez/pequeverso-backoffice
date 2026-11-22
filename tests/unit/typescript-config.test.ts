@@ -35,5 +35,9 @@ it("enables typed routes and keeps the generated route types in the program", ()
   // Excluding `.next` as a whole silently drops .next/types/link.d.ts, and with it typed links.
   assert.ok(!tsconfig.exclude.includes(".next"), "exclude only build outputs under .next");
   for (const pattern of tsconfig.exclude)
-    assert.ok(!".next/types/link.d.ts".startsWith(`${pattern}/`), pattern);
+    for (const file of [".next/types/link.d.ts", ".next/types/validator.ts"])
+      assert.ok(
+        !path.matchesGlob(file, pattern) && !path.matchesGlob(file, `${pattern}/**`),
+        pattern,
+      );
 });
