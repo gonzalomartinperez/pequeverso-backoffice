@@ -1,4 +1,5 @@
 import type { InvitationRecord, Role } from "../domain/access.ts";
+import type { AuditCursor } from "../domain/sessions.ts";
 
 /** A backoffice account as the access screens show it. Never includes tokens or provider data. */
 export type Member = {
@@ -63,4 +64,49 @@ export interface Secrets {
 
 export interface Clock {
   now(): Date;
+}
+
+/** An active session of one account, as stored (raw network data never leaves the server). */
+export type SessionRecord = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  expiresAt: Date;
+  ipAddress: string | null;
+  userAgent: string | null;
+};
+
+/** The account's own sessions (Better Auth's session table). Never exposes the session token. */
+export interface SessionStore {
+  /** Unexpired sessions of `userId`, newest first. */
+  listSessions(userId: string, now: Date): Promise<SessionRecord[]>;
+  /** Deletes one session of `userId`; false when it is not theirs or no longer exists. */
+  revokeSession(userId: string, sessionId: string): Promise<boolean>;
+  /** Deletes every live session of `userId` except `keepSessionId`; returns how many ended. */
+  revokeOtherSessions(userId: string, keepSessionId: string, now: Date): Promise<number>;
+}
+
+type AuditAction =
+  | "invitation_created"
+  | "invitation_revoked"
+  | "invitation_accepted"
+  | "member_removed";
+
+/**
+ * One audit entry with names resolved at read time (live join): the stored row keeps ids only,
+ * so a removed account or an unknown subject reads as null rather than a stale copy.
+ */
+export type AuditEntry = {
+  id: string;
+  action: AuditAction;
+  at: Date;
+  actorId: string | null;
+  actorEmail: string | null;
+  subjectId: string;
+  subjectEmail: string | null;
+};
+
+export interface AuditStore {
+  /** Up to `limit` entries, newest first (`at` then `id` descending), strictly after `cursor`. */
+  listAudit(cursor: AuditCursor | null, limit: number): Promise<AuditEntry[]>;
 }

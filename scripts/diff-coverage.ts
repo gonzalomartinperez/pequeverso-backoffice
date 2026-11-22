@@ -102,9 +102,11 @@ export function evaluateDiff(
       continue;
     }
     if (!file.endsWith(".ts") || file.endsWith(".d.ts")) continue;
+    // A type-only module has no runtime lines; `c8 --all` still lists it with zero hits.
+    if (typeOnly(file)) continue;
     const executable = lcov.get(file);
     if (!executable) {
-      if (!typeOnly(file)) errors.push(`${file} changed but is not in lcov (unmeasured)`);
+      errors.push(`${file} changed but is not in lcov (unmeasured)`);
       continue;
     }
     const group = isAuthPath(file) ? tally.auth : tally.rest;

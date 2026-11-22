@@ -5,7 +5,7 @@
   "plugins": ["@stryker-mutator/tap-runner"],
   "tap": {
     "testFiles": [
-      "tests/unit/{access,analytics,analytics-http,config,fixture-safety,log-redaction,operations,properties,proxy-csp,telemetry,validator-fuzz}.test.ts"
+      "tests/unit/{access,account,analytics,analytics-http,config,fixture-safety,log-redaction,metric,operations,properties,proxy-csp,telemetry,validator-fuzz}.test.ts"
     ],
     "nodeArgs": [
       "--test-reporter=tap",
