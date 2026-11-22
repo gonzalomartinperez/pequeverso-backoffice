@@ -25,6 +25,10 @@ function defaultReader(root: string) {
   };
 }
 
+/** An allowlisted public mutation needs its own (non-inherited) entry with a non-blank reason. */
+const allowedMutation = (list: Readonly<Record<string, string>>, id: string) =>
+  Object.hasOwn(list, id) && Boolean(list[id]?.trim());
+
 /** Roles for which every guard in the list passes (the entry's effective audience). */
 const audience = (guards: readonly string[]) =>
   ROLES.filter((role) => guards.every((guard) => can(role, guard as Action)));
@@ -83,7 +87,12 @@ export function checkGuards(
     if (
       entry.mutating &&
       (row.guard === "public" || row.guard === "bearer-token") &&
-      !Object.hasOwn(options.publicMutations ?? PUBLIC_MUTATIONS, at)
+      !(
+        Object.getOwnPropertyDescriptor(options.publicMutations ?? PUBLIC_MUTATIONS, at)?.value ??
+        ""
+      )
+        .toString()
+        .trim()
     )
       problems.push(
         `${at}: mutating entry must call requireActor or delegate to Better Auth (listed ${row.guard}); allowlist it in PUBLIC_MUTATIONS with a reason only if it truly needs no session`,

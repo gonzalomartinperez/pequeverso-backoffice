@@ -412,7 +412,7 @@ describe("route guards and coverage", () => {
 
   it("negative fixture: a mutating handler or action listed public or bearer fails (M4.2)", () => {
     const mutating = "must call requireActor or delegate to Better Auth";
-    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+    for (const method of ["POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]) {
       const file = {
         "src/app/r/route.ts": `export async function ${method}() { return new Response(); }`,
       };
@@ -424,6 +424,22 @@ describe("route guards and coverage", () => {
     has(
       run({ "src/app/a/actions.ts": '"use server";\nexport async function doIt() {}' }, [
         row("action:src/app/a/actions.ts#doIt", "public"),
+      ]),
+      mutating,
+    );
+    has(
+      run(
+        {
+          "src/app/r/route.ts": 'export { POST } from "./handler";',
+          "src/app/r/handler.ts": "export async function POST() { return new Response(); }",
+        },
+        [row("route:src/app/r/route.ts#POST", "public")],
+      ),
+      mutating,
+    );
+    has(
+      run({ "src/app/a/actions.ts": '"use server";\nexport default async function save() {}' }, [
+        row("action:src/app/a/actions.ts#default", "public"),
       ]),
       mutating,
     );
@@ -451,6 +467,13 @@ describe("route guards and coverage", () => {
       }),
       [],
     );
+    for (const reason of ["", "   "])
+      has(
+        checkGuards(surfaceOf(post), [row("route:src/app/r/route.ts#POST", "public")], {
+          publicMutations: { "route:src/app/r/route.ts#POST": reason },
+        }),
+        mutating,
+      );
   });
 
   it("flags duplicate ids", () => {
