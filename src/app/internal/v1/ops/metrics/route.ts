@@ -1,4 +1,4 @@
-import { config } from "@/server/config";
+import { config } from "@/server/env";
 import { observability } from "@/server/observability";
 
 /** Private network scrape only: no cookies, roles or API client token used for machine access. */

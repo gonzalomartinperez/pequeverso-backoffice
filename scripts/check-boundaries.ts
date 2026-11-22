@@ -187,6 +187,66 @@ function reference(node: ts.Identifier): boolean {
   return true;
 }
 
+// The single reader of process.env (M4.1); validation stays in env-parse.ts. instrumentation.ts may
+// read only NEXT_RUNTIME, which Next.js inlines per runtime before any server module loads.
+const ENV_READER = "server/env.ts";
+const ENV_EXCEPTIONS: Record<string, readonly string[]> = {
+  "instrumentation.ts": ["NEXT_RUNTIME"],
+};
+/** Every read of the process environment in a module: the variable name, or null when computed. */
+function environmentReads(file: ts.SourceFile, ambient: (node: ts.Identifier) => boolean) {
+  const reads: (string | null)[] = [];
+  const member = (node: ts.Expression): string | null =>
+    ts.isPropertyAccessExpression(node)
+      ? node.name.text
+      : ts.isElementAccessExpression(node)
+        ? literal(node.argumentExpression)
+        : null;
+  const processEnv = (node: ts.Node): boolean =>
+    (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
+    member(node) === "env" &&
+    ((ts.isIdentifier(node.expression) &&
+      node.expression.text === "process" &&
+      ambient(node.expression)) ||
+      ((ts.isPropertyAccessExpression(node.expression) ||
+        ts.isElementAccessExpression(node.expression)) &&
+        member(node.expression) === "process" &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.expression.text === "globalThis"));
+  function visit(node: ts.Node): void {
+    if (processEnv(node)) {
+      const parent = node.parent;
+      reads.push(
+        (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent)) &&
+          parent.expression === node
+          ? member(parent)
+          : null,
+      );
+    } else if (
+      ts.isVariableDeclaration(node) &&
+      ts.isObjectBindingPattern(node.name) &&
+      node.initializer &&
+      ts.isIdentifier(node.initializer) &&
+      node.initializer.text === "process" &&
+      ambient(node.initializer) &&
+      node.name.elements.some((element) => {
+        const property = element.propertyName ?? element.name;
+        return element.dotDotDotToken || (ts.isIdentifier(property) && property.text === "env");
+      })
+    ) {
+      reads.push(null);
+    } else if (
+      ts.isImportDeclaration(node) &&
+      ["process", "node:process"].includes(literal(node.moduleSpecifier) ?? "")
+    ) {
+      reads.push(null);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  return reads;
+}
+
 /** Analyze snapshots only: fixture modules are parsed, never imported or executed. */
 export function checkBoundaries(modules: ReadonlyMap<string, string>, root: string): string[] {
   const src = path.join(root, "src");
@@ -236,7 +296,16 @@ export function checkBoundaries(modules: ReadonlyMap<string, string>, root: stri
     host,
   );
   const checker = program.getTypeChecker();
+  const ambient = (node: ts.Identifier) =>
+    !checker
+      .getSymbolAtLocation(node)
+      ?.declarations?.some((declaration) => parsed.has(declaration.getSourceFile().fileName));
   for (const [file, module] of parsed) {
+    const rel = posix(path.relative(src, file));
+    if (rel !== ENV_READER)
+      for (const name of environmentReads(module.file, ambient))
+        if (name === null || !ENV_EXCEPTIONS[rel]?.includes(name))
+          report(file, `process.env is read only in src/${ENV_READER} (${name ?? "computed"})`);
     const from = module.place;
     if (!from) continue;
     if (from.layer === "domain" || from.layer === "application") {

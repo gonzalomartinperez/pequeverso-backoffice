@@ -420,3 +420,51 @@ it("admits only the analytics feature's existing four layers and preserves all b
     assert.match(inspect({ [file]: source }).join("\n"), expected);
   }
 });
+
+it("lets only server/env.ts read process.env (instrumentation may read NEXT_RUNTIME only)", () => {
+  const reader = 'import "server-only"; export const config = () => process.env.SECRET;';
+  assert.deepEqual(inspect({ "server/env.ts": reader }), []);
+  assert.deepEqual(
+    inspect({
+      "instrumentation.ts":
+        'export async function register() { if (process.env.NEXT_RUNTIME !== "nodejs") return; }',
+    }),
+    [],
+  );
+  for (const [file, source, name] of [
+    [
+      "server/auth.ts",
+      "export const secret = process.env.BETTER_AUTH_SECRET;",
+      "BETTER_AUTH_SECRET",
+    ],
+    ["proxy.ts", 'export const dev = process.env["NODE_ENV"] === "development";', "NODE_ENV"],
+    [
+      "instrumentation.ts",
+      "export const origin = process.env.BACKOFFICE_ORIGIN;",
+      "BACKOFFICE_ORIGIN",
+    ],
+    ["app/panel/page.tsx", "export const all = process.env;", "computed"],
+    ["server/container.ts", "const key = 'X'; export const v = process.env[key];", "computed"],
+    ["server/auth.ts", "const { env } = process; export const v = env.X;", "computed"],
+    ["server/auth.ts", "const { ...rest } = process; export const v = rest;", "computed"],
+    ["server/auth.ts", "export const v = globalThis.process.env.X;", "X"],
+    ["server/auth.ts", 'import { env } from "node:process"; export const v = env.X;', "computed"],
+    ["shared/ui/probe.tsx", "export const v = process.env.X;", "X"],
+  ]) {
+    assert.ok(
+      inspect({ [file as string]: source as string }).includes(
+        `src/${file}: process.env is read only in src/server/env.ts (${name})`,
+      ),
+      `${file}: ${source}`,
+    );
+  }
+});
+
+it("does not treat a local binding named process as the environment", () => {
+  assert.deepEqual(
+    inspect({
+      "server/auth.ts": "const process = { env: { X: 1 } }; export const v = process.env.X;",
+    }),
+    [],
+  );
+});

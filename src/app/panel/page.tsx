@@ -1,6 +1,6 @@
 import { Dashboard } from "@/features/operations/presentation/dashboard";
 import { requireActor } from "@/server/auth";
-import { readOperations, readTelemetry } from "@/server/operations";
+import { readOperations, readTelemetry } from "@/server/container";
 
 /** Read per request on the server; the browser never sees the ops credential or the API URL. */
 export default async function OperationsPage() {

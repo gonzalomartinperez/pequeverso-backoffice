@@ -3,7 +3,7 @@ import { ConfirmAction } from "@/features/auth/presentation/confirm-action";
 import { InviteForm } from "@/features/auth/presentation/invite-form";
 import { when } from "@/features/operations/presentation/format";
 import { accessDeps, requireActor } from "@/server/auth";
-import { config } from "@/server/config";
+import { config } from "@/server/env";
 import { Section, TableRegion, td, th } from "@/shared/ui/sections";
 import { inviteAction, removeMemberAction, revokeInvitationAction } from "./actions";
 

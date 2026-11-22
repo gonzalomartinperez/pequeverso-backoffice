@@ -24,5 +24,5 @@ This repository is public; the application it builds is a **private** backoffice
   answers, buyer e-mails, cookies or secrets).
 - **Secrets:** only in the runtime environment (`BETTER_AUTH_SECRET`, `DATABASE_URL`, provider
   client secrets, `OPS_READ_TOKEN`). Production refuses weak or test settings
-  (`src/server/parse-config.ts`). CI scans files and history for secrets.
+  (`src/server/env-parse.ts`). CI scans files and history for secrets.
 - No analytics, session replay or third-party scripts are loaded.
