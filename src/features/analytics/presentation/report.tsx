@@ -1,4 +1,5 @@
-import { Facts, Section, TableRegion, td, th } from "../../../shared/ui/sections.tsx";
+import { es } from "#shared/i18n/es.ts";
+import { Facts, Section, TableRegion, td, th } from "#shared/ui/sections.tsx";
 import type { AnalyticsReading } from "../application/ports.ts";
 import type { Selection } from "../domain/report.ts";
 import { AnalyticsFilters } from "./filters.tsx";
@@ -6,10 +7,9 @@ import { AnalyticsFilters } from "./filters.tsx";
 const number = (value: number) => value.toLocaleString("es");
 const countryNames = new Intl.DisplayNames(["es"], { type: "region" });
 const messages = {
-  disabled: "Lectura de analítica desactivada. No hay un informe disponible.",
-  invalid_selection: "La selección no es válida. Elige una página y una sección compatibles.",
-  unavailable:
-    "No disponible. No se pudo obtener un informe válido; no se muestran ceros en su lugar.",
+  disabled: es.analytics.status.disabled,
+  invalid_selection: es.analytics.status.invalidSelection,
+  unavailable: es.analytics.status.unavailable,
 };
 export function AnalyticsReport({
   reading,
@@ -23,24 +23,25 @@ export function AnalyticsReport({
     <div className="grid min-w-0 gap-6">
       <header>
         <h1 className="text-heading text-ink">
-          Actividad del sitio
-          {report ? (report.synthetic ? " · prueba local" : " · producción") : ""}
+          {es.analytics.title}
+          {report
+            ? report.synthetic
+              ? ` ${es.analytics.localSuffix}`
+              : ` ${es.analytics.productionSuffix}`
+            : ""}
         </h1>
         <p className="mt-2 text-body text-copy">
           {report
             ? report.synthetic
-              ? "Datos sintéticos. "
-              : "Datos clasificados como producción por la API. "
-            : "Sin clasificación de datos disponible. "}
-          Son eventos recibidos, no personas, visitas únicas ni conversiones. Esta vista no activa
-          la recopilación ni verifica el despliegue del colector.
+              ? `${es.analytics.syntheticData} `
+              : `${es.analytics.productionData} `
+            : `${es.analytics.unclassifiedData} `}
+          {es.analytics.reportScope}
         </p>
       </header>
-      <Section id="analytics-filters" title="Consultar un intervalo">
+      <Section id="analytics-filters" title={es.analytics.filtersTitle}>
         <AnalyticsFilters key={Object.values(selection).join("|")} selection={selection} />
-        <p className="mt-3 text-small text-muted">
-          Todos los filtros afectan todas las cifras. La consulta se envía al pulsar Consultar.
-        </p>
+        <p className="mt-3 text-small text-muted">{es.analytics.filtersDescription}</p>
       </Section>
       {!report ? (
         <p role="status" className="rounded-md border border-line bg-surface-raised p-5 text-copy">
@@ -50,50 +51,53 @@ export function AnalyticsReport({
         <>
           <Section
             id="analytics-counts"
-            title="Eventos recibidos"
-            description={`${report.start} a ${report.end}, fin excluido. ${report.partial ? "Intervalo actual parcial." : "Intervalo calendario anterior."}`}
+            title={es.analytics.receivedEvents}
+            description={es.analytics.intervalDescription(
+              report.start,
+              report.end,
+              report.partial ? es.analytics.currentInterval : es.analytics.pastInterval,
+            )}
           >
             <Facts
               items={[
-                { term: "Vistas de página", value: number(report.totals.page_views) },
-                { term: "Exposiciones de sección", value: number(report.totals.section_views) },
+                { term: es.analytics.pageViews, value: number(report.totals.page_views) },
+                { term: es.analytics.sectionViews, value: number(report.totals.section_views) },
                 {
-                  term: "Clics de puntero",
+                  term: es.analytics.pointerClicks,
                   value: number(report.totals.public_clicks),
-                  hint: "No incluye activaciones por teclado.",
+                  hint: es.analytics.pointerClicksHint,
                 },
               ]}
             />
             <p className="mt-4 text-small text-muted">
-              Primer evento recibido: {report.first_observed_at ?? "Sin registros"}. Último:{" "}
-              {report.last_observed_at ?? "Sin registros"}. No indica cuándo se activó el canal ni
-              su disponibilidad.
+              {es.analytics.observedEvents(
+                report.first_observed_at ?? es.analytics.noRecords,
+                report.last_observed_at ?? es.analytics.noRecords,
+              )}
             </p>
             {report.totals.page_views +
               report.totals.section_views +
               report.totals.public_clicks ===
             0 ? (
-              <p className="mt-3 text-body">
-                No hay eventos recibidos para esta selección. Esto no demuestra que el sitio no tuvo
-                tráfico.
-              </p>
+              <p className="mt-3 text-body">{es.analytics.noReceivedEvents}</p>
             ) : null}
           </Section>
-          <Section id="analytics-calendar" title="Calendario UTC">
-            <TableRegion label="Eventos por día">
+          <Section id="analytics-calendar" title={es.analytics.utcCalendar}>
+            <TableRegion label={es.analytics.dailyEvents}>
               <table className="w-full">
-                <caption className="p-3 text-left text-small">
-                  Conteos recibidos por día; sin estimaciones de personas.
-                </caption>
+                <caption className="p-3 text-left text-small">{es.analytics.dailyCaption}</caption>
                 <thead>
                   <tr>
-                    {["Día UTC", "Vistas de página", "Exposiciones", "Clics de puntero"].map(
-                      (label) => (
-                        <th key={label} scope="col" className={th}>
-                          {label}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      es.analytics.dayUtc,
+                      es.analytics.pageViews,
+                      es.analytics.exposures,
+                      es.analytics.pointerClicks,
+                    ].map((label) => (
+                      <th key={label} scope="col" className={th}>
+                        {label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -113,25 +117,25 @@ export function AnalyticsReport({
           </Section>
           <Section
             id="analytics-country"
-            title="Eventos por país"
+            title={es.analytics.eventsByCountry}
             description={
               report.country_collection === "disabled"
-                ? "Configuración actual: país desactivado. Puede haber agregados históricos con país. No informa nacionalidad ni ubicación personal."
-                : "Configuración actual: cabecera de proxy confiable. Esta vista no verifica el proxy ni la procedencia de cada evento. No informa nacionalidad ni ubicación personal."
+                ? es.analytics.countryCollectionDisabled
+                : es.analytics.countryCollectionProxy
             }
           >
-            <TableRegion label="Eventos por grupo de país">
+            <TableRegion label={es.analytics.countryGroups}>
               <table className="w-full">
                 <caption className="p-3 text-left text-small">
-                  Suma de los tres tipos de eventos, no solo vistas de página.
+                  {es.analytics.countryCaption}
                 </caption>
                 <thead>
                   <tr>
                     <th scope="col" className={th}>
-                      Grupo
+                      {es.analytics.group}
                     </th>
                     <th scope="col" className={th}>
-                      Eventos
+                      {es.analytics.events}
                     </th>
                   </tr>
                 </thead>
@@ -140,9 +144,9 @@ export function AnalyticsReport({
                     <tr key={row.code}>
                       <th scope="row" className={td}>
                         {row.code === "unknown"
-                          ? "País no informado"
+                          ? es.analytics.unknownCountry
                           : row.code === "withheld"
-                            ? "Grupos retenidos por umbral (menos de 3 por país)"
+                            ? es.analytics.withheldCountries
                             : `${countryNames.of(row.code) ?? row.code} (${row.code})`}
                       </th>
                       <td className={td}>{number(row.count)}</td>
@@ -154,11 +158,11 @@ export function AnalyticsReport({
           </Section>
           <Section
             id="analytics-grid"
-            title="Cuadrícula agregada de clics"
-            description="8 × 8 celdas de la sección; solo se muestran grupos de al menos 3 clics. Una celda ausente puede no tener eventos o estar retenida; no se representa como cero."
+            title={es.analytics.clickGrid}
+            description={es.analytics.clickGridDescription}
           >
             {!report.grid.available ? (
-              <p>Selecciona una página y una sección concretas para ver la cuadrícula.</p>
+              <p>{es.analytics.selectGrid}</p>
             ) : (
               <>
                 <div aria-hidden="true" className="grid max-w-md grid-cols-8 gap-1">
@@ -171,23 +175,25 @@ export function AnalyticsReport({
                         key={`${x}:${y}`}
                         className={`flex aspect-square items-center justify-center rounded text-small ${row ? "bg-chip text-ink" : "border border-line bg-surface-sunken text-muted"}`}
                       >
-                        {row ? number(row.count) : "—"}
+                        {row ? number(row.count) : es.common.dash}
                       </span>
                     );
                   })}
                 </div>
-                <TableRegion label="Alternativa de texto de la cuadrícula">
+                <TableRegion label={es.analytics.gridTextAlternative}>
                   <table className="mt-4 w-full">
                     <caption className="p-3 text-left text-small">
-                      Solo celdas publicadas; coordenadas enteras de 0 a 7.
+                      {es.analytics.gridCaption}
                     </caption>
                     <thead>
                       <tr>
-                        {["Columna", "Fila", "Clics de puntero"].map((label) => (
-                          <th scope="col" key={label} className={th}>
-                            {label}
-                          </th>
-                        ))}
+                        {[es.analytics.column, es.analytics.row, es.analytics.pointerClicks].map(
+                          (label) => (
+                            <th scope="col" key={label} className={th}>
+                              {label}
+                            </th>
+                          ),
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -204,9 +210,11 @@ export function AnalyticsReport({
               </>
             )}
             <p className="mt-4 text-small text-copy">
-              Clics visibles: {number(report.grid.visible_clicks)} · Retenidos:{" "}
-              {number(report.grid.withheld_clicks)} · Sin cuadrícula seleccionada:{" "}
-              {number(report.grid.unselected_clicks)}.
+              {es.analytics.gridCounts(
+                number(report.grid.visible_clicks),
+                number(report.grid.withheld_clicks),
+                number(report.grid.unselected_clicks),
+              )}
             </p>
           </Section>
         </>

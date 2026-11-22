@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { es } from "#shared/i18n/es.ts";
 import { profile, type Selection } from "../domain/report.ts";
 
 const inputClass =
@@ -11,23 +12,23 @@ export function AnalyticsFilters({ selection }: { selection: Selection }) {
   return (
     <form method="get" action="/panel/analitica" className="flex flex-wrap items-end gap-3">
       <label className="grid gap-1 text-small">
-        Período (UTC)
+        {es.analytics.filters.period}
         <select name="period" defaultValue={selection.period} className={inputClass}>
-          <option value="day">Día</option>
-          <option value="week">Semana (lunes)</option>
-          <option value="month">Mes</option>
+          <option value="day">{es.analytics.filters.day}</option>
+          <option value="week">{es.analytics.filters.week}</option>
+          <option value="month">{es.analytics.filters.month}</option>
         </select>
       </label>
       <label className="grid gap-1 text-small">
-        Intervalo
+        {es.analytics.filters.interval}
         <select name="offset" defaultValue={selection.offset} className={inputClass}>
-          <option value="0">Actual, parcial</option>
-          <option value="1">Anterior</option>
-          <option value="2">Dos anteriores</option>
+          <option value="0">{es.analytics.filters.current}</option>
+          <option value="1">{es.analytics.filters.previous}</option>
+          <option value="2">{es.analytics.filters.twoBefore}</option>
         </select>
       </label>
       <label className="grid gap-1 text-small">
-        Página
+        {es.analytics.filters.page}
         <select
           name="route"
           value={route}
@@ -37,20 +38,20 @@ export function AnalyticsFilters({ selection }: { selection: Selection }) {
           }}
           className={inputClass}
         >
-          <option value="all">Todas</option>
-          <option value="/">Inicio</option>
-          <option value="/grafismo-fonetico/">Grafismo Fonético</option>
+          <option value="all">{es.analytics.filters.allPages}</option>
+          <option value="/">{es.analytics.filters.home}</option>
+          <option value="/grafismo-fonetico/">{es.analytics.filters.phoneticGraphism}</option>
         </select>
       </label>
       <label className="grid gap-1 text-small">
-        Sección
+        {es.analytics.filters.section}
         <select
           name="section_id"
           value={section}
           onChange={(event) => setSection(event.target.value as Selection["section_id"])}
           className={inputClass}
         >
-          <option value="all">Todas</option>
+          <option value="all">{es.analytics.filters.allSections}</option>
           {sections.map((id) => (
             <option key={id} value={id}>
               {id}
@@ -59,16 +60,16 @@ export function AnalyticsFilters({ selection }: { selection: Selection }) {
         </select>
       </label>
       <label className="grid gap-1 text-small">
-        Ancho de pantalla
+        {es.analytics.filters.viewport}
         <select
           name="viewport_bucket"
           defaultValue={selection.viewport_bucket}
           className={inputClass}
         >
-          <option value="all">Todos</option>
-          <option value="mobile">Menos de 768 px</option>
-          <option value="tablet">768 a 1023 px</option>
-          <option value="desktop">1024 px o más</option>
+          <option value="all">{es.analytics.filters.allViewports}</option>
+          <option value="mobile">{es.analytics.filters.mobile}</option>
+          <option value="tablet">{es.analytics.filters.tablet}</option>
+          <option value="desktop">{es.analytics.filters.desktop}</option>
         </select>
       </label>
       <input type="hidden" name="locale" value="es" />
@@ -76,7 +77,7 @@ export function AnalyticsFilters({ selection }: { selection: Selection }) {
         type="submit"
         className="min-h-11 rounded-pill bg-action px-5 font-bold text-on-action focus-visible:outline-2 focus-visible:outline-ring"
       >
-        Consultar
+        {es.analytics.filters.submit}
       </button>
     </form>
   );

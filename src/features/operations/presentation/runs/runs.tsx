@@ -1,6 +1,7 @@
+import { es } from "#shared/i18n/es.ts";
+import * as f from "#shared/lib/format.ts";
 import { Facts, Section, TableRegion, td, th } from "#shared/ui/sections.tsx";
 import { acceptedRuns, type OpsSummary, percent, type RunWindow } from "../../domain/summary.ts";
-import * as f from "../format.ts";
 
 export function RunsGrid({ summary }: { summary: OpsSummary }) {
   return (
@@ -8,10 +9,8 @@ export function RunsGrid({ summary }: { summary: OpsSummary }) {
       {summary.windows.length ? (
         summary.windows.map((window) => <Runs key={window.hours} window={window} />)
       ) : (
-        <Section id="runs" title="Solicitudes">
-          <p className="text-small text-copy">
-            {f.UNAVAILABLE}: la API todavía no registra métricas de ejecución.
-          </p>
+        <Section id="runs" title={es.operations.runs.title}>
+          <p className="text-small text-copy">{es.operations.runs.noMetrics(f.UNAVAILABLE)}</p>
         </Section>
       )}
     </div>
@@ -27,63 +26,63 @@ function Runs({ window }: { window: RunWindow }) {
   return (
     <Section
       id={`runs-${window.hours}`}
-      title={`Solicitudes · ${f.windowLabel(window.hours)}`}
-      description="Aceptada: la API empezó a responder. Interrumpida: la conexión se cortó antes del final y no cuenta como completada. Rechazada: no llegó a responder (presupuesto, capacidad o límites)."
+      title={es.operations.runs.windowTitle(f.windowLabel(window.hours))}
+      description={es.operations.runs.description}
     >
       <div className="grid min-w-0 grid-cols-1 gap-5 2xl:grid-cols-2">
         <Facts
           items={[
-            { term: "Aceptadas", value: f.count(accepted) },
+            { term: es.operations.runs.accepted, value: f.count(accepted) },
             {
-              term: "Completadas",
+              term: es.operations.runs.completed,
               value: f.count(r.completed),
-              hint: `Éxito sobre aceptadas: ${f.pct(success)}`,
+              hint: es.operations.runs.successHint(f.pct(success)),
             },
-            { term: "Fallidas", value: f.count(r.failed) },
-            { term: "Canceladas", value: f.count(r.cancelled) },
-            { term: "Interrumpidas", value: f.count(r.interrupted) },
-            { term: "Rechazadas antes de responder", value: f.count(r.refused) },
-            { term: "Respuestas reemplazadas por reglas", value: f.count(window.replaced) },
+            { term: es.operations.runs.failed, value: f.count(r.failed) },
+            { term: es.operations.runs.cancelled, value: f.count(r.cancelled) },
+            { term: es.operations.runs.interrupted, value: f.count(r.interrupted) },
+            { term: es.operations.runs.refusedBeforeReply, value: f.count(r.refused) },
+            { term: es.operations.runs.replacedByRules, value: f.count(window.replaced) },
           ]}
         />
         <div className="flex flex-col gap-4">
           <Facts
             items={[
               {
-                term: "Primer texto (p50 / p95)",
+                term: es.operations.runs.firstTextQuantiles,
                 value: window.latency.firstDelta
                   ? `${f.ms(window.latency.firstDelta.p50)} / ${f.ms(window.latency.firstDelta.p95)}`
                   : f.UNAVAILABLE,
-                hint: "Desde que la API acepta la pregunta hasta el primer fragmento emitido por la API.",
+                hint: es.operations.runs.firstTextHint,
               },
               {
-                term: "Respuesta completa (p50 / p95)",
+                term: es.operations.runs.fullReplyQuantiles,
                 value: window.latency.total
                   ? `${f.ms(window.latency.total.p50)} / ${f.ms(window.latency.total.p95)}`
                   : f.UNAVAILABLE,
-                hint: "Hasta la respuesta final validada, solo ejecuciones completadas.",
+                hint: es.operations.runs.fullReplyHint,
               },
               {
-                term: "Tokens de entrada (en caché)",
+                term: es.operations.runs.inputTokens,
                 value: `${f.tokens(t.input)} (${f.tokens(t.cachedInput)})`,
               },
               {
-                term: "Tokens de salida (razonamiento)",
+                term: es.operations.runs.outputTokens,
                 value: `${f.tokens(t.output)} (${f.tokens(t.reasoning)})`,
               },
             ]}
           />
           {failures.length ? (
-            <TableRegion label={`Fallos por código, ${f.windowLabel(window.hours)}`}>
+            <TableRegion label={es.operations.runs.failuresByCode(f.windowLabel(window.hours))}>
               <table className="w-full border-collapse">
-                <caption className="sr-only">Fallos por código público</caption>
+                <caption className="sr-only">{es.operations.runs.failureCaption}</caption>
                 <thead>
                   <tr>
                     <th scope="col" className={th}>
-                      Código
+                      {es.operations.runs.code}
                     </th>
                     <th scope="col" className={th}>
-                      Cantidad
+                      {es.operations.runs.count}
                     </th>
                   </tr>
                 </thead>
@@ -100,7 +99,7 @@ function Runs({ window }: { window: RunWindow }) {
               </table>
             </TableRegion>
           ) : (
-            <p className="text-small text-copy">Sin fallos registrados en esta ventana.</p>
+            <p className="text-small text-copy">{es.operations.runs.noFailures}</p>
           )}
         </div>
       </div>
@@ -108,55 +107,45 @@ function Runs({ window }: { window: RunWindow }) {
   );
 }
 
-const OUTCOME_LABEL = {
-  completed: "Completada",
-  failed: "Fallida",
-  cancelled: "Cancelada",
-  interrupted: "Interrumpida",
-  refused: "Rechazada",
-} as const;
-
 export function Recent({ summary }: { summary: OpsSummary }) {
   const runs = summary.recent;
   return (
     <Section
       id="recent"
-      title="Últimas ejecuciones"
-      description="Hasta 50, la más reciente primero. Identificador opaco, sin contenido de la conversación."
+      title={es.operations.runs.recentTitle}
+      description={es.operations.runs.recentDescription}
     >
       {runs.length === 0 ? (
-        <p className="text-small text-copy">
-          {f.UNAVAILABLE}: la API no informó ejecuciones recientes.
-        </p>
+        <p className="text-small text-copy">{es.operations.runs.noRecent(f.UNAVAILABLE)}</p>
       ) : (
-        <TableRegion label="Últimas ejecuciones">
+        <TableRegion label={es.operations.runs.recentTitle}>
           <table className="w-full border-collapse">
-            <caption className="sr-only">Últimas ejecuciones del asistente (UTC)</caption>
+            <caption className="sr-only">{es.operations.runs.recentCaption}</caption>
             <thead>
               <tr>
                 <th scope="col" className={th}>
-                  Inicio (UTC)
+                  {es.operations.runs.startedAt}
                 </th>
                 <th scope="col" className={th}>
-                  Resultado
+                  {es.operations.runs.result}
                 </th>
                 <th scope="col" className={th}>
-                  Código
+                  {es.operations.runs.code}
                 </th>
                 <th scope="col" className={th}>
-                  Modelo
+                  {es.operations.service.model}
                 </th>
                 <th scope="col" className={th}>
-                  Idioma
+                  {es.operations.runs.language}
                 </th>
                 <th scope="col" className={th}>
-                  Primer texto
+                  {es.operations.runs.firstText}
                 </th>
                 <th scope="col" className={th}>
-                  Total
+                  {es.operations.runs.total}
                 </th>
                 <th scope="col" className={th}>
-                  Id
+                  {es.operations.runs.id}
                 </th>
               </tr>
             </thead>
@@ -167,12 +156,12 @@ export function Recent({ summary }: { summary: OpsSummary }) {
                     {f.when(run.startedAt)}
                   </th>
                   <td className={td}>
-                    {OUTCOME_LABEL[run.outcome]}
-                    {run.replaced ? " · reemplazada" : ""}
+                    {es.operations.runs.outcome[run.outcome]}
+                    {run.replaced ? ` ${es.operations.runs.replacedSuffix}` : ""}
                   </td>
-                  <td className={td}>{run.code ? <code>{run.code}</code> : "—"}</td>
-                  <td className={td}>{run.modelCall ? "Sí" : "No"}</td>
-                  <td className={td}>{run.language ?? "—"}</td>
+                  <td className={td}>{run.code ? <code>{run.code}</code> : es.common.dash}</td>
+                  <td className={td}>{run.modelCall ? es.common.yes : es.common.no}</td>
+                  <td className={td}>{run.language ?? es.common.dash}</td>
                   <td className={td}>{f.ms(run.firstDeltaMs)}</td>
                   <td className={td}>{f.ms(run.totalMs)}</td>
                   <td className={td}>

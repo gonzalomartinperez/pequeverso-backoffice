@@ -1,18 +1,19 @@
+import { es } from "#shared/i18n/es.ts";
+import * as f from "#shared/lib/format.ts";
 import { Section, TableRegion, td, th } from "#shared/ui/sections.tsx";
 import { budgetUse, hasTrend, type OpsSummary } from "../../domain/summary.ts";
 import { LazyDailyCharts } from "../daily-charts-lazy.tsx";
-import * as f from "../format.ts";
 
 export function Daily({ summary }: { summary: OpsSummary }) {
   const rows = summary.daily;
   return (
     <Section
       id="daily"
-      title="Actividad diaria"
-      description="Solo días con registros; un día ausente no se interpreta como cero."
+      title={es.operations.daily.title}
+      description={es.operations.daily.description}
     >
       {rows.length === 0 ? (
-        <p className="text-small text-copy">{f.UNAVAILABLE}: todavía no hay días con registros.</p>
+        <p className="text-small text-copy">{es.operations.daily.noReadings(f.UNAVAILABLE)}</p>
       ) : (
         <div className="flex flex-col gap-5">
           {hasTrend(rows) ? (
@@ -28,41 +29,39 @@ export function Daily({ summary }: { summary: OpsSummary }) {
               }))}
             />
           ) : (
-            <p className="text-small text-copy">
-              Hay una sola lectura diaria: se muestra como tabla, sin tendencia.
-            </p>
+            <p className="text-small text-copy">{es.operations.daily.singleReading}</p>
           )}
-          <TableRegion label="Actividad diaria en tabla">
+          <TableRegion label={es.operations.daily.tableLabel}>
             <table className="w-full border-collapse">
-              <caption className="sr-only">Ejecuciones, costo y tokens por día (UTC)</caption>
+              <caption className="sr-only">{es.operations.daily.tableCaption}</caption>
               <thead>
                 <tr>
                   <th scope="col" className={th}>
-                    Día (UTC)
+                    {es.operations.daily.dayUtc}
                   </th>
                   <th scope="col" className={th}>
-                    Completadas
+                    {es.operations.runs.completed}
                   </th>
                   <th scope="col" className={th}>
-                    Fallidas
+                    {es.operations.runs.failed}
                   </th>
                   <th scope="col" className={th}>
-                    Canceladas
+                    {es.operations.runs.cancelled}
                   </th>
                   <th scope="col" className={th}>
-                    Interrumpidas
+                    {es.operations.runs.interrupted}
                   </th>
                   <th scope="col" className={th}>
-                    Rechazadas
+                    {es.operations.runs.refused}
                   </th>
                   <th scope="col" className={th}>
-                    Con uso informado
+                    {es.operations.budget.confirmed}
                   </th>
                   <th scope="col" className={th}>
-                    Estimado
+                    {es.operations.budget.estimated}
                   </th>
                   <th scope="col" className={th}>
-                    Tokens entrada / salida
+                    {es.operations.daily.tokenTotals}
                   </th>
                 </tr>
               </thead>
@@ -97,28 +96,34 @@ export function Budget({ summary }: { summary: OpsSummary }) {
   const b = summary.budget;
   if (!b)
     return (
-      <Section id="budget" title="Presupuesto">
-        <p className="text-small text-copy">
-          {f.UNAVAILABLE}: la API no informó el estado del presupuesto.
-        </p>
+      <Section id="budget" title={es.operations.budget.title}>
+        <p className="text-small text-copy">{es.operations.budget.noReading(f.UNAVAILABLE)}</p>
       </Section>
     );
   const use = budgetUse(summary);
   const spendRows = [
-    { label: "Con uso informado", month: b.monthSpend.confirmed, day: b.daySpend.confirmed },
-    { label: "Estimado", month: b.monthSpend.estimated, day: b.daySpend.estimated },
-    { label: "Pendiente", month: b.monthSpend.pending, day: b.daySpend.pending },
-    { label: "Límite", month: b.monthlyLimit, day: b.dailyLimit },
+    {
+      label: es.operations.budget.confirmed,
+      month: b.monthSpend.confirmed,
+      day: b.daySpend.confirmed,
+    },
+    {
+      label: es.operations.budget.estimated,
+      month: b.monthSpend.estimated,
+      day: b.daySpend.estimated,
+    },
+    { label: es.operations.budget.pending, month: b.monthSpend.pending, day: b.daySpend.pending },
+    { label: es.operations.budget.limit, month: b.monthlyLimit, day: b.dailyLimit },
   ];
   return (
     <Section
       id="budget"
-      title={`Presupuesto de ${b.month ?? "este mes"}`}
-      description="Importes calculados con el uso informado y las tarifas versionadas, no la factura del proveedor. Las reservas de uso desconocido y en curso se conservan."
+      title={es.operations.budget.monthTitle(b.month ?? es.operations.budget.thisMonth)}
+      description={es.operations.budget.description}
     >
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-baseline justify-between gap-3 text-small">
-          <span className="font-extrabold text-ink">Comprometido del límite mensual</span>
+          <span className="font-extrabold text-ink">{es.operations.budget.committed}</span>
           <span className="tabular-nums text-ink">{f.pct(use)}</span>
         </div>
         {use == null ? null : (
@@ -131,25 +136,25 @@ export function Budget({ summary }: { summary: OpsSummary }) {
             high={90}
             optimum={0}
             value={Math.min(use, 100)}
-            aria-label="Uso del presupuesto mensual"
+            aria-label={es.operations.budget.meterLabel}
             aria-valuetext={f.pct(use)}
           />
         )}
       </div>
       <div className="mt-4">
-        <TableRegion label="Gasto del mes y del día">
+        <TableRegion label={es.operations.budget.spendLabel}>
           <table className="mt-0 w-full border-collapse">
-            <caption className="sr-only">Gasto del asistente por estado, en dólares</caption>
+            <caption className="sr-only">{es.operations.budget.spendCaption}</caption>
             <thead>
               <tr>
                 <th scope="col" className={th}>
-                  Concepto
+                  {es.operations.budget.concept}
                 </th>
                 <th scope="col" className={th}>
-                  Mes
+                  {es.operations.budget.month}
                 </th>
                 <th scope="col" className={th}>
-                  Día ({b.day ?? f.UNAVAILABLE})
+                  {es.operations.budget.dayLabel(b.day ?? f.UNAVAILABLE)}
                 </th>
               </tr>
             </thead>
@@ -169,18 +174,13 @@ export function Budget({ summary }: { summary: OpsSummary }) {
       </div>
       <details className="mt-3 rounded-md border border-line p-3">
         <summary className="min-h-11 cursor-pointer content-center [overflow-wrap:anywhere] text-small font-extrabold text-link focus-visible:outline-3 focus-visible:outline-ring">
-          Tarifas y estados del gasto
+          {es.operations.budget.ratesAndStatuses}
         </summary>
-        <p className="mt-2 text-small text-copy">
-          Con uso informado (confirmado en el ledger): costo estimado desde los tokens reportados.
-          Estimado: uso desconocido; se conserva la reserva de peor caso. Pendiente: reservas de
-          ejecuciones en curso. Ninguno es un importe reconciliado con la factura.
-        </p>
+        <p className="mt-2 text-small text-copy">{es.operations.budget.statusDescription}</p>
         <Rates summary={summary} />
       </details>
       <p className="mt-3 text-small text-copy">
-        Corte de seguridad mensual: {f.usd(b.monthlyCutoff)}. Restante antes del corte:{" "}
-        {f.usd(b.remainingMonth)}.
+        {es.operations.budget.cutoff(f.usd(b.monthlyCutoff), f.usd(b.remainingMonth))}
       </p>
     </Section>
   );
@@ -192,15 +192,12 @@ function Rates({ summary }: { summary: OpsSummary }) {
     <p className="mt-3 text-small text-copy" data-testid="pricing">
       {p ? (
         <>
-          Estimaciones calculadas con las tarifas «{p.revision}» ({p.model}): entrada{" "}
-          {f.usd(p.inputPerMillion)}, en caché {f.usd(p.cachedInputPerMillion)}, escritura de caché{" "}
-          {f.usd(p.cacheWritePerMillion)} y salida (incluye razonamiento){" "}
-          {f.usd(p.outputPerMillion)} por millón de tokens.{" "}
-          <strong>No es la factura del proveedor:</strong> contrástala con el panel de facturación
-          de OpenAI.
+          {`${es.operations.budget.rates(p.revision, p.model, f.usd(p.inputPerMillion), f.usd(p.cachedInputPerMillion), f.usd(p.cacheWritePerMillion), f.usd(p.outputPerMillion))} `}
+          <strong>{es.operations.budget.notInvoice}</strong>
+          {` ${es.operations.budget.billingPanel}`}
         </>
       ) : (
-        <>Tarifas de estimación: {f.UNAVAILABLE}. Las cifras no son la factura del proveedor.</>
+        es.operations.budget.noRates(f.UNAVAILABLE)
       )}
     </p>
   );

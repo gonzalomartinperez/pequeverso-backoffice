@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
+import { es } from "#shared/i18n/es.ts";
 import { Button } from "#shared/ui/button.tsx";
 
 /**
@@ -102,15 +103,15 @@ export function ConfirmAction({
           <p className="text-small">{description}</p>
           {failed ? (
             <p role="alert" className="text-small text-danger">
-              No se pudo completar. Recarga la página y vuelve a intentarlo.
+              {es.common.actionFailed}
             </p>
           ) : null}
           <div className="mt-2 flex flex-wrap justify-end gap-2">
             <Button variant="ghost" size="sm" onClick={() => dialog.current?.close()}>
-              Cancelar
+              {es.common.cancel}
             </Button>
             <Button size="sm" disabled={pending} aria-busy={pending} onClick={() => void confirm()}>
-              {pending ? "Procesando…" : confirmLabel}
+              {pending ? es.common.processing : confirmLabel}
             </Button>
           </div>
         </div>

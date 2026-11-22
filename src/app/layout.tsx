@@ -2,11 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
+import { es } from "#shared/i18n/es.ts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Backoffice · Asistente Pequeverso",
-  description: "Operaciones privadas del asistente de Pequeverso.",
+  title: es.common.siteTitle,
+  description: es.common.siteDescription,
   robots: { index: false, follow: false },
   icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
 };

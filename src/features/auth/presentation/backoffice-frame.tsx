@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { es } from "#shared/i18n/es.ts";
 import { BrandMark } from "#shared/ui/brand-mark.tsx";
 
 /**
@@ -20,15 +21,15 @@ export function BackofficeFrame({
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface-raised focus:px-3 focus:py-2"
       >
-        Saltar al contenido
+        {es.panel.skipToContent}
       </a>
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 sm:px-6">
           <span className="flex min-h-12 min-w-0 max-w-full flex-wrap items-center gap-2.5 gap-y-1 [overflow-wrap:anywhere]">
             <BrandMark size={40} />
-            <span className="font-display text-xl font-bold text-ink">Pequeverso</span>
+            <span className="font-display text-xl font-bold text-ink">{es.common.brand}</span>
             <span className="rounded-pill bg-surface-sunken px-2 py-0.5 text-tiny font-extrabold text-copy">
-              Backoffice
+              {es.panel.name}
             </span>
           </span>
           {account ? (
