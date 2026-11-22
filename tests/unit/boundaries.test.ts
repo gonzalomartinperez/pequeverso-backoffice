@@ -479,7 +479,7 @@ it("lets only server/env.ts read process.env (instrumentation may read NEXT_RUNT
   for (const [file, source, use] of rejected)
     assert.ok(
       inspect({ [file]: source }).includes(
-        `src/${file}: process.env is read only in src/server/env.ts (${use})`,
+        `src/${file}: process.env is read only in src/server/env.ts; elsewhere only process.exit, uptime and memoryUsage (${use})`,
       ),
       `${file}: ${source} -> ${inspect({ [file]: source }).join(" | ")}`,
     );

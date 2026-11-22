@@ -310,7 +310,10 @@ export function checkBoundaries(modules: ReadonlyMap<string, string>, root: stri
     const rel = posix(path.relative(src, file));
     if (rel !== ENV_READER)
       for (const use of environmentUses(module.file, rel, module.edges, ambient))
-        report(file, `process.env is read only in src/${ENV_READER} (${use})`);
+        report(
+          file,
+          `process.env is read only in src/${ENV_READER}; elsewhere only process.exit, uptime and memoryUsage (${use})`,
+        );
     const from = module.place;
     if (!from) continue;
     if (from.layer === "domain" || from.layer === "application") {

@@ -59,7 +59,8 @@ Option 2.
 - Neutral: the proxy imports `server/env.ts`, which carries the `server-only` marker. In Next.js
   16 the proxy runs on the Node.js runtime and is compiled for the server, so the marker holds;
   `next build` and the browser suite on the production build confirm it. The proxy bundle also
-  carries the configuration parser (small, pure); `config()` is never called from the proxy.
+  carries the configuration parser and `node:net`; `config()` is never called from the proxy.
+  Moving the proxy to the edge runtime would need these two checks split out first.
 - Bad: the guard still parses with the TypeScript 6 compiler API (`@typescript/typescript6`)
   until TypeScript 7.1 exposes one; M4.8 records the evaluation.
 
