@@ -15,6 +15,13 @@ export function privateTraceHeader(value: string | null): Record<string, string>
   return { traceparent: value };
 }
 
+const REQUEST_ID = /^[A-Za-z0-9._-]{8,64}$/;
+
+/** Only a well-formed request id (8-64 URL-safe characters) is forwarded to the private API. */
+export function privateRequestIdHeader(value: string | null): Record<string, string> {
+  return value && REQUEST_ID.test(value) ? { "x-request-id": value } : {};
+}
+
 /**
  * Server-to-server client for `GET {OPS_API_URL}/internal/v1/ops/summary` with a bearer token.
  * Never cached, bounded in time and size, no redirects followed. Every failure collapses into an
@@ -25,6 +32,7 @@ export function httpOpsSource(
   fetcher: typeof fetch = fetch,
   timeoutMs = 4000,
   traceparent: string | null = null,
+  requestId: string | null = null,
 ): OpsSource {
   return {
     async read(): Promise<OpsReading> {
@@ -37,6 +45,7 @@ export function httpOpsSource(
             Authorization: `Bearer ${settings.token}`,
             Accept: "application/json",
             ...privateTraceHeader(traceparent),
+            ...privateRequestIdHeader(requestId),
           },
           cache: "no-store",
           redirect: "error",

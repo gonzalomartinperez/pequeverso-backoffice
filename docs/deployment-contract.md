@@ -171,13 +171,26 @@ No observability switch changes OAuth admission, roles or assistant activation.
 
 ## Health
 
-- `GET /healthz` → `200 {"status":"ok"}`, `no-store`: process liveness only.
-- `GET /readyz` → `200 {"status":"ready"}` only when configuration parses, PostgreSQL answers and
-  every migrated table exists; otherwise `503 {"status":"not_ready"}` without details. Internal
+- `GET /healthz` → `200 {"status":"ok","version":"…","schema_version":"0002"}`, `no-store`:
+  process liveness only.
+- `GET /readyz` → `200 {"status":"ready","version":"…","schema_version":"0002"}` only when
+  configuration parses, PostgreSQL answers and every migrated table exists; otherwise
+  `503 {"status":"not_ready",…}` with the same two version fields and no other details. Internal
   only (do not route publicly). Use it as the readiness check.
+- `version` is the image's `VERSION` build label (`0.0.0-dev` when unset); `schema_version` is
+  the newest migration this build expects. Both fields were added at M4.7 (expand only: probes
+  that read `status` or the HTTP code are unaffected).
 - If the database drops, the pool reconnects on the next query; meanwhile protected pages redirect
   to a safe "unavailable" sign-in page. The dashboard reports "no disponible" if the API is
   unreachable.
+
+## Request correlation
+
+Every response carries `x-request-id`. A well-formed incoming value (8 to 64 characters from
+`A-Z a-z 0-9 . _ -`) is kept; anything else is replaced with a UUID. The same id is forwarded to
+the private API calls (`x-request-id` on `/internal/v1/ops/summary` and `/ops/telemetry`), set as
+the `request.id` span attribute and written as `request_id` in structured logs. The reverse
+proxy may send its own id; it must not strip the response header. Added at M4.7 (expand only).
 
 ## Bounded monitoring and shared-host budgets
 

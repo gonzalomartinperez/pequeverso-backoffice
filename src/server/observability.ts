@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { ROOT_CONTEXT, SpanKind, SpanStatusCode, type Tracer } from "@opentelemetry/api";
 import type { BasicTracerProvider, SpanExporter } from "@opentelemetry/sdk-trace-base";
 import type { ObservabilityConfig } from "./observability-config.ts";
+import { isRequestId, REQUEST_ID_ATTRIBUTE } from "./request-id.ts";
 
 /** Only these operations/outcomes can become labels. Never URLs, auth routes or errors. */
 export type SafeOperation = "ops_summary" | "ops_telemetry" | "readiness";
@@ -91,13 +92,18 @@ export class SafeObservability {
     operation: SafeOperation,
     read: (traceparent: string | null) => Promise<T>,
     classify: (value: T) => Outcome,
+    requestId: string | null = null,
   ): Promise<T> {
     if (!OPERATIONS.includes(operation)) return read(null);
     await this.initialize();
     const started = performance.now();
     const span = this.tracer?.startSpan(
       operation,
-      { kind: operation === "readiness" ? SpanKind.INTERNAL : SpanKind.CLIENT },
+      {
+        kind: operation === "readiness" ? SpanKind.INTERNAL : SpanKind.CLIENT,
+        // The only per-request attribute: a sanitized correlation id, never a user or URL.
+        ...(isRequestId(requestId) ? { attributes: { [REQUEST_ID_ATTRIBUTE]: requestId } } : {}),
+      },
       ROOT_CONTEXT,
     );
     let outcome: Outcome = "error";

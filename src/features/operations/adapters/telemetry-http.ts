@@ -1,5 +1,5 @@
 import type { TelemetryReading } from "../application/ports.ts";
-import { privateTraceHeader, readBounded } from "./ops-http.ts";
+import { privateRequestIdHeader, privateTraceHeader, readBounded } from "./ops-http.ts";
 import { parseOpsTelemetry } from "./telemetry-validate.ts";
 
 /** Independent optional read: API404/off is expected and never invalidates legacy summary. */
@@ -8,6 +8,7 @@ export async function readHttpTelemetry(
   enabled: boolean,
   fetcher: typeof fetch = fetch,
   traceparent: string | null = null,
+  requestId: string | null = null,
 ): Promise<TelemetryReading> {
   const fetchedAt = new Date();
   if (!enabled) return { status: "unavailable", reason: "disabled", fetchedAt };
@@ -18,6 +19,7 @@ export async function readHttpTelemetry(
         Authorization: `Bearer ${settings.token}`,
         Accept: "application/json",
         ...privateTraceHeader(traceparent),
+        ...privateRequestIdHeader(requestId),
       },
       signal: AbortSignal.timeout(4000),
       cache: "no-store",

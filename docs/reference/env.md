@@ -26,6 +26,7 @@ Production requires at least one complete OAuth provider pair.
 | `OPS_TELEMETRY_ENABLED` | Optional | `false` | Enables reads of private operational telemetry when set to `true`. |
 | `PRODUCT_ANALYTICS_READ_ENABLED` | Optional | `false` | Enables reads of private product analytics aggregates when set to `true`. |
 | `TRUSTED_PROXY_IPS` | Optional | No trusted proxies | Comma-separated IP addresses or narrow CIDRs trusted to supply `X-Forwarded-For`. |
+| `VERSION` | Optional | `0.0.0-dev` | Build label set by the image (`ARG VERSION`); reported as `version` by `/healthz` and `/readyz`. A malformed label reads `unknown` and never stops the server. |
 
 ## Observability
 

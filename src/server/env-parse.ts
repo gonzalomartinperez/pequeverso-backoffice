@@ -37,7 +37,19 @@ export type BackofficeConfig = {
   rateLimit: boolean;
   /** Exact reverse-proxy addresses/CIDRs whose X-Forwarded-For chain is trusted (empty: none). */
   trustedProxies: string[];
+  /** Build label (`VERSION`), not a secret; reported by the health probes. */
+  version: string;
 };
+
+/**
+ * Build label baked into the image (Dockerfile ARG VERSION), shown on /healthz and /readyz.
+ * Cosmetic: an unset label is `0.0.0-dev` and a malformed one reads `unknown` instead of
+ * stopping the server (strict checks belong to the image build).
+ */
+export function parseVersion(raw: string | undefined): string {
+  if (raw === undefined) return "0.0.0-dev";
+  return /^[0-9A-Za-z][0-9A-Za-z.+_-]{0,63}$/.test(raw) ? raw : "unknown";
+}
 
 function proxies(raw: string | undefined): string[] {
   const list = (raw ?? "")
@@ -165,6 +177,7 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
   }
   if (opsToken && opsToken.length < 32)
     throw new Error("OPS_READ_TOKEN must have at least 32 characters");
+  const version = parseVersion(env.VERSION);
   const analyticsReadEnabled = observabilitySwitch(
     env.PRODUCT_ANALYTICS_READ_ENABLED,
     "PRODUCT_ANALYTICS_READ_ENABLED",
@@ -185,5 +198,6 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
     sessionHours: 8,
     rateLimit: !rateLimitOff,
     trustedProxies: proxies(env.TRUSTED_PROXY_IPS),
+    version,
   };
 }
