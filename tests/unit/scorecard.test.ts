@@ -276,6 +276,10 @@ test("a per-file mutation floor follows a renamed file and still binds there", (
     /files\.src\/server\/env-parse\.ts: 80 is looser than 83/,
   );
   assert.equal(loosening("mutation", base, { files: {} }, renames).length, 1);
+  const collision = { files: { "src/old.ts": 90, "src/new.ts": 70 } };
+  const onto = new Map([["src/old.ts", "src/new.ts"]]);
+  assert.equal(loosening("mutation", collision, { files: { "src/new.ts": 80 } }, onto).length, 1);
+  assert.deepEqual(loosening("mutation", collision, { files: { "src/new.ts": 90 } }, onto), []);
 });
 
 test("lowering or removing a mutation score or per-file floor is loosening", () => {

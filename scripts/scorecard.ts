@@ -481,9 +481,13 @@ export function loosening(
       return isObject(entry) ? entry.value : undefined;
     };
     walk(scoreValue(base.values), scoreValue(current.values), "values.score", "score", "higher");
-    const files = isObject(base.files)
-      ? Object.fromEntries(Object.entries(base.files).map(([k, v]) => [renames.get(k) ?? k, v]))
-      : base.files;
+    // Two base floors landing on one path keep the stricter one.
+    const files: Json = {};
+    for (const [k, v] of Object.entries(isObject(base.files) ? base.files : {})) {
+      const to = renames.get(k) ?? k;
+      const seen = files[to];
+      files[to] = typeof seen === "number" && typeof v === "number" ? Math.max(seen, v) : v;
+    }
     walk(files, current.files, "files", "files", "higher");
   } else if (name === "bundle" || name === "lighthouse")
     for (const [k, v] of Object.entries(isObject(base.baseline) ? base.baseline : {}))
