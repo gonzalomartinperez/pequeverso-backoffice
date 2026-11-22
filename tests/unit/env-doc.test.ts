@@ -35,7 +35,7 @@ describe("docs/reference/env.md", () => {
   it("describes exactly the variables read by the main and delegated parsers", () => {
     const runtime = ENVIRONMENT_VARIABLES.runtime.map(([name]) => name);
     const observability = ENVIRONMENT_VARIABLES.observability.map(([name]) => name);
-    assert.deepEqual(runtime.sort(), environmentReads("src/server/parse-config.ts"));
+    assert.deepEqual(runtime.sort(), environmentReads("src/server/env-parse.ts"));
     assert.deepEqual(
       [...observability, "BACKOFFICE_ENVIRONMENT", "OPS_READ_TOKEN"].sort(),
       environmentReads("src/server/observability-config.ts"),

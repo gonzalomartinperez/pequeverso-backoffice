@@ -41,10 +41,12 @@
   ],
   "exclude": [
     "node_modules",
-    ".next",
+    ".next/standalone",
+    ".next/server",
+    ".next/cache",
+    ".next/static",
     ".integration",
     "test-results",
-    "playwright-report",
     "playwright-report"
   ]
 }

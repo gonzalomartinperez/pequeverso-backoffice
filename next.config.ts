@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   pageExtensions,
   poweredByHeader: false,
+  typedRoutes: true,
   reactStrictMode: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

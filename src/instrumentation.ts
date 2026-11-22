@@ -5,7 +5,7 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const { config } = await import("./server/config");
+  const { config } = await import("./server/env");
   let settings: ReturnType<typeof config>;
   try {
     settings = config();

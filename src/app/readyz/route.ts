@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import { authReady } from "@/server/auth";
-import { config } from "@/server/config";
+import { config } from "@/server/env";
 import { observability } from "@/server/observability";
 
 /**

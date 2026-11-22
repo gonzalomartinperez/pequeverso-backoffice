@@ -1,5 +1,5 @@
 // Documentation table for docs/reference/env.md (scripts/generate-env.ts). Descriptive only: the
-// parser in parse-config.ts is the behaviour, and tests/unit/env-doc.test.ts keeps both in step.
+// parser in env-parse.ts is the behaviour, and tests/unit/env-doc.test.ts keeps both in step.
 export type EnvironmentVariable = readonly [
   name: string,
   requirement: "Optional" | "Required" | `Required ${string}`,
