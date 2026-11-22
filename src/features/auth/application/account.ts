@@ -66,10 +66,14 @@ export async function revokeOtherSessions(
   actor: Actor,
   currentSessionId: string,
 ): Promise<RevokeOthersResult> {
-  const live = await deps.sessions.listSessions(actor.id, deps.clock.now());
+  const now = deps.clock.now();
+  const live = await deps.sessions.listSessions(actor.id, now);
   if (!currentSessionId || !live.some((record) => record.id === currentSessionId))
     return { ok: false, reason: "unknown_current" };
-  return { ok: true, ended: await deps.sessions.revokeOtherSessions(actor.id, currentSessionId) };
+  return {
+    ok: true,
+    ended: await deps.sessions.revokeOtherSessions(actor.id, currentSessionId, now),
+  };
 }
 
 export const AUDIT_PAGE_SIZE = 50;

@@ -181,9 +181,11 @@ class MemorySessions implements SessionStore {
     this.records = this.records.filter((r) => !(r.userId === userId && r.id === sessionId));
     return this.records.length < before;
   }
-  async revokeOtherSessions(userId: string, keep: string) {
+  async revokeOtherSessions(userId: string, keep: string, now: Date) {
     const before = this.records.length;
-    this.records = this.records.filter((r) => r.userId !== userId || r.id === keep);
+    this.records = this.records.filter(
+      (r) => r.userId !== userId || r.id === keep || r.expiresAt <= now,
+    );
     return before - this.records.length;
   }
 }

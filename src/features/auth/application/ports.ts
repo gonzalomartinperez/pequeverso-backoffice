@@ -82,8 +82,8 @@ export interface SessionStore {
   listSessions(userId: string, now: Date): Promise<SessionRecord[]>;
   /** Deletes one session of `userId`; false when it is not theirs or no longer exists. */
   revokeSession(userId: string, sessionId: string): Promise<boolean>;
-  /** Deletes every session of `userId` except `keepSessionId`; returns how many ended. */
-  revokeOtherSessions(userId: string, keepSessionId: string): Promise<number>;
+  /** Deletes every live session of `userId` except `keepSessionId`; returns how many ended. */
+  revokeOtherSessions(userId: string, keepSessionId: string, now: Date): Promise<number>;
 }
 
 type AuditAction =
