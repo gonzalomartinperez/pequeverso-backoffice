@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
-import { Button } from "@/shared/ui/button";
+import { Button } from "#shared/ui/button.tsx";
 
 /**
  * Destructive action behind a native modal dialog: focus moves into the dialog, Escape cancels,
