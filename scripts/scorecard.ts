@@ -414,8 +414,27 @@ export function parseFlags(args: string[]): Record<string, string> {
   return flags;
 }
 
+/**
+ * Renamed paths between the base revision and HEAD, from `git diff --name-status -M`. A per-file
+ * ratchet follows its file to the new path, so a move keeps its floor instead of reading as a
+ * deleted entry.
+ */
+export function parseRenames(nameStatus: string): Map<string, string> {
+  const renames = new Map<string, string>();
+  for (const line of nameStatus.split("\n")) {
+    const [status, from, to] = line.split("\t");
+    if (status?.startsWith("R") && from && to) renames.set(from, to);
+  }
+  return renames;
+}
+
 /** Ratchets that got looser than at the base revision; a file new at the base is not compared. */
-export function loosening(name: string, base: Json, current: Json): string[] {
+export function loosening(
+  name: string,
+  base: Json,
+  current: Json,
+  renames: ReadonlyMap<string, string> = new Map(),
+): string[] {
   const out: string[] = [];
   const walk = (b: unknown, c: unknown, at: string, key: string, better: Better) => {
     if (typeof b === "number") {
@@ -462,7 +481,10 @@ export function loosening(name: string, base: Json, current: Json): string[] {
       return isObject(entry) ? entry.value : undefined;
     };
     walk(scoreValue(base.values), scoreValue(current.values), "values.score", "score", "higher");
-    walk(base.files, current.files, "files", "files", "higher");
+    const files = isObject(base.files)
+      ? Object.fromEntries(Object.entries(base.files).map(([k, v]) => [renames.get(k) ?? k, v]))
+      : base.files;
+    walk(files, current.files, "files", "files", "higher");
   } else if (name === "bundle" || name === "lighthouse")
     for (const [k, v] of Object.entries(isObject(base.baseline) ? base.baseline : {}))
       walk(
@@ -527,10 +549,15 @@ if (import.meta.main) {
         console.error(`Scorecard: ratchet loosened: ${file} exists at the base revision only`);
         process.exitCode = 1;
       }
+      const diff = spawnSync("git", ["diff", "--name-status", "-M", rev, "HEAD"], {
+        encoding: "utf8",
+      });
+      if (diff.status !== 0) throw new Error(`cannot list renames since ${rev}`);
+      const renames = parseRenames(diff.stdout);
       for (const [name, current] of Object.entries(input.ratchets)) {
         const base = readBaseRatchet(rev, `quality/ratchets/${name}.json`);
         if (isObject(base))
-          for (const line of loosening(name, base, current)) {
+          for (const line of loosening(name, base, current, renames)) {
             console.error(`Scorecard: ratchet loosened: ${line}`);
             process.exitCode = 1;
           }
