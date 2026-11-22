@@ -60,7 +60,7 @@ source pin is API `850e78cf84df78f0ea66e2811e92aeb15a6f5d04`, integrated by squa
 [PR95](https://github.com/gonzalomartinperez/pequeverso-assistant-api/pull/95) and released in
 [PR97](https://github.com/gonzalomartinperez/pequeverso-assistant-api/pull/97). Its five contract
 blobs and canonical country allowlist are byte-identical to the reviewed `121d3dc` cohort.
-Existing ops and telemetry pins remain separate. Committed provenance is not
+On 2026-11-22 the pin moved to API develop `6c1147ee345fcf10207864a9d4a6393d6233df83` (not yet released to API main): the five files differ from `850e78c` only in JSON Schema description strings and the profile's schema hashes, the country source only in quote style, so validators are unchanged and the evidence below was recorded on `850e78c`. Existing ops and telemetry pins remain separate. Committed provenance is not
 production proof. Five exact
 artifacts include14 socket-country and8 UTC-calendar semantic fixtures. The local ISO label
 module is derived from that same commit’s canonical API allowlist and checked against its schema;
