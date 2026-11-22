@@ -112,19 +112,24 @@ function percentiles(value: unknown, path: string): Percentiles | null {
   };
 }
 
+function failureCounts(value: unknown, path: string): Record<string, number> {
+  const raw = optionalObject(value, path) ?? {};
+  const failures: Record<string, number> = {};
+  const entries = Object.entries(raw);
+  if (entries.length > 32) fail(path);
+  for (const [code, n] of entries) {
+    if (!CODE.test(code)) fail(path);
+    failures[code] = count(n, `${path}.${code}`) ?? fail(`${path}.${code}`);
+  }
+  return failures;
+}
+
 function runWindow(value: unknown, path: string): RunWindow {
   const raw = object(value, path);
   const runs = optionalObject(raw.runs, `${path}.runs`) ?? {};
   const latency = optionalObject(raw.latency_ms, `${path}.latency_ms`) ?? {};
   const tokens = optionalObject(raw.tokens, `${path}.tokens`) ?? {};
-  const failuresRaw = optionalObject(raw.failures, `${path}.failures`) ?? {};
-  const failures: Record<string, number> = {};
-  const entries = Object.entries(failuresRaw);
-  if (entries.length > 32) fail(`${path}.failures`);
-  for (const [code, n] of entries) {
-    if (!CODE.test(code)) fail(`${path}.failures`);
-    failures[code] = count(n, `${path}.failures.${code}`) ?? fail(`${path}.failures.${code}`);
-  }
+  const failures = failureCounts(raw.failures, `${path}.failures`);
   const hours = count(raw.hours, `${path}.hours`);
   if (hours == null || hours <= 0) fail(`${path}.hours`);
   return {
@@ -220,6 +225,20 @@ function list<T>(
   return value.map((entry, index) => item(entry, `${path}[${index}]`));
 }
 
+function parseBudget(budget: Json | null): OpsSummary["budget"] {
+  if (!budget) return null;
+  return {
+    month: calendarMonth(budget.month, "$.budget.month"),
+    day: calendarDay(budget.day, "$.budget.day"),
+    monthlyLimit: money(budget.monthly_limit, "$.budget.monthly_limit"),
+    monthlyCutoff: money(budget.monthly_cutoff, "$.budget.monthly_cutoff"),
+    dailyLimit: money(budget.daily_limit, "$.budget.daily_limit"),
+    monthSpend: spend(budget.month_spend, "$.budget.month_spend"),
+    daySpend: spend(budget.day_spend, "$.budget.day_spend"),
+    remainingMonth: money(budget.remaining_month, "$.budget.remaining_month"),
+  };
+}
+
 export function parseOpsSummary(value: unknown): OpsSummary {
   const raw = object(value, "$");
   if (raw.schema_version !== "1") fail("$.schema_version");
@@ -267,18 +286,7 @@ export function parseOpsSummary(value: unknown): OpsSummary {
       products: count(catalog.products, "$.catalog.products"),
       documents: count(catalog.documents, "$.catalog.documents"),
     },
-    budget: budget
-      ? {
-          month: calendarMonth(budget.month, "$.budget.month"),
-          day: calendarDay(budget.day, "$.budget.day"),
-          monthlyLimit: money(budget.monthly_limit, "$.budget.monthly_limit"),
-          monthlyCutoff: money(budget.monthly_cutoff, "$.budget.monthly_cutoff"),
-          dailyLimit: money(budget.daily_limit, "$.budget.daily_limit"),
-          monthSpend: spend(budget.month_spend, "$.budget.month_spend"),
-          daySpend: spend(budget.day_spend, "$.budget.day_spend"),
-          remainingMonth: money(budget.remaining_month, "$.budget.remaining_month"),
-        }
-      : null,
+    budget: parseBudget(budget),
     windows: list(raw.windows, 8, "$.windows", runWindow),
     daily,
     metricsSince: date(raw.metrics_since, "$.metrics_since"),

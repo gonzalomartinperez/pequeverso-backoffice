@@ -52,6 +52,39 @@ function counts(value: unknown, daily = false): Counts {
   return result;
 }
 const sum = (counts: Counts) => counts.page_views + counts.section_views + counts.public_clicks;
+function parseGrid(value: unknown, selection: Selection, publicClicks: number): Report["grid"] {
+  const rawGrid = object(value, [
+    "available",
+    "visible_clicks",
+    "withheld_clicks",
+    "unselected_clicks",
+    "cells",
+  ]);
+  need(rawGrid.available === (selection.route !== "all" && selection.section_id !== "all"));
+  const seenCells = new Set<string>();
+  const cells = rows(rawGrid.cells, 64).map((value) => {
+    const row = object(value, ["x", "y", "count"]);
+    const x = integer(row.x, 0, 7),
+      y = integer(row.y, 0, 7),
+      count = integer(row.count, 3);
+    need(!seenCells.has(`${x}:${y}`));
+    seenCells.add(`${x}:${y}`);
+    return { x, y, count };
+  });
+  const grid = {
+    available: rawGrid.available as boolean,
+    visible_clicks: integer(rawGrid.visible_clicks),
+    withheld_clicks: integer(rawGrid.withheld_clicks),
+    unselected_clicks: integer(rawGrid.unselected_clicks),
+    cells,
+  };
+  need(cells.reduce((total, row) => total + row.count, 0) === grid.visible_clicks);
+  need(grid.visible_clicks + grid.withheld_clicks + grid.unselected_clicks === publicClicks);
+  if (grid.available) need(grid.unselected_clicks === 0);
+  else need(cells.length === 0 && grid.visible_clicks === 0 && grid.withheld_clicks === 0);
+  return grid;
+}
+
 export function parseAnalyticsReport(value: unknown, expected: Selection): Report {
   const root = object(value, [
     "schema_version",
@@ -138,37 +171,7 @@ export function parseAnalyticsReport(value: unknown, expected: Selection): Repor
     return { code: row.code, count };
   });
   need(countries.reduce((total, row) => total + row.count, 0) === sum(totals));
-  const rawGrid = object(root.grid, [
-    "available",
-    "visible_clicks",
-    "withheld_clicks",
-    "unselected_clicks",
-    "cells",
-  ]);
-  need(rawGrid.available === (selection.route !== "all" && selection.section_id !== "all"));
-  const seenCells = new Set<string>();
-  const cells = rows(rawGrid.cells, 64).map((value) => {
-    const row = object(value, ["x", "y", "count"]);
-    const x = integer(row.x, 0, 7),
-      y = integer(row.y, 0, 7),
-      count = integer(row.count, 3);
-    need(!seenCells.has(`${x}:${y}`));
-    seenCells.add(`${x}:${y}`);
-    return { x, y, count };
-  });
-  const grid = {
-    available: rawGrid.available as boolean,
-    visible_clicks: integer(rawGrid.visible_clicks),
-    withheld_clicks: integer(rawGrid.withheld_clicks),
-    unselected_clicks: integer(rawGrid.unselected_clicks),
-    cells,
-  };
-  need(cells.reduce((total, row) => total + row.count, 0) === grid.visible_clicks);
-  need(
-    grid.visible_clicks + grid.withheld_clicks + grid.unselected_clicks === totals.public_clicks,
-  );
-  if (grid.available) need(grid.unselected_clicks === 0);
-  else need(cells.length === 0 && grid.visible_clicks === 0 && grid.withheld_clicks === 0);
+  const grid = parseGrid(root.grid, selection, totals.public_clicks);
   return {
     schema_version: 1,
     project: "pequeverso",
