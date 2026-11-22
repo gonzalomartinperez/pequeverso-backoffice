@@ -44,10 +44,12 @@ export function ipPrefix(address: string | null | undefined): string | null {
   if (v4) return `${v4.slice(0, 3).join(".")}.0/24`;
   const v6 = ipv6(value);
   if (!v6) return null;
-  if (v6.slice(0, 5).every((group) => group === 0) && v6[5] === 0xffff) {
-    const [c = 0, d = 0] = v6.slice(6);
-    return `${c >> 8}.${c & 0xff}.${d >> 8}.0/24`;
-  }
+  const v4Prefix = (c: number, d: number) => `${c >> 8}.${c & 0xff}.${d >> 8}.0/24`;
+  // IPv4-mapped (::ffff:a.b.c.d) and 6to4 (2002:aabb:ccdd::/48) carry a client IPv4 address in
+  // the groups a /48 would show, so both are reduced to that address's /24.
+  if (v6.slice(0, 5).every((group) => group === 0) && v6[5] === 0xffff)
+    return v4Prefix(v6[6] ?? 0, v6[7] ?? 0);
+  if (v6[0] === 0x2002) return v4Prefix(v6[1] ?? 0, v6[2] ?? 0);
   return `${v6
     .slice(0, 3)
     .map((group) => group.toString(16))
@@ -87,13 +89,17 @@ const AUDIT_ID = /^[0-9A-Za-z-]{1,64}$/;
 
 /** Opaque URL-safe form `<epoch ms>.<id>`; ids are the audit table's UUID text. */
 export function encodeAuditCursor(cursor: AuditCursor): string {
-  return `${cursor.at.getTime()}.${cursor.id}`;
+  const ms = cursor.at.getTime();
+  // Only positions decodeAuditCursor accepts, so a page can always be followed.
+  if (!Number.isSafeInteger(ms) || ms < 0 || !AUDIT_ID.test(cursor.id))
+    throw new RangeError("audit cursor position is not encodable");
+  return `${ms}.${cursor.id}`;
 }
 
 /** Null for anything that is not a cursor this module produced (fail closed, no partial parse). */
 export function decodeAuditCursor(value: string | null | undefined): AuditCursor | null {
   if (typeof value !== "string") return null;
-  const match = /^(\d{1,15})\.(.+)$/.exec(value);
+  const match = /^(0|[1-9]\d{0,14})\.(.+)$/.exec(value);
   if (!match || !AUDIT_ID.test(match[2] ?? "")) return null;
   const at = new Date(Number(match[1]));
   return Number.isNaN(at.getTime()) ? null : { at, id: match[2] ?? "" };

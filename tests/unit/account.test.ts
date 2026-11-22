@@ -39,6 +39,9 @@ describe("session privacy reductions", () => {
     assert.equal(ipPrefix("::ffff:198.51.100.9"), "198.51.100.0/24");
     assert.equal(ipPrefix("::ffff:c633:6409"), "198.51.100.0/24");
     assert.equal(ipPrefix("64:ff9b::198.51.100.9"), "64:ff9b:0::/48");
+    assert.equal(ipPrefix("::FFFF:198.51.100.9"), "198.51.100.0/24");
+    // 6to4 embeds the client IPv4 in groups 2-3, inside a /48: reduce it to that /24.
+    assert.equal(ipPrefix("2002:c633:6409::1"), "198.51.100.0/24");
   });
 
   it("withholds anything that is not an address", () => {
@@ -58,6 +61,11 @@ describe("session privacy reductions", () => {
       "::ffff:300.1.1.1",
       "example.test",
       "203.0.113.7, 10.0.0.1",
+      "fe80::1%eth0",
+      "1.2.3.4%eth0",
+      "[2001:db8::1]",
+      "2001:db8::1/64",
+      "203.0.113.0/24",
     ])
       assert.equal(ipPrefix(bad), null, String(bad));
   });
@@ -114,6 +122,33 @@ describe("session privacy reductions", () => {
       assert.equal(decodeAuditCursor(bad), null, String(bad));
     assert.equal(decodeAuditCursor(`1.${"a".repeat(65)}`), null);
     assert.equal(decodeAuditCursor("9999999999999999.id"), null);
+  });
+
+  it("never encodes a position it cannot decode, and rejects padded timestamps", () => {
+    for (const bad of [
+      { at: new Date(1), id: "a.b" },
+      { at: new Date(1), id: "a".repeat(65) },
+      { at: new Date(-1), id: "a" },
+      { at: new Date(Number.NaN), id: "a" },
+    ])
+      assert.throws(() => encodeAuditCursor(bad), RangeError);
+    assert.equal(decodeAuditCursor("0001.abc"), null);
+    assert.deepEqual(decodeAuditCursor("0.abc"), { at: new Date(0), id: "abc" });
+  });
+
+  it("an IPv6 prefix never shows more than three groups (property)", () => {
+    fc.assert(
+      fc.property(fc.ipV6(), (address) => {
+        const prefix = ipPrefix(address);
+        assert.ok(prefix !== null, address);
+        assert.ok(
+          /^\d{1,3}\.\d{1,3}\.\d{1,3}\.0\/24$/.test(prefix) ||
+            /^[0-9a-f]{1,4}:[0-9a-f]{1,4}:[0-9a-f]{1,4}::\/48$/.test(prefix),
+          `${address} -> ${prefix}`,
+        );
+      }),
+      propertyOptions("property"),
+    );
   });
 
   it("cursor round trip holds for any valid position (property)", () => {
@@ -197,6 +232,7 @@ describe("own sessions", () => {
       },
     ]);
     assert.ok(!JSON.stringify(views).includes("203.0.113.77"));
+    assert.ok(!JSON.stringify(views).includes("rv:133.0"));
   });
 
   it("revokes another own session, never the current one or someone else's", async () => {
@@ -222,12 +258,28 @@ describe("own sessions", () => {
       session("s5", owner.id),
       session("s3", viewer.id),
     ]);
-    assert.equal(await revokeOtherSessions({ sessions }, owner, "s2"), 2);
+    const deps = { sessions, clock: { now: () => NOW } };
+    assert.deepEqual(await revokeOtherSessions(deps, owner, "s2"), { ok: true, ended: 2 });
     assert.deepEqual(
       sessions.records.map((r) => r.id),
       ["s2", "s3"],
     );
-    assert.equal(await revokeOtherSessions({ sessions }, owner, "s2"), 0);
+    assert.deepEqual(await revokeOtherSessions(deps, owner, "s2"), { ok: true, ended: 0 });
+  });
+
+  it("refuses to end other sessions without a live current session of the actor", async () => {
+    const sessions = new MemorySessions([
+      session("s1", owner.id),
+      session("s3", viewer.id),
+      session("old", owner.id, { expiresAt: new Date("2026-11-22T11:00:00Z") }),
+    ]);
+    const deps = { sessions, clock: { now: () => NOW } };
+    for (const current of ["", "s3", "old", "missing"])
+      assert.deepEqual(await revokeOtherSessions(deps, owner, current), {
+        ok: false,
+        reason: "unknown_current",
+      });
+    assert.equal(sessions.records.length, 3);
   });
 });
 

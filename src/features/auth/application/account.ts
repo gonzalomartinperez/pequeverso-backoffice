@@ -53,13 +53,23 @@ export async function revokeSession(
   return (await deps.sessions.revokeSession(actor.id, sessionId)) ? "revoked" : "not_found";
 }
 
-/** Ends every session of the actor except the current one; returns how many ended. */
-export function revokeOtherSessions(
-  deps: { sessions: SessionStore },
+export type RevokeOthersResult =
+  | { ok: true; ended: number }
+  | { ok: false; reason: "unknown_current" };
+
+/**
+ * Ends every session of the actor except the current one. The current session must be one of the
+ * actor's live sessions: an empty or foreign id would otherwise end them all, current included.
+ */
+export async function revokeOtherSessions(
+  deps: { sessions: SessionStore; clock: Clock },
   actor: Actor,
   currentSessionId: string,
-): Promise<number> {
-  return deps.sessions.revokeOtherSessions(actor.id, currentSessionId);
+): Promise<RevokeOthersResult> {
+  const live = await deps.sessions.listSessions(actor.id, deps.clock.now());
+  if (!currentSessionId || !live.some((record) => record.id === currentSessionId))
+    return { ok: false, reason: "unknown_current" };
+  return { ok: true, ended: await deps.sessions.revokeOtherSessions(actor.id, currentSessionId) };
 }
 
 export const AUDIT_PAGE_SIZE = 50;
