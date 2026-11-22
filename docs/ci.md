@@ -237,14 +237,19 @@ failing) and listed in `quality/ratchets/known-failures.json`;
 `tests/unit/known-failures.test.ts` fails when a listed test vanishes or stops being todo, or a
 todo test is unlisted. Today: log redaction and `x-request-id` (owner M4.7).
 
-## Release PR
+## Release automation
 
-[Release PR](../.github/workflows/release-please.yml) runs release-please in manifest mode on pushes
-to `develop` ([config](../release-please-config.json), [manifest](../.release-please-manifest.json)):
-it opens or updates one release PR with the version and `CHANGELOG.md`; it never tags, builds or
-publishes. It is skipped until the owner grants a GitHub App (`RELEASE_APP_ID` variable and
-`RELEASE_APP_PRIVATE_KEY` secret), because PRs opened with `GITHUB_TOKEN` do not trigger CI. The
-redesign ships as 2.0.0 (`Release-As: 2.0.0`, PVB-D13) at M7.
+Open a version-bump PR into `develop`. Update `package.json` and the root lockfile's version metadata,
+move the reviewed entries into a dated `## [X.Y.Z] - YYYY-MM-DD` section of [the changelog](../CHANGELOG.md),
+and keep the `## [Unreleased]` heading for subsequent changes. The redesign ships as 2.0.0 at M7
+(PVB-D13).
+
+After the owner-approved `develop` → `main` release PR merges, the [Release workflow](../.github/workflows/release.yml)
+uses `GITHUB_TOKEN` to tag the merge commit `vX.Y.Z` and publish a GitHub Release from the
+matching changelog section (releases published after the owner enables immutable releases are immutable; the setting is not retroactive). An existing published release is left in place. A draft or a bare tag
+requires manual resolution, and a missing section fails the run if the version has no published
+release. The backoffice image is published separately at M7. See the
+[release automation decision](decisions/0015-release-automation-version-pr.md).
 
 ## Node LTS trial
 

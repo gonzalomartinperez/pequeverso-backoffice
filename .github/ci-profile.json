@@ -45,8 +45,6 @@
         ".env.example",
         ".gitignore",
         ".devcontainer/**",
-        "release-please-config.json",
-        ".release-please-manifest.json",
         "standards.lock",
         "docker-bake.hcl",
         ".gitleaksignore",

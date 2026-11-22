@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Automate source releases from reviewed version-bump PRs and changelog entries.
+
 ## 1.0.0 — source release baseline (2026-10-17)
 
 - Align application and root lockfile version metadata with the owner-selected first source
