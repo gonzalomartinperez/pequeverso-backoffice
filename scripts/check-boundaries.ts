@@ -58,7 +58,15 @@ const SUBPATHS = Object.entries(manifest.imports ?? {}).flatMap(([key, target]) 
 );
 function subpath(root: string, specifier: string): string | null {
   const entry = SUBPATHS.find(({ prefix }) => specifier.startsWith(prefix));
-  return entry ? path.join(root, entry.target, specifier.slice(entry.prefix.length)) : null;
+  const rest = entry ? specifier.slice(entry.prefix.length) : "";
+  // No `.` or `..` segments: `#server/../features/x.ts` must not leave its namespace.
+  if (
+    !entry ||
+    !rest ||
+    rest.split("/").some((part) => part === "" || part === "." || part === "..")
+  )
+    return null;
+  return path.join(root, entry.target, rest);
 }
 const PACKAGES = new Set([
   ...Object.keys(manifest.dependencies),

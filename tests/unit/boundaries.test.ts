@@ -120,11 +120,7 @@ it("keeps existing cross-feature, package, outside-src and adapter restrictions"
       'import type { Port } from "#features/operations/application/ports.ts";',
       /may not import feature operations/,
     ],
-    [
-      "server/probe.ts",
-      'import { external } from "#shared/../../external";',
-      /imports outside src/,
-    ],
+    ["server/probe.ts", 'import { external } from "../../external";', /imports outside src/],
   ] as const;
   for (const [file, source, expected] of cases) {
     assert.match(inspect({ [file]: source }).join("\n"), expected);
@@ -518,5 +514,23 @@ it("resolves only declared subpath imports, by exact file name (M4.3)", () => {
     problems('import { store } from "#features/auth/adapters/store";'),
     /unresolved local target \(#features\/auth\/adapters\/store\)/,
   );
-  assert.match(problems('import { x } from "#shared/../../outside.ts";'), /imports outside src/);
+  for (const specifier of [
+    "#shared/../../outside.ts",
+    "#server/../features/auth/adapters/store.ts",
+    "#shared/./ui/x.ts",
+    "#shared//x.ts",
+  ])
+    assert.match(
+      problems(`import { x } from "${specifier}";`),
+      /unknown subpath import/,
+      specifier,
+    );
+  assert.match(
+    inspect({
+      "server/env.ts": "import 'server-only'; export const config = {};",
+      "shared/ui/probe.tsx":
+        '"use client"; import { config } from "#server/env.ts"; export const x = config;',
+    }).join("\n"),
+    /client runtime reaches private server module server\/env\.ts/,
+  );
 });
