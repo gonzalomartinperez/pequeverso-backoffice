@@ -26,6 +26,13 @@ const browser = (area: string) => `tests/browser/${area}.spec.ts`;
 const SMOKE = "scripts/smoke-postgres.sh";
 const accesos = "action:src/app/panel/accesos/actions.ts#";
 
+/**
+ * Mutating entries (every server action, every non-GET route handler) that may run without a
+ * session guard or Better Auth, each with its reason. Empty: target-state rule 9 (M4.2) allows
+ * public or bearer access only for reads (health probes, the invitation landing, metrics).
+ */
+export const PUBLIC_MUTATIONS: Readonly<Record<string, string>> = {};
+
 export const MATRIX: readonly Row[] = [
   {
     id: `${accesos}inviteAction`,

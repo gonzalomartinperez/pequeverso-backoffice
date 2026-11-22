@@ -66,7 +66,11 @@ framing and sets private, no-store caching. The CSP test covers the production p
 
 - **Authorization matrix.** The [permissions matrix](../reference/permissions.md) covers
   owners, viewers and anonymous callers. The static test checks guard placement on the
-  real entry points. The PostgreSQL matrix drives permission checks and the corresponding
+  real entry points. Every server action and non-GET route handler must call
+  `requireActor` or delegate to Better Auth; a public or bearer mutation fails unless it is
+  allowlisted with a reason in `PUBLIC_MUTATIONS` (empty).
+  `tests/unit/authz-matrix.test.ts` › `negative fixture: a mutating handler or action listed public or bearer fails (M4.2)`.
+  The PostgreSQL matrix drives permission checks and the corresponding
   use cases, including stale-role writes.
 - **CSRF and Origin.** Better Auth's cookie-bearing auth POSTs and Next.js server actions
   use distinct checks. The handler test covers sign-out, sign-in and linking.
