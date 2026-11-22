@@ -152,6 +152,155 @@ describe("ops summary contract", () => {
     ];
     for (const payload of bad) assert.throws(() => parseOpsSummary(payload), OpsPayloadError);
   });
+
+  it("checks budget shape before statuses and budget fields after daily rows", () => {
+    const invalid = { ...pinned, availability: { status: "unknown" }, budget: [] };
+    assert.throws(() => parseOpsSummary(invalid), { message: "invalid ops summary at $.budget" });
+    const budget = { ...pinned.budget, month: "2026-13" };
+    assert.throws(() => parseOpsSummary({ ...pinned, budget, daily: [{ day: "invalid" }] }), {
+      message: "invalid ops summary at $.daily[0].day",
+    });
+    assert.throws(() => parseOpsSummary({ ...pinned, budget }), {
+      message: "invalid ops summary at $.budget.month",
+    });
+  });
+
+  it("validates failure counts before hours and accepts the maximum number of codes", () => {
+    const failures = Object.fromEntries(
+      Array.from({ length: 32 }, (_, index) => [`failure_${index}`, index]),
+    );
+    const window = { ...pinned.windows[0], failures };
+    assert.deepEqual(
+      parseOpsSummary({ ...pinned, windows: [window] }).windows[0]?.failures,
+      failures,
+    );
+    assert.throws(
+      () =>
+        parseOpsSummary({
+          ...pinned,
+          windows: [{ ...window, failures: { ...failures, extra: 0 } }],
+        }),
+      { message: "invalid ops summary at $.windows[0].failures" },
+    );
+    assert.throws(
+      () => parseOpsSummary({ ...pinned, windows: [{ hours: 0, failures: { timeout: null } }] }),
+      { message: "invalid ops summary at $.windows[0].failures.timeout" },
+    );
+  });
+
+  it("reports the exact field when a summary section contains invalid data", () => {
+    const sections = {
+      service: {
+        environment: "INVALID",
+        revision: 1,
+        provider: "INVALID",
+        model: 1,
+        reasoning_effort: 1,
+        assistant_enabled: 1,
+        started_at: "invalid",
+        synthetic: 1,
+      },
+      availability: { status: "invalid", reason: "INVALID" },
+      catalog: {
+        status: "invalid",
+        source: "INVALID",
+        revision: 1,
+        sha256: 1,
+        generated_at: "invalid",
+        verified_at: "invalid",
+        activated_at: "invalid",
+        price_status: "invalid",
+        price_max_age_hours: -1,
+        last_attempt_at: "invalid",
+        last_failure: 1,
+        last_failure_at: "invalid",
+        products: -1,
+        documents: -1,
+      },
+      budget: {
+        day: "2026-02-30",
+        monthly_limit: 1,
+        monthly_cutoff: 1,
+        daily_limit: 1,
+        month_spend: 1,
+        day_spend: 1,
+        remaining_month: 1,
+      },
+      pricing: {
+        revision: null,
+        model: null,
+        input_per_million: 1,
+        cached_input_per_million: 1,
+        cache_write_per_million: 1,
+        output_per_million: 1,
+      },
+    };
+    for (const [section, invalidFields] of Object.entries(sections)) {
+      for (const [field, value] of Object.entries(invalidFields)) {
+        const payload = { ...pinned, [section]: { ...pinned[section], [field]: value } };
+        assert.throws(() => parseOpsSummary(payload), {
+          message: `invalid ops summary at $.${section}.${field}`,
+        });
+      }
+    }
+    for (const section of ["service", "availability", "catalog", "pricing"]) {
+      assert.throws(() => parseOpsSummary({ ...pinned, [section]: [] }), {
+        message: `invalid ops summary at $.${section}`,
+      });
+    }
+    for (const [field, value] of Object.entries({
+      schema_version: "2",
+      generated_at: "invalid",
+      metrics_since: "invalid",
+      recent: {},
+    })) {
+      assert.throws(() => parseOpsSummary({ ...pinned, [field]: value }), {
+        message: `invalid ops summary at $.${field}`,
+      });
+    }
+  });
+
+  it("reports the exact window field and preserves the ordering of window checks", () => {
+    const window = pinned.windows[0];
+    for (const [field, value] of Object.entries({
+      hours: 0,
+      runs: [],
+      latency_ms: [],
+      tokens: [],
+      replaced: -1,
+    })) {
+      assert.throws(
+        () => parseOpsSummary({ ...pinned, windows: [{ ...window, [field]: value }] }),
+        {
+          message: `invalid ops summary at $.windows[0].${field}`,
+        },
+      );
+    }
+    for (const [section, fields] of [
+      ["runs", ["completed", "failed", "cancelled", "interrupted", "refused"]],
+      ["tokens", ["input", "cached_input", "output", "reasoning", "runs_with_usage"]],
+    ] as const) {
+      for (const field of fields) {
+        const entry = { ...window, [section]: { [field]: -1 } };
+        assert.throws(() => parseOpsSummary({ ...pinned, windows: [entry] }), {
+          message: `invalid ops summary at $.windows[0].${section}.${field}`,
+        });
+      }
+    }
+    for (const measurement of ["first_delta", "total"]) {
+      const path = `$.windows[0].latency_ms.${measurement}`;
+      const entry = { ...window, latency_ms: { [measurement]: [] } };
+      assert.throws(() => parseOpsSummary({ ...pinned, windows: [entry] }), {
+        message: `invalid ops summary at ${path}`,
+      });
+      for (const field of ["p50", "p95", "count"]) {
+        const entry = { ...window, latency_ms: { [measurement]: { [field]: -1 } } };
+        assert.throws(() => parseOpsSummary({ ...pinned, windows: [entry] }), {
+          message: `invalid ops summary at ${path}.${field}`,
+        });
+      }
+    }
+  });
 });
 
 describe("invalid calendar HTTP boundary", () => {
@@ -173,6 +322,10 @@ describe("summary derivations", () => {
   it("adds decimal money exactly and propagates unavailability", () => {
     assert.equal(addMoney("0.1", "0.2", "0.000001"), "0.300001");
     assert.equal(addMoney("1.5", null), null);
+    assert.equal(addMoney(), "0.000000");
+    assert.equal(addMoney("1", "-1.000001"), "-0.000001");
+    assert.equal(addMoney("-1", "1"), "0.000000");
+    assert.equal(addMoney("1", "0.0000001"), null);
   });
 
   it("computes budget use from confirmed + estimated + pending", () => {

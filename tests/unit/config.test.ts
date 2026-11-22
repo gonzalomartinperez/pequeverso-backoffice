@@ -182,4 +182,127 @@ describe("backoffice configuration", () => {
       assert.doesNotMatch(String(error), /SECRETVALUE/);
     }
   });
+
+  it("reports the first invalid configuration group using only its setting names", () => {
+    const env = {
+      ...production,
+      GITHUB_CLIENT_SECRET: "",
+      AUTH_TEST_ISSUER: "http://localhost",
+      AUTH_DISABLE_RATE_LIMIT: "1",
+      OPS_API_URL: "not a URL",
+      OPS_READ_TOKEN: "short",
+      PRODUCT_ANALYTICS_READ_ENABLED: "yes",
+      OPS_TELEMETRY_ENABLED: "yes",
+    };
+    assert.throws(() => parseConfig(env), { message: "GitHub needs both client id and secret" });
+    env.GITHUB_CLIENT_SECRET = production.GITHUB_CLIENT_SECRET;
+    assert.throws(() => parseConfig(env), {
+      message: "AUTH_TEST_ISSUER is not allowed in production",
+    });
+    env.AUTH_TEST_ISSUER = "";
+    assert.throws(() => parseConfig(env), {
+      message: "AUTH_DISABLE_RATE_LIMIT is not allowed in production",
+    });
+    env.AUTH_DISABLE_RATE_LIMIT = "";
+    assert.throws(() => parseConfig(env), { message: "OPS_API_URL must be an absolute URL" });
+    env.OPS_API_URL = "https://ops.example.test/path?private";
+    assert.throws(() => parseConfig(env), {
+      message: "OPS_API_URL must not carry credentials, query or fragment",
+    });
+    env.OPS_API_URL = "https://ops.example.test/path";
+    assert.throws(() => parseConfig(env), {
+      message: "OPS_READ_TOKEN must have at least 32 characters",
+    });
+    env.OPS_READ_TOKEN = "t".repeat(32);
+    assert.throws(() => parseConfig(env), {
+      message: "PRODUCT_ANALYTICS_READ_ENABLED must be true or false",
+    });
+  });
+
+  it("validates observability switches and credentials before the trace exporter", () => {
+    const env = {
+      ...production,
+      OBSERVABILITY_METRICS_ENABLED: "true",
+      OBSERVABILITY_TRACES_ENABLED: "yes",
+      OBSERVABILITY_READ_TOKEN: "",
+      OBSERVABILITY_OTLP_TRACES_ENDPOINT: "invalid",
+      OTEL_EXPORTER_OTLP_HEADERS: "synthetic",
+    };
+    const invalidToken = {
+      message: "OBSERVABILITY_READ_TOKEN must be a private token of 32–256 characters",
+    };
+    assert.throws(() => parseConfig(env), {
+      message: "OBSERVABILITY_TRACES_ENABLED must be true or false",
+    });
+    env.OBSERVABILITY_TRACES_ENABLED = "true";
+    for (const token of ["", "m".repeat(31), "m".repeat(257), `${"m".repeat(32)} x`]) {
+      assert.throws(() => parseConfig({ ...env, OBSERVABILITY_READ_TOKEN: token }), invalidToken);
+    }
+    env.OBSERVABILITY_READ_TOKEN = "m".repeat(256);
+    assert.throws(
+      () =>
+        parseConfig({
+          ...env,
+          OPS_API_URL: "https://ops.test",
+          OPS_READ_TOKEN: env.OBSERVABILITY_READ_TOKEN,
+        }),
+      { message: "OBSERVABILITY_READ_TOKEN must differ from OPS_READ_TOKEN" },
+    );
+    assert.throws(() => parseConfig(env), {
+      message: "Use only OBSERVABILITY_* settings for the isolated trace exporter",
+    });
+    env.OTEL_EXPORTER_OTLP_HEADERS = "";
+    assert.throws(() => parseConfig(env), {
+      message: "OBSERVABILITY_OTLP_TRACES_ENDPOINT must be an absolute endpoint",
+    });
+    assert.deepEqual(parseConfig({ ...env, OBSERVABILITY_TRACES_ENABLED: "false" }).observability, {
+      metricsToken: env.OBSERVABILITY_READ_TOKEN,
+      otlpEndpoint: null,
+    });
+  });
+
+  it("bounds trace endpoints to the existing protocols, origins and path", () => {
+    const env = {
+      ...production,
+      OBSERVABILITY_TRACES_ENABLED: "true",
+      OBSERVABILITY_METRICS_ENABLED: "",
+      OBSERVABILITY_READ_TOKEN: "ignored",
+    };
+    const readEndpoint = (endpoint: string) =>
+      parseConfig({ ...env, OBSERVABILITY_OTLP_TRACES_ENDPOINT: endpoint }).observability;
+    for (const endpoint of [
+      "https://collector.example.test/v1/traces",
+      "http://collector/v1/traces",
+    ])
+      assert.deepEqual(readEndpoint(` ${endpoint} `), {
+        metricsToken: null,
+        otlpEndpoint: endpoint,
+      });
+    for (const endpoint of [
+      "https://collector/v1/metrics",
+      "https://user@collector/v1/traces",
+      "https://:synthetic@collector/v1/traces",
+      "https://collector/v1/traces?synthetic",
+      "https://collector/v1/traces#synthetic",
+      "ftp://collector/v1/traces",
+      "http://collector.example.test/v1/traces",
+      "http://localhost/v1/traces",
+      "http://127.0.0.1/v1/traces",
+    ])
+      assert.throws(() => readEndpoint(endpoint), {
+        message:
+          "OBSERVABILITY_OTLP_TRACES_ENDPOINT needs https or a private service and /v1/traces",
+      });
+    for (const host of ["localhost", "127.0.0.1"]) {
+      const endpoint = `http://${host}/v1/traces`;
+      assert.equal(
+        parseConfig({
+          BACKOFFICE_ENVIRONMENT: "test",
+          OBSERVABILITY_TRACES_ENABLED: "true",
+          OBSERVABILITY_OTLP_TRACES_ENDPOINT: endpoint,
+        }).observability.otlpEndpoint,
+        endpoint,
+      );
+    }
+  });
 });
