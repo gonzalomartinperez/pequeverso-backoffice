@@ -5,7 +5,7 @@ import { when } from "#features/operations/presentation/format.ts";
 import { accessDeps, requireActor } from "#server/auth.ts";
 import { config } from "#server/env.ts";
 import { Section, TableRegion, td, th } from "#shared/ui/sections.tsx";
-import { inviteAction, removeMemberAction, revokeInvitationAction } from "./actions";
+import { inviteAction, removeMemberAction, revokeInvitationAction } from "./actions.ts";
 
 const STATE_LABEL = {
   pending: "Pendiente",

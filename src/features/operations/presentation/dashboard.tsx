@@ -3,7 +3,7 @@ import { Badge } from "#shared/ui/badge.tsx";
 import { LinkButton } from "#shared/ui/button.tsx";
 import { Callout } from "#shared/ui/callout.tsx";
 import { Facts, Section, TableRegion, td, th } from "#shared/ui/sections.tsx";
-import type { OpsReading, TelemetryReading } from "../application/ports";
+import type { OpsReading, TelemetryReading } from "../application/ports.ts";
 import {
   acceptedRuns,
   budgetUse,
@@ -12,10 +12,10 @@ import {
   type OpsSummary,
   percent,
   type RunWindow,
-} from "../domain/summary";
-import { LazyDailyCharts } from "./daily-charts-lazy";
-import * as f from "./format";
-import { Telemetry } from "./telemetry";
+} from "../domain/summary.ts";
+import { LazyDailyCharts } from "./daily-charts-lazy.tsx";
+import * as f from "./format.ts";
+import { Telemetry } from "./telemetry.tsx";
 
 const UNAVAILABLE_READING: Record<Exclude<OpsReading, { status: "ok" }>["reason"], string> = {
   not_configured: "El backoffice no tiene configurada la conexión privada con la API.",

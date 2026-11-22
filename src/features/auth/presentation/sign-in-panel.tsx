@@ -3,7 +3,7 @@ import { LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "#shared/ui/button.tsx";
 import { Callout } from "#shared/ui/callout.tsx";
-import { authClient } from "./auth-client";
+import { authClient } from "./auth-client.ts";
 
 export type ProviderOption = { id: string; label: string };
 

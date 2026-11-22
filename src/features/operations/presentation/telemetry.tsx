@@ -2,8 +2,8 @@ import { Activity, CircleCheck, FlaskConical, TriangleAlert } from "lucide-react
 import { Badge } from "#shared/ui/badge.tsx";
 import { Callout } from "#shared/ui/callout.tsx";
 import { Facts, Section } from "#shared/ui/sections.tsx";
-import type { TelemetryReading } from "../application/ports";
-import * as f from "./format";
+import type { TelemetryReading } from "../application/ports.ts";
+import * as f from "./format.ts";
 
 function bytes(value: number | null): string {
   return value == null
