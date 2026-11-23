@@ -32,7 +32,7 @@ env:
 
 jobs:
   classify:
-    uses: gonzalomartinperez/engineering-standards/.github/workflows/classify.yml@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+    uses: gonzalomartinperez/engineering-standards/.github/workflows/classify.yml@e08e0f5c7967b7d6e5bee474d5a404e0e56b65a9 # v1.1.1
     permissions:
       contents: read
       pull-requests: read
@@ -40,7 +40,7 @@ jobs:
   security:
     needs: [classify]
     if: contains(fromJSON(needs.classify.outputs.jobs), 'security')
-    uses: gonzalomartinperez/engineering-standards/.github/workflows/security.yml@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+    uses: gonzalomartinperez/engineering-standards/.github/workflows/security.yml@e08e0f5c7967b7d6e5bee474d5a404e0e56b65a9 # v1.1.1
     permissions:
       contents: read
       pull-requests: read
@@ -567,7 +567,7 @@ jobs:
       - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
-      - uses: gonzalomartinperez/engineering-standards/actions/ci-gate@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+      - uses: gonzalomartinperez/engineering-standards/actions/ci-gate@e08e0f5c7967b7d6e5bee474d5a404e0e56b65a9 # v1.1.1
         with:
           needs: ${{ toJSON(needs) }}
           expected: ${{ needs.classify.outputs.jobs }}
